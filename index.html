@@ -135,6 +135,20 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
  #side:not(.hidden)~#prodPill{left:calc(50% + 180px)}
 }
 @media(max-width:760px){#tabs button{padding:8px 1px}}
+#geonusaSeg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px}
+#geonusaSeg button{background:var(--bg2);color:var(--mut);border:1px solid var(--bord);padding:8px 4px;font-size:12px;border-radius:8px}
+#geonusaSeg button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+#sheetHandle{display:none;align-items:center;justify-content:center;padding:8px 0 4px;cursor:pointer;flex:0 0 auto;order:-1}
+#sheetHandle i{width:46px;height:5px;border-radius:3px;background:#cbd5e1;display:block}
+@media(max-width:900px){
+ #side{top:auto;bottom:0;left:0;right:0;width:100%;max-width:100%;height:56vh;height:56dvh;border-right:0;border-top:1px solid var(--bord);border-radius:18px 18px 0 0;box-shadow:0 -10px 32px rgba(15,51,78,.18);transition:height .28s ease,transform .3s ease}
+ #side.hidden{transform:translateY(106%)}
+ #side.sheet-full{height:94vh;height:94dvh}
+ #side.sheet-peek{height:138px}
+ #side.sheet-peek .panel.on{overflow:hidden}
+ #sheetHandle{display:flex}
+ #detail{z-index:1600}
+}
 </style>
 </head>
 <body>
@@ -336,6 +350,23 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  map.on('click',()=>{document.getElementById('detail').classList.add('open')});
  // ===== Panel Gempa Terkini BMKG (autogempa) + ticker, ala beranda bmkg.go.id =====
  const fab=document.createElement('button');fab.id='fabMenu';fab.title='Buka/tutup menu';fab.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>';fab.onclick=()=>document.getElementById('side').classList.toggle('hidden');document.body.appendChild(fab);
+ const sideEl=document.getElementById('side');
+ const handle=document.createElement('div');handle.id='sheetHandle';handle.title='Ubah tinggi panel';handle.innerHTML='<i></i>';
+ handle.onclick=()=>{if(sideEl.classList.contains('sheet-full')){sideEl.classList.remove('sheet-full');sideEl.classList.add('sheet-peek')}else if(sideEl.classList.contains('sheet-peek')){sideEl.classList.remove('sheet-peek')}else sideEl.classList.add('sheet-full')};
+ sideEl.insertBefore(handle, sideEl.firstChild);
+ const geoPanel=document.getElementById('p-geonusa');
+ if(geoPanel){
+   const bq=document.getElementById('bmkgQuake'),bw=document.getElementById('bmkgWeather'),bn=document.getElementById('bmkgWarn');
+   [bq,bw,bn].forEach(el=>{if(el){el.classList.add('subA');el.style.margin='0 0 10px'}});
+   if(bq)geoPanel.prepend(bq,bw,bn);
+   geoPanel.querySelectorAll(':scope > .card').forEach(c=>c.classList.add('subB'));
+   const seg=document.createElement('div');seg.id='geonusaSeg';
+   seg.innerHTML='<button class="on" data-seg="A">Info BMKG</button><button data-seg="B">Data Wilayah</button>';
+   geoPanel.insertBefore(seg, geoPanel.firstChild);
+   const applySeg=A=>{geoPanel.querySelectorAll('.subA').forEach(e=>e.style.display=A?'':'none');geoPanel.querySelectorAll('.subB').forEach(e=>e.style.display=A?'none':'');geoPanel.scrollTop=0};
+   seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');applySeg(b.dataset.seg==='A')});
+   applySeg(true);
+ }
  const BMKG_SVG='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><circle cx="24" cy="24" r="22.5" fill="#005baa" stroke="#daa520" stroke-width="2"/><polygon points="24,3.5 26.8,21.2 44.5,24 26.8,26.8 24,44.5 21.2,26.8 3.5,24 21.2,21.2" fill="#daa520"/><polygon points="24,9 25.6,22.4 39,24 25.6,25.6 24,39 22.4,25.6 9,24 22.4,22.4" fill="#daa520" transform="rotate(45 24 24)" opacity=".85"/><circle cx="24" cy="24" r="12.5" fill="#005baa" stroke="#ffffff" stroke-width="1.6"/><ellipse cx="24" cy="24" rx="5.6" ry="12.5" fill="none" stroke="#ffffff" stroke-width="1"/><line x1="11.5" y1="24" x2="36.5" y2="24" stroke="#ffffff" stroke-width="1"/><path d="M13.5 17.5h21M13.5 30.5h21" stroke="#ffffff" stroke-width=".9" fill="none"/></svg>';
  const BMKG_URI='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(BMKG_SVG);
  const fav=document.createElement('link');fav.rel='icon';fav.type='image/svg+xml';fav.href=BMKG_URI;document.head.appendChild(fav);
