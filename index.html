@@ -94,6 +94,8 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 #bmkgQuake table{font-size:12px}
 #ticker{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:900;background:#04264d;color:#fff;display:flex;align-items:center;overflow:hidden;font-size:12.5px}
 #side:not(.hidden)~#ticker{left:372px}
+#prodPill{position:fixed;right:12px;bottom:42px;z-index:1200;background:#14532d;color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;box-shadow:var(--shadow);display:none}
+.satbtn.on{background:var(--acc)!important;color:#fff!important;border-color:var(--acc)!important}
 @media(max-width:760px){#side:not(.hidden)~#ticker{left:0}}
 #ticker b{background:var(--gold);color:#04264d;padding:0 10px;height:100%;display:flex;align-items:center;flex:none;letter-spacing:.5px}
 #ticker .track{white-space:nowrap;animation:tick 40s linear infinite;padding-left:12px}
@@ -133,10 +135,19 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 <div class="card"><h3>👥 Indikator Wilayah Terpilih</h3><div id="indikator"><p>Pilih wilayah di atas — ibu kota, penduduk, luas, elevasi, zona waktu, dan kode pos (desa) tampil di sini dari data API yang sama.</p></div></div>
 </section>
 <section class="panel" id="p-geoportal">
+<div class="card"><h3>🛰 Citra Satelit &amp; Radar — BMKG</h3><p>Citra geostasioner resmi BMKG (sumber: satellite.bmkg.go.id) &amp; radar cuaca nasional (gis.bmkg.go.id). Pilih produk, geser waktu, atau putar animasinya.</p>
+<div class="row" id="satBtns"><button class="ghost satbtn" data-sat="eh" onclick="setSatProduct('eh')">Himawari-9 IR Enhanced</button><button class="ghost satbtn" data-sat="nc" onclick="setSatProduct('nc')">Natural Color</button></div>
+<div class="row"><button class="ghost satbtn" data-sat="wv" onclick="setSatProduct('wv')">Water Vapor</button><button class="ghost satbtn" data-sat="rp" onclick="setSatProduct('rp')">Rainfall</button><button class="ghost satbtn" data-sat="gk" onclick="setSatProduct('gk')">GK-2A IR Enhanced</button></div>
+<label>Waktu citra <span id="satTime" style="color:var(--txt)">—</span></label>
+<input type="range" id="satSlider" min="0" max="0" value="0" oninput="satSliderMove(this.value)" style="width:100%">
+<div class="row"><button class="ghost" id="satPlayBtn" onclick="satPlayToggle()">▶ Putar Animasi</button><button class="ghost" onclick="setSatProduct(null)">Matikan Citra</button></div>
+<label>Opasitas citra <input type="range" min="20" max="100" value="85" oninput="setSatOpacity(this.value)"></label>
+<div class="row"><button class="ghost" id="radarBtn" onclick="toggleRadar()">📡 Radar BMKG: Nonaktif</button></div>
+<div id="radarLegend" style="display:none;margin-top:6px"><div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#a0d8ef,#01b8ff,#00e500,#b4dc00,#ffdc00,#ff7100,#ff0000,#b800d6)"></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>5 dBZ ringan</span><span>35 deras</span><span>55 ekstrem</span><span>75 hail</span></div></div>
+<p id="satStatus" style="font-size:12px;color:var(--mut)">Citra diperbarui mengikuti model run BMKG (±10 menit). Waktu ditampilkan dalam WITA (waktu Tarakan).</p></div>
 <div class="card"><h3>🌐 GeoPortal Hub — SatuPeta BIG</h3><p>Basemap Rupabumi BIG tersedia di pemilih layer peta (kanan atas). Layer WMS/WFS/ArcGIS publik bisa dimuat lewat GEOTOOLS → ArcGIS REST.</p>
 <button class="ghost" onclick="setBase('rbi')">Pakai Basemap Rupabumi BIG</button></div>
 <div class="card"><h3>🏔 Unduh DEMNAS (konsep)</h3><p>Alur aslinya: pilih indeks DEMNAS → clip batas wilayah → unduh GeoTIFF tanpa token dari BIG. Di prototype ini gunakan Export di GEOTOOLS untuk GeoJSON hasil gambar.</p></div>
-<div class="card"><h3>🏙 GeoJogja &amp; GeoJakarta</h3><p>Modul regional: di produksi, muat layer tematik Geoportal DIY &amp; batas RT DKI dari layanan ArcGIS masing-masing pemda.</p></div>
 </section>
 <section class="panel" id="p-geodisaster">
 <div class="card"><h3>🌋 Gempa — BMKG Live</h3><p>Sumber: data.bmkg.go.id (gempa terkini &amp; dirasakan).</p><div class="row"><button onclick="loadQuake('terkini')">M 5.0+ Terkini</button><button class="ghost" onclick="loadQuake('dirasakan')">Dirasakan</button></div><div id="quakeList" style="margin-top:8px"></div></div>
@@ -199,7 +210,30 @@ function gibsUrl(kind,date){const d=date||new Date(Date.now()-864e5).toISOString
 function toggleGibs(kind,force){if(gibsLayer&&gibsKind===kind&&force!==true){map.removeLayer(gibsLayer);gibsLayer=null;return}if(gibsLayer)map.removeLayer(gibsLayer);gibsKind=kind;gibsLayer=L.tileLayer(gibsUrl(kind,document.getElementById('gibsDate').value||undefined),{opacity:.85,attribution:'NASA GIBS'});gibsLayer.addTo(map);toast('Layer citra '+kind.toUpperCase()+' aktif')}
 function refreshGibs(){if(gibsLayer){const k=gibsKind;map.removeLayer(gibsLayer);gibsLayer=null;toggleGibs(k,true)}else toast('Aktifkan dulu layer MODIS/VIIRS')}
 function setOpacity(v){if(gibsLayer)gibsLayer.setOpacity(v/100)}
-function toggleRadar(){toggleGibs('modis')}
+// ===== Citra Satelit & Radar BMKG (satellite.bmkg.go.id + gis.bmkg.go.id) — terverifikasi live =====
+const SATPROD={eh:{model:'himawari9',param:'EH',label:'Himawari-9 IR Enhanced'},nc:{model:'himawari9',param:'NC',label:'Himawari-9 Natural Color'},wv:{model:'himawari9',param:'WV',label:'Himawari-9 Water Vapor'},rp:{model:'himawari9',param:'RP',label:'Himawari-9 Rainfall'},gk:{model:'gk2a',param:'EH',label:'GK-2A IR Enhanced'}};
+const BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+let satLayer=null,satKey=null,satRuns=[],satIdx=0,satPlayTimer=null,modelrunCache=null,modelrunAt=0,radarLayer=null,radarTimer=null,satRefreshTimer=null;
+function fmtWita(iso){const d=new Date(new Date(iso).getTime()+8*3600000);const p=n=>String(n).padStart(2,'0');return `${p(d.getUTCDate())} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()} · ${p(d.getUTCHours())}.${p(d.getUTCMinutes())} WITA`}
+async function getModelRuns(){if(modelrunCache&&Date.now()-modelrunAt<300000)return modelrunCache;const r=await fetchTimeout('https://satellite.bmkg.go.id/api22/modelrun',15000);modelrunCache=await r.json();modelrunAt=Date.now();return modelrunCache}
+function satUrl(key,iso){const p=SATPROD[key];return `https://satellite.bmkg.go.id/api22/tile/{z}/{x}/{y}.png?tiletype=himawari9&modelname=${p.model}&param=${p.param}&baserun=${encodeURIComponent(iso)}`}
+function satLabel(){const el=document.getElementById('satTime');if(!satRuns.length){el.textContent='—';return}el.textContent=fmtWita(satRuns[satIdx])+(satIdx===0?' (terbaru)':'');updateProdPill()}
+function satApplyLayer(){if(satLayer)map.removeLayer(satLayer);if(!satKey||!satRuns.length)return;satLayer=L.tileLayer(satUrl(satKey,satRuns[satIdx]),{maxZoom:18,maxNativeZoom:10,minZoom:3,opacity:(+((document.querySelector('#p-geoportal input[oninput^="setSatOpacity"]')||{}).value)||85)/100,attribution:'Citra satelit: BMKG (satellite.bmkg.go.id) — Himawari-9 (JMA) / GK-2A (KMA)'}).addTo(map);satLabel()}
+async function setSatProduct(key){const st=document.getElementById('satStatus');if(!key||key===satKey){satKey=null;if(satLayer)map.removeLayer(satLayer);satLayer=null;satStopPlay();document.querySelectorAll('.satbtn').forEach(b=>b.classList.remove('on'));document.getElementById('satTime').textContent='—';updateProdPill();return}
+ satKey=key;document.querySelectorAll('.satbtn').forEach(b=>b.classList.toggle('on',b.dataset.sat===key));st.textContent='Menghubungi server citra BMKG…';
+ try{const data=await getModelRuns();satRuns=(data[SATPROD[key].model]||[]).slice();if(!satRuns.length){st.textContent='Tidak ada model run untuk produk ini saat ini di server BMKG.';return}satIdx=0;const sl=document.getElementById('satSlider');sl.max=satRuns.length-1;sl.value=satRuns.length-1;satApplyLayer();st.textContent=satProdLabel(key)+' aktif — '+satRuns.length+' waktu tersedia, geser slider untuk mundur ke citra sebelumnya.'}catch(e){st.textContent='Server citra BMKG belum menjawab — coba lagi sebentar lagi.'}
+ if(satRefreshTimer)clearInterval(satRefreshTimer);satRefreshTimer=setInterval(async()=>{if(!satKey)return;modelrunCache=null;try{const data=await getModelRuns();const runs=(data[SATPROD[satKey].model]||[]).slice();if(runs.length&&runs[0]!==satRuns[0]){const ikutTerbaru=satIdx===0;satRuns=runs;const sl=document.getElementById('satSlider');sl.max=runs.length-1;if(ikutTerbaru){satIdx=0;sl.value=runs.length-1}satApplyLayer()}}catch(e){}},600000)}
+function satProdLabel(k){return SATPROD[k].label}
+function satSliderMove(v){if(!satRuns.length)return;satIdx=satRuns.length-1-(+v);if(satLayer)satLayer.setUrl(satUrl(satKey,satRuns[satIdx]));satLabel()}
+function satStopPlay(){if(satPlayTimer){clearInterval(satPlayTimer);satPlayTimer=null}const b=document.getElementById('satPlayBtn');if(b)b.textContent='▶ Putar Animasi'}
+function satPlayToggle(){if(satPlayTimer){satStopPlay();return}if(!satKey||satRuns.length<2){toast('Aktifkan dulu produk citranya');return}document.getElementById('satPlayBtn').textContent='⏸ Jeda';satPlayTimer=setInterval(()=>{satIdx=satIdx<=0?satRuns.length-1:satIdx-1;document.getElementById('satSlider').value=satRuns.length-1-satIdx;if(satLayer)satLayer.setUrl(satUrl(satKey,satRuns[satIdx]));satLabel()},800)}
+function setSatOpacity(v){if(satLayer)satLayer.setOpacity(v/100)}
+const RadarGrid=L.GridLayer.extend({createTile:function(coords){const img=document.createElement('img');const S=256*Math.pow(2,coords.z);const R=20037508.342789244;const x0=-R+ (coords.x*256/S)*2*R;const x1=-R+((coords.x+1)*256/S)*2*R;const y1=R-(coords.y*256/S)*2*R;const y0=R-((coords.y+1)*256/S)*2*R;img.src=`https://gis.bmkg.go.id/arcgis/rest/services/radarcmax/MapServer/export?bbox=${x0},${y0},${x1},${y1}&bboxSR=3857&imageSR=3857&size=256,256&dpi=96&format=png32&transparent=true&layers=show:1&f=image&_ts=${Date.now()}`;img.alt='';return img}});
+function toggleRadar(){const btn=document.getElementById('radarBtn');if(radarLayer){map.removeLayer(radarLayer);radarLayer=null;if(radarTimer)clearInterval(radarTimer);radarTimer=null;document.getElementById('radarLegend').style.display='none';if(btn)btn.textContent='📡 Radar BMKG: Nonaktif';updateProdPill();toast('Radar BMKG nonaktif');return}
+ radarLayer=new RadarGrid({opacity:.55,attribution:'Radar cuaca: BMKG (gis.bmkg.go.id)'}).addTo(map);document.getElementById('radarLegend').style.display='';if(btn)btn.textContent='📡 Radar BMKG: Aktif';updateProdPill();toast('Radar BMKG aktif (reflektivitas maks) — auto-refresh 6 menit');
+ if(radarTimer)clearInterval(radarTimer);radarTimer=setInterval(()=>{if(radarLayer)radarLayer.redraw();updateProdPill()},360000)}
+function updateProdPill(){let pill=document.getElementById('prodPill');if(!pill){pill=document.createElement('div');pill.id='prodPill';document.body.appendChild(pill)}
+ if(radarLayer){pill.style.display='';pill.textContent='📡 Radar BMKG · '+fmtWita(new Date().toISOString())}else if(satKey&&satRuns.length){pill.style.display='';pill.textContent='🛰 '+SATPROD[satKey].label+' · '+fmtWita(satRuns[satIdx])}else pill.style.display='none'}
 // BMKG earthquakes
 let quakeLayer=null;
 async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(`<b>M ${g.Magnitude}</b> — ${g.Wilayah}<br>${g.Tanggal} ${g.Jam}<br>Kedalaman: ${g.Kedalaman}`);quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
@@ -260,7 +294,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  const s=document.getElementById('search'),q=document.getElementById('quick');
  if(s)document.body.appendChild(s); if(q)document.body.appendChild(q);
  // Tambah item quick-layer sesuai daftar situs acuan
- if(q){const extra=[['🔥 Hotspot',"toggleGibs('modis')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"gambarBatas()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
+ if(q){const extra=[['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['📡 Radar',"toggleRadar()"],['🔥 Hotspot',"toggleGibs('modis')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"gambarBatas()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
  extra.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.setAttribute('onclick',fn);q.appendChild(b)});}
  // Klik peta membuka sheet detail kanan
  map.on('click',()=>{document.getElementById('detail').classList.add('open')});
