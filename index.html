@@ -94,14 +94,33 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 #bmkgQuake table{font-size:12px}
 #ticker{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:900;background:#04264d;color:#fff;display:flex;align-items:center;overflow:hidden;font-size:12.5px}
 #side:not(.hidden)~#ticker{left:372px}
-#prodPill{position:fixed;right:12px;bottom:42px;z-index:1200;background:#14532d;color:#fff;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;box-shadow:var(--shadow);display:none}
+#prodPill{position:fixed;top:118px;left:50%;transform:translateX(-50%);z-index:1200;background:#14532d;color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:999px;box-shadow:var(--shadow);display:none;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#quick button.on{background:#16a34a;color:#fff}
+.leaflet-center{position:absolute;left:50%;transform:translateX(-50%);z-index:1000;pointer-events:none}
+.leaflet-center .leaflet-control{pointer-events:auto}
+.leaflet-center .leaflet-control-zoom{display:flex;flex-direction:row;border:0;border-radius:999px;overflow:hidden;box-shadow:0 4px 16px rgba(4,38,77,.25)}
+.leaflet-center .leaflet-control-zoom a{width:42px;height:38px;line-height:38px;border:0;background:#fff;color:#0f2a4a;font-size:18px}
+.leaflet-center .leaflet-control-zoom a:first-child{border-right:1px solid #e2e8f0}
+#fabMenu{position:fixed;right:14px;bottom:44px;z-index:1300;width:56px;height:56px;border-radius:50%;background:#005baa;border:2px solid #daa520;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(4,38,77,.35);cursor:pointer;padding:0}
+.pillbtn{width:32px;height:32px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .satbtn.on{background:var(--acc)!important;color:#fff!important;border-color:var(--acc)!important}
 @media(max-width:760px){#side:not(.hidden)~#ticker{left:0}}
 #ticker b{background:var(--gold);color:#04264d;padding:0 10px;height:100%;display:flex;align-items:center;flex:none;letter-spacing:.5px}
 #ticker .track{white-space:nowrap;animation:tick 40s linear infinite;padding-left:12px}
 @keyframes tick{from{transform:translateX(60vw)}to{transform:translateX(-100%)}}
 #toast{bottom:42px!important}
-@media(max-width:760px){#side{width:100vw;max-width:100vw}#detail{width:100vw;max-width:100vw;min-width:0}#search,#quick{width:calc(100% - 16px)}#topbar{top:auto;bottom:86px}}
+@media(max-width:760px){
+ #side{width:100vw;max-width:100vw}
+ #detail{top:auto;bottom:0;left:0;right:0;width:100vw;max-width:100vw;min-width:0;height:48vh;height:48dvh;border-left:0;border-top:1px solid var(--bord);border-radius:16px 16px 0 0;padding-bottom:44px}
+ #search{width:calc(100% - 16px);height:44px;top:10px}
+ #quick{width:calc(100% - 16px);top:62px}
+ #quick button{padding:8px 12px;font-size:12.5px}
+ #prodPill{top:110px;font-size:11px}
+ #topbar{top:auto;bottom:158px;right:10px}
+ #tabs button{padding:9px 10px}
+ .leaflet-center{bottom:6px}
+ #fabMenu{bottom:40px}
+}
 </style>
 </head>
 <body>
@@ -169,7 +188,7 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 </aside>
 <button id="sideToggle" title="Buka menu" onclick="document.getElementById('side').classList.remove('hidden')"><svg class="ic" viewBox="0 0 24 24" width="18" height="18"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
 <div id="mapwrap"><div id="map"></div>
-<div id="topbar"><button class="ghost" onclick="setBase('sat')">🛰 Satelit</button><button class="ghost" onclick="setBase('osm')">🗺 Jalan</button><button class="ghost" onclick="setBase('dark')">🌑 Gelap</button></div>
+<div id="topbar"><button class="ghost" onclick="setBase('gmap')" title="Basemap Google Maps">Google</button><button class="ghost" onclick="setBase('sat')" title="Basemap satelit Esri">Satelit</button><button class="ghost" onclick="setBase('osm')" title="Basemap OpenStreetMap">Jalan</button><button class="ghost" onclick="setBase('dark')" title="Basemap gelap">Gelap</button></div>
 <div id="detail"><button id="detailClose" class="ghost" onclick="document.getElementById('detail').classList.remove('open')">✕</button><b>Detail Administrasi</b> <span style="color:var(--mut)">(klik peta)</span><div id="detailBody">—</div><div id="weatherBody"></div></div>
 <div id="toast"></div>
 </div>
@@ -184,17 +203,20 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 <script>
 const map=L.map('map',{preferCanvas:true,maxZoom:22,minZoom:3,zoomControl:false}).setView([3.3270177,117.5682619],12);
-L.control.zoom({position:'bottomright'}).addTo(map);
+map._controlCorners.bottomcenter=L.DomUtil.create('div','leaflet-bottom leaflet-center',map._controlContainer);
+L.control.zoom({position:'bottomcenter'}).addTo(map);
 L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
 const bases={
+ gmap:L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{subdomains:'0123',maxZoom:20,attribution:'© Google Maps'}),
  osm:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}),
  sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri World Imagery'}),
  dark:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}),
  topo:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}),
  rbi:L.tileLayer('https://geoservices.big.go.id/rbi/rest/services/BASEMAP/Rupabumi_Indonesia/MapServer/tile/{z}/{y}/{x}?blankTile=false',{maxZoom:18,attribution:'BIG Rupabumi Indonesia'})
 };
-let curBase=bases.sat; curBase.addTo(map);
-L.control.layers({'Satelit Esri':bases.sat,'OSM':bases.osm,'Gelap':bases.dark,'Topo':bases.topo,'Rupabumi BIG':bases.rbi},null,{position:'topright'}).addTo(map);
+let curBase=bases.gmap; curBase.addTo(map);
+L.control.layers({'Google Maps':bases.gmap,'Satelit Esri':bases.sat,'OSM':bases.osm,'Gelap':bases.dark,'Topo':bases.topo,'Rupabumi BIG':bases.rbi},null,{position:'topright'}).addTo(map);
+function chipState(name,on){document.querySelectorAll('#quick button').forEach(b=>{if(b.textContent.includes(name))b.classList.toggle('on',!!on)})}
 function setBase(k){map.removeLayer(curBase);curBase=bases[k];curBase.addTo(map)}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',4200)}
 function flyIndo(){map.flyTo([-2.5,118],5)}
@@ -207,7 +229,7 @@ function minAll(){[quakeLayer,gibsLayer,drawnItems].forEach(l=>{if(l)map.removeL
 // NASA GIBS time layers
 let gibsLayer=null,gibsKind=null;
 function gibsUrl(kind,date){const d=date||new Date(Date.now()-864e5).toISOString().slice(0,10);const id=kind==='viirs'?'VIIRS_NOAA20_CorrectedReflectance_TrueColor':'MODIS_Terra_CorrectedReflectance_TrueColor';return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${id}/default/${d}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`}
-function toggleGibs(kind,force){if(gibsLayer&&gibsKind===kind&&force!==true){map.removeLayer(gibsLayer);gibsLayer=null;return}if(gibsLayer)map.removeLayer(gibsLayer);gibsKind=kind;gibsLayer=L.tileLayer(gibsUrl(kind,document.getElementById('gibsDate').value||undefined),{opacity:.85,attribution:'NASA GIBS'});gibsLayer.addTo(map);toast('Layer citra '+kind.toUpperCase()+' aktif')}
+function toggleGibs(kind,force){if(gibsLayer&&gibsKind===kind&&force!==true){map.removeLayer(gibsLayer);gibsLayer=null;chipState('MODIS',false);chipState('VIIRS',false);chipState('Hotspot',false);if(typeof updateProdPill==='function')updateProdPill();return}if(gibsLayer)map.removeLayer(gibsLayer);gibsKind=kind;gibsLayer=L.tileLayer(gibsUrl(kind,document.getElementById('gibsDate').value||undefined),{opacity:.85,attribution:'NASA GIBS'});gibsLayer.addTo(map);chipState('MODIS',kind==='modis');chipState('VIIRS',kind==='viirs');chipState('Hotspot',kind==='fire');if(typeof updateProdPill==='function')updateProdPill();toast('Layer citra '+kind.toUpperCase()+' aktif')}
 function refreshGibs(){if(gibsLayer){const k=gibsKind;map.removeLayer(gibsLayer);gibsLayer=null;toggleGibs(k,true)}else toast('Aktifkan dulu layer MODIS/VIIRS')}
 function setOpacity(v){if(gibsLayer)gibsLayer.setOpacity(v/100)}
 // ===== Citra Satelit & Radar BMKG (satellite.bmkg.go.id + gis.bmkg.go.id) — terverifikasi live =====
@@ -219,9 +241,9 @@ async function getModelRuns(){if(modelrunCache&&Date.now()-modelrunAt<300000)ret
 function satUrl(key,iso){const p=SATPROD[key];return `https://satellite.bmkg.go.id/api22/tile/{z}/{x}/{y}.png?tiletype=himawari9&modelname=${p.model}&param=${p.param}&baserun=${encodeURIComponent(iso)}`}
 function satLabel(){const el=document.getElementById('satTime');if(!satRuns.length){el.textContent='—';return}el.textContent=fmtWita(satRuns[satIdx])+(satIdx===0?' (terbaru)':'');updateProdPill()}
 function satApplyLayer(){if(satLayer)map.removeLayer(satLayer);if(!satKey||!satRuns.length)return;satLayer=L.tileLayer(satUrl(satKey,satRuns[satIdx]),{maxZoom:18,maxNativeZoom:10,minZoom:3,opacity:(+((document.querySelector('#p-geoportal input[oninput^="setSatOpacity"]')||{}).value)||85)/100,attribution:'Citra satelit: BMKG (satellite.bmkg.go.id) — Himawari-9 (JMA) / GK-2A (KMA)'}).addTo(map);satLabel()}
-async function setSatProduct(key){const st=document.getElementById('satStatus');if(!key||key===satKey){satKey=null;if(satLayer)map.removeLayer(satLayer);satLayer=null;satStopPlay();document.querySelectorAll('.satbtn').forEach(b=>b.classList.remove('on'));document.getElementById('satTime').textContent='—';updateProdPill();return}
+async function setSatProduct(key){const st=document.getElementById('satStatus');if(!key||key===satKey){satKey=null;if(satLayer)map.removeLayer(satLayer);satLayer=null;chipState('Himawari',false);satStopPlay();document.querySelectorAll('.satbtn').forEach(b=>b.classList.remove('on'));document.getElementById('satTime').textContent='—';updateProdPill();return}
  satKey=key;document.querySelectorAll('.satbtn').forEach(b=>b.classList.toggle('on',b.dataset.sat===key));st.textContent='Menghubungi server citra BMKG…';
- try{const data=await getModelRuns();satRuns=(data[SATPROD[key].model]||[]).slice();if(!satRuns.length){st.textContent='Tidak ada model run untuk produk ini saat ini di server BMKG.';return}satIdx=0;const sl=document.getElementById('satSlider');sl.max=satRuns.length-1;sl.value=satRuns.length-1;satApplyLayer();st.textContent=satProdLabel(key)+' aktif — '+satRuns.length+' waktu tersedia, geser slider untuk mundur ke citra sebelumnya.'}catch(e){st.textContent='Server citra BMKG belum menjawab — coba lagi sebentar lagi.'}
+ try{const data=await getModelRuns();satRuns=(data[SATPROD[key].model]||[]).slice();if(!satRuns.length){st.textContent='Tidak ada model run untuk produk ini saat ini di server BMKG.';return}satIdx=0;const sl=document.getElementById('satSlider');sl.max=satRuns.length-1;sl.value=satRuns.length-1;satApplyLayer();chipState('Himawari',true);st.textContent=satProdLabel(key)+' aktif — '+satRuns.length+' waktu tersedia, geser slider untuk mundur ke citra sebelumnya.'}catch(e){st.textContent='Server citra BMKG belum menjawab — coba lagi sebentar lagi.'}
  if(satRefreshTimer)clearInterval(satRefreshTimer);satRefreshTimer=setInterval(async()=>{if(!satKey)return;modelrunCache=null;try{const data=await getModelRuns();const runs=(data[SATPROD[satKey].model]||[]).slice();if(runs.length&&runs[0]!==satRuns[0]){const ikutTerbaru=satIdx===0;satRuns=runs;const sl=document.getElementById('satSlider');sl.max=runs.length-1;if(ikutTerbaru){satIdx=0;sl.value=runs.length-1}satApplyLayer()}}catch(e){}},600000)}
 function satProdLabel(k){return SATPROD[k].label}
 function satSliderMove(v){if(!satRuns.length)return;satIdx=satRuns.length-1-(+v);if(satLayer)satLayer.setUrl(satUrl(satKey,satRuns[satIdx]));satLabel()}
@@ -229,15 +251,15 @@ function satStopPlay(){if(satPlayTimer){clearInterval(satPlayTimer);satPlayTimer
 function satPlayToggle(){if(satPlayTimer){satStopPlay();return}if(!satKey||satRuns.length<2){toast('Aktifkan dulu produk citranya');return}document.getElementById('satPlayBtn').textContent='⏸ Jeda';satPlayTimer=setInterval(()=>{satIdx=satIdx<=0?satRuns.length-1:satIdx-1;document.getElementById('satSlider').value=satRuns.length-1-satIdx;if(satLayer)satLayer.setUrl(satUrl(satKey,satRuns[satIdx]));satLabel()},800)}
 function setSatOpacity(v){if(satLayer)satLayer.setOpacity(v/100)}
 const RadarGrid=L.GridLayer.extend({createTile:function(coords){const img=document.createElement('img');const S=256*Math.pow(2,coords.z);const R=20037508.342789244;const x0=-R+ (coords.x*256/S)*2*R;const x1=-R+((coords.x+1)*256/S)*2*R;const y1=R-(coords.y*256/S)*2*R;const y0=R-((coords.y+1)*256/S)*2*R;img.src=`https://gis.bmkg.go.id/arcgis/rest/services/radarcmax/MapServer/export?bbox=${x0},${y0},${x1},${y1}&bboxSR=3857&imageSR=3857&size=256,256&dpi=96&format=png32&transparent=true&layers=show:1&f=image&_ts=${Date.now()}`;img.alt='';return img}});
-function toggleRadar(){const btn=document.getElementById('radarBtn');if(radarLayer){map.removeLayer(radarLayer);radarLayer=null;if(radarTimer)clearInterval(radarTimer);radarTimer=null;document.getElementById('radarLegend').style.display='none';if(btn)btn.textContent='📡 Radar BMKG: Nonaktif';updateProdPill();toast('Radar BMKG nonaktif');return}
- radarLayer=new RadarGrid({opacity:.55,attribution:'Radar cuaca: BMKG (gis.bmkg.go.id)'}).addTo(map);document.getElementById('radarLegend').style.display='';if(btn)btn.textContent='📡 Radar BMKG: Aktif';updateProdPill();toast('Radar BMKG aktif (reflektivitas maks) — auto-refresh 6 menit');
+function toggleRadar(){const btn=document.getElementById('radarBtn');if(radarLayer){map.removeLayer(radarLayer);radarLayer=null;if(radarTimer)clearInterval(radarTimer);radarTimer=null;document.getElementById('radarLegend').style.display='none';if(btn)btn.textContent='📡 Radar BMKG: Nonaktif';chipState('Radar',false);updateProdPill();toast('Radar BMKG nonaktif');return}
+ radarLayer=new RadarGrid({opacity:.55,attribution:'Radar cuaca: BMKG (gis.bmkg.go.id)'}).addTo(map);document.getElementById('radarLegend').style.display='';if(btn)btn.textContent='📡 Radar BMKG: Aktif';chipState('Radar',true);updateProdPill();toast('Radar BMKG aktif (reflektivitas maks) — auto-refresh 6 menit');
  if(radarTimer)clearInterval(radarTimer);radarTimer=setInterval(()=>{if(radarLayer)radarLayer.redraw();updateProdPill()},360000)}
 function updateProdPill(){let pill=document.getElementById('prodPill');if(!pill){pill=document.createElement('div');pill.id='prodPill';document.body.appendChild(pill)}
- if(radarLayer){pill.style.display='';pill.textContent='📡 Radar BMKG · '+fmtWita(new Date().toISOString())}else if(satKey&&satRuns.length){pill.style.display='';pill.textContent='🛰 '+SATPROD[satKey].label+' · '+fmtWita(satRuns[satIdx])}else pill.style.display='none'}
+ if(radarLayer){pill.style.display='';pill.textContent='📡 Radar BMKG · '+fmtWita(new Date().toISOString())}else if(satKey&&satRuns.length){pill.style.display='';pill.textContent='🛰 '+SATPROD[satKey].label+' · '+fmtWita(satRuns[satIdx])}else if(typeof gibsLayer!=='undefined'&&gibsLayer){pill.style.display='';pill.textContent='🛰 '+(gibsKind==='modis'?'MODIS Terra':gibsKind==='viirs'?'VIIRS NOAA-20 Thermal Anomalies':'Hotspot / Fire')+' · NASA GIBS'}else pill.style.display='none'}
 // BMKG earthquakes
 let quakeLayer=null;
 async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(`<b>M ${g.Magnitude}</b> — ${g.Wilayah}<br>${g.Tanggal} ${g.Jam}<br>Kedalaman: ${g.Kedalaman}`);quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
-function toggleQuake(){document.querySelector('[data-p="geodisaster"]').click();loadQuake('terkini')}
+function toggleQuake(){document.querySelector('[data-p="geodisaster"]').click();chipState('Gempa',true);loadQuake('terkini')}
 // Click: reverse geocode + weather
 map.on('click',async e=>{const {lat,lng}=e.latlng;document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Memuat alamat…`;
 try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18`,{headers:{'Accept-Language':'id'}});const j=await r.json();document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>${j.display_name||'-'}`}catch(_){document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`}
@@ -299,6 +321,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  // Klik peta membuka sheet detail kanan
  map.on('click',()=>{document.getElementById('detail').classList.add('open')});
  // ===== Panel Gempa Terkini BMKG (autogempa) + ticker, ala beranda bmkg.go.id =====
+ const fab=document.createElement('button');fab.id='fabMenu';fab.title='Buka/tutup menu';fab.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>';fab.onclick=()=>document.getElementById('side').classList.toggle('hidden');document.body.appendChild(fab);
  const tick=document.createElement('div');tick.id='ticker';tick.innerHTML='<b>INFO BMKG</b><span class="track" id="tickerText">Memuat informasi gempa terkini BMKG…</span>';document.body.appendChild(tick);
  async function loadBmkgQuake(){try{const j=await (await fetch('https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json')).json();const g=j.Infogempa.gempa;const [la,ln]=String(g.Coordinates).split(',').map(Number);
  document.getElementById('bmkgQuakeBody').innerHTML=`<div style="display:flex;gap:12px;align-items:center"><div class="mag">M ${g.Magnitude}</div><div style="font-size:12px;color:var(--mut2)">${g.Tanggal} · ${g.Jam}<br>Kedalaman: ${g.Kedalaman}</div></div><table><tr><td>Koordinat</td><td><b>${g.Lintang} — ${g.Bujur}</b></td></tr><tr><td>Wilayah</td><td>${g.Wilayah}</td></tr><tr><td>Potensi</td><td>${g.Potensi}</td></tr>${g.Dirasakan?`<tr><td>Dirasakan</td><td>${g.Dirasakan}</td></tr>`:''}</table><button class="ghost" style="margin-top:6px;font-size:12px" onclick="map.flyTo([${la},${ln}],9);L.circleMarker([${la},${ln}],{radius:10,color:'#c0392b',fillColor:'#e74c3c',fillOpacity:.6}).addTo(map).bindPopup('<b>M ${g.Magnitude}</b> — ${g.Wilayah}').openPopup()">Lihat di Peta</button>`;
@@ -360,7 +383,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  // Quick bar & topbar: chips teks bersih tanpa emoji (seperti situs acuan)
  document.querySelectorAll('#quick button,#topbar button').forEach(b=>{b.textContent=b.textContent.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'').trim()});
  // Search bar: mark mini + tombol ikon kaca pembesar
- if(s){s.insertAdjacentHTML('afterbegin','<span class="rk-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>');const sb=s.querySelector('button');if(sb)sb.innerHTML=IC('<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>',15)}
+ if(s){s.insertAdjacentHTML('afterbegin','<span class="rk-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>');s.insertAdjacentHTML('beforeend','<button type="button" class="ghost pillbtn" title="Lihat seluruh Indonesia" onclick="flyIndo()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg></button><button type="button" class="ghost pillbtn" title="Buka GeoTools" onclick="document.querySelector(\'[data-p=geotools]\').click();document.getElementById(\'side\').classList.remove(\'hidden\')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>');const sb=s.querySelector('button');if(sb)sb.innerHTML=IC('<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>',15)}
  // Loading overlay
  const lo=document.createElement('div');lo.id='loadingOverlay';lo.innerHTML='<div style="font-size:26px;font-weight:800;letter-spacing:1px">SIGAP <span style="color:#daa520">JUWATA</span></div><div style="font-size:12px;letter-spacing:3px;color:#dbeafe">SISTEM INFORMASI GEOSPASIAL & CUACA · TARAKAN</div><div class="loadbar"><i></i></div>';document.body.appendChild(lo);
  // Modal sambutan (ringkasan fitur dengan kata sendiri)
