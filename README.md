@@ -1,17 +1,18 @@
-# RUANG KITA+ — Prototype
+# SIGAP JUWATA — Sistem Informasi Geospasial & Cuaca
 
-- `BEDAH_RUANGKITA.md` — hasil bedah menyeluruh ruangkita.net (menu, fitur, layer, stack, sumber data).
-- `index.html` — prototype 1 file, fungsi setara inti situs acuan, implementasi baru.
+Portal peta prototype **Stasiun Meteorologi Juwata Tarakan (BMKG)** — live di https://rksetyono.github.io/
 
-## Cara pakai / deploy (sama seperti aslinya: GitHub Pages)
-1. Buat repo GitHub baru, upload `index.html` ini.
-2. Settings → Pages → Deploy from branch `main` / root.
-3. Selesai — situs live tanpa server, tanpa biaya hosting.
+- `index.html` — aplikasi 1 file (Leaflet): peta fokus Tarakan/Bandara Juwata, panel Gempa & Cuaca BMKG, peringatan dini, data wilayah Kemendagri se-Indonesia, citra satelit NASA GIBS, GeoPortal basemap BIG, GeoDisaster, GeoTools.
+- `BEDAH_RUANGKITA.md` — arsip hasil bedah situs acuan ruangkita.net (menu, fitur, stack, sumber data) yang menjadi referensi awal pembangunan.
 
-## Sudah dilengkapi (update 16 Okt 2026)
-- ✅ Data wilayah LENGKAP: cascade provinsi → kab/kota → kecamatan → desa (38/514/7.285/83.762, kode Kemendagri 2025 via API statis Emsifa v2), indikator wilayah, gambar batas polygon, download GeoJSON batas.
-- ✅ Modul GEOOSS/KKPR: screening RDTR, cari KKPR per NIB/nama, cek NIB tanah — semua query live ke GISTARU ATR/BPN dengan status transparan (server GISTARU lambat; untuk produksi pasang proxy CORS Cloudflare Worker).
+## Deploy (GitHub Pages, tanpa server)
+Repo `rksetyono/rksetyono.github.io`, branch `main`, root — setiap push ke `index.html` otomatis live ±1 menit.
 
-## Pengembangan berikutnya (sesuai bedah §6)
-- Hubungkan GeoPangan ke PIHPS BI & SP2KP Kemendag, CCTV ke stream HLS Dishub/pemda setempat.
-- Tambah time-slider citra BMKG Himawari-9/GK-2A.
+## Riwayat arah
+- Berawal sebagai prototype fungsi-setara situs acuan, lalu di-rebrand total menjadi SIGAP JUWATA (16 Okt 2026) untuk kantor Stasiun Meteorologi Juwata Tarakan.
+- Menu yang tidak berkaitan dengan tugas BMKG Juwata telah DIHAPUS: GEOOSS/KKPR, GEOWATCH (CCTV contoh), GEOFARM, GEOPANGAN, kartu GeoTrans/Transjakarta, chip Sawit. Cadangan versi sebelumnya: `index.html.bak-pre-sigap` (lokal).
+- Cuaca bawaan mengikuti Kel. Karang Anyar Pantai, Kota Tarakan (adm4 65.71.01.1003 — wilayah Bandara Juwata); pusat peta awal di Bandara Juwata (3.3270, 117.5683).
+
+## Catatan data
+- Gempa: data.bmkg.go.id (live). Cuaca: API publik BMKG per adm4, fallback Open-Meteo berlabel bila API tak terjangkau.
+- Wilayah: API statis Emsifa v2 (kode Kemendagri, Kepmendagri 300.2.2-2138/2025).
