@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUANG KITA+ | Peta Interaktif Indonesia & Citra Satelit Real-Time</title>
+<meta name="description" content="Platform peta interaktif Indonesia: citra satelit NASA/BMKG, gempa BMKG live, cuaca, GeoTools, GeoFarm, GeoPangan, CCTV.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+<style>
+/* ===== Shell UI v2 — struktur mengikuti situs acuan: peta fullscreen, tema TERANG bawaan, sidebar overlay kaca 360px, search & quick bar melayang, sheet detail kanan ===== */
+:root{--bg:#ffffff;--bg2:#f4f8fc;--bg3:#e8f1f9;--panel:rgba(255,255,255,.95);--panel2:#ffffff;--card:#ffffff;--txt:#14304d;--mut:#5b7a99;--mut2:#33526e;--acc:#005baa;--acc2:#0072bc;--gold:#daa520;--grn:#009444;--bord:#d7e5f2;--shadow:0 8px 32px rgba(4,38,77,.18)}
+body.dark{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--panel:rgba(15,23,42,.92);--panel2:#1e293b;--card:#1e293b;--txt:#f1f5f9;--mut:#94a3b8;--mut2:#cbd5e1;--bord:#334155;--shadow:0 8px 32px rgba(0,0,0,.5)}
+*{box-sizing:border-box}html,body{height:100%;margin:0;font-family:'Google Sans','Segoe UI',system-ui,Tahoma,sans-serif;background:var(--bg);color:var(--txt);font-size:14px}
+#app{position:relative;height:100vh;height:100dvh;width:100vw;overflow:hidden}
+#mapwrap{position:absolute;inset:0}#map{position:absolute;inset:0;background:#000;z-index:1}
+/* Sidebar kiri overlay */
+#side{position:absolute;top:0;left:0;width:360px;max-width:92vw;height:100%;background:var(--panel);backdrop-filter:blur(20px) saturate(180%);border-right:1px solid var(--bord);box-shadow:10px 0 32px rgba(15,51,78,.12);display:flex;flex-direction:column;z-index:1000;transition:transform .3s ease-in-out}
+#side.hidden{transform:translateX(-105%)}
+#side header{padding:14px 16px;color:#fff;background:radial-gradient(circle at 92% 0%,rgba(218,165,32,.45),transparent 38%),linear-gradient(135deg,#04264d,#005baa 65%,#0072bc);border-bottom:3px solid var(--gold);display:flex;align-items:center;justify-content:space-between}
+#side header b{font-size:19px;letter-spacing:.5px}#side header b span{color:#7dd3fc}#side header small{display:block;color:#dbeafe;font-size:11px;letter-spacing:2px}
+#sideToggle{position:absolute;top:14px;left:14px;z-index:1100;width:40px;height:40px;border-radius:50%;background:var(--panel);color:var(--txt);border:1px solid var(--bord);box-shadow:var(--shadow);font-size:17px;display:none;align-items:center;justify-content:center}
+#side.hidden~#sideToggle{display:flex}
+/* Search melayang di tengah atas peta */
+#search{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1000;width:min(420px,calc(100% - 32px));height:46px;display:flex;align-items:center;gap:8px;padding:0 8px 0 14px;background:var(--panel);backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--bord);border-radius:23px;box-shadow:var(--shadow)}
+#search input{flex:1;border:0;outline:0;background:transparent;color:var(--txt);font-size:14px}
+#search button{border-radius:17px;padding:7px 14px}
+/* Quick layer bar melayang */
+#quick{position:fixed;top:68px;left:50%;transform:translateX(-50%);z-index:999;width:min(560px,calc(100% - 32px));display:flex;gap:4px;padding:4px;overflow-x:auto;overflow-y:hidden;background:var(--panel);backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--bord);border-radius:12px;box-shadow:var(--shadow);scrollbar-width:thin}
+#quick button{flex:0 0 auto;font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;background:transparent;color:var(--mut2)}
+#quick button:hover{background:var(--bg3)}
+button{background:var(--acc);color:#fff;border:0;padding:9px 12px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit}
+button:hover{filter:brightness(1.08)}
+button.ghost{background:var(--bg2);color:var(--txt);border:1px solid var(--bord)}
+/* Menu aplikasi */
+#tabs{display:flex;flex-wrap:wrap;gap:4px;padding:10px;border-bottom:1px solid var(--bord)}
+#tabs button{flex:1 1 31%;font-size:11px;font-weight:700;letter-spacing:.4px;padding:9px 2px;background:var(--bg2);color:var(--mut);border:1px solid var(--bord)}
+#tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+#panels{flex:1;overflow-y:auto;padding:16px;font-size:13px}
+.panel{display:none}.panel.on{display:block}
+.card{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h3{margin:0 0 6px;font-size:15px;color:var(--txt)}.card p,li{font-size:13px;color:var(--mut);line-height:1.55}
+select,input[type=text],input[type=number],input[type=file],input[type=date]{width:100%;padding:8px;margin:4px 0 8px;border-radius:8px;border:1px solid var(--bord);background:var(--panel2);color:var(--txt);font-family:inherit}
+label{font-size:12px;color:var(--mut);display:flex;gap:8px;align-items:center;margin:6px 0}
+.row{display:flex;gap:6px}.row>*{flex:1}
+#topbar{position:absolute;z-index:1000;top:122px;right:10px;display:flex;flex-direction:column;gap:6px}
+#topbar button{box-shadow:var(--shadow);font-size:12px}
+/* Panel detail = sheet kanan */
+#detail{position:fixed;top:0;right:0;width:30vw;min-width:320px;max-width:50vw;height:100vh;height:100dvh;background:var(--bg);border-left:1px solid var(--bord);box-shadow:var(--shadow);z-index:1001;padding:16px;font-size:13px;overflow-y:auto;transform:translateX(105%);transition:transform .3s ease-in-out}
+#detail.open{transform:translateX(0)}
+#detailClose{float:right}
+#toast{position:fixed;z-index:3000;bottom:16px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;display:none;max-width:92vw;font-size:13px;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{border-bottom:1px solid var(--bord);padding:5px;text-align:left;color:var(--txt)}
+canvas{max-width:100%}
+.leaflet-control-scale-line{background:rgba(255,255,255,.75);color:#1e293b}
+/* Loading overlay + modal sambutan */
+#loadingOverlay{position:fixed;inset:0;z-index:5000;display:flex;flex-direction:column;gap:14px;justify-content:center;align-items:center;background:radial-gradient(circle at 50% 35%,#0072bc,#04264d 65%);color:#fff;transition:opacity .45s,visibility .45s}
+#loadingOverlay.hide{opacity:0;visibility:hidden}
+.loadbar{width:min(300px,70vw);height:5px;background:rgba(255,255,255,.25);border-radius:3px;overflow:hidden}.loadbar i{display:block;height:100%;width:40%;background:#7dd3fc;border-radius:3px;animation:ld 1.1s infinite}@keyframes ld{from{transform:translateX(-110%)}to{transform:translateX(330%)}}
+#welcomeModal{position:fixed;inset:0;z-index:4000;background:rgba(2,12,27,.55);display:none;align-items:center;justify-content:center;padding:16px}
+#welcomeModal.open{display:flex}
+.wel-card{background:var(--bg);color:var(--txt);border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;box-shadow:var(--shadow)}
+.wel-card h2{margin:4px 0}.wel-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.wel-grid div{background:var(--bg2);border:1px solid var(--bord);border-radius:10px;padding:10px;font-size:12.5px;color:var(--mut2)}
+/* Logo mark & wordmark (spesifikasi diukur dari situs acuan) */
+.rk-mark{display:grid;grid-template-columns:repeat(2,10px);grid-template-rows:repeat(2,10px);gap:2px;flex:none}
+.rk-mark i{border-radius:3px;background:#fff}
+.rk-mark i:nth-child(2){background:#f3bf28}.rk-mark i:nth-child(3){background:#60d9e3}.rk-mark i:nth-child(4){background:#bce6ed}
+.rk-brand{display:flex;align-items:center;gap:10px}
+.rk-name{display:grid;line-height:1;letter-spacing:.04em}
+.rk-name strong{font-size:19px;font-weight:800;letter-spacing:.02em;color:#fff}
+.rk-name strong span{color:#daa520}
+.rk-name small{margin-top:4px;color:rgba(255,255,255,.82);font-size:8px;font-weight:700;letter-spacing:.12em}
+.rk-mark.onlight i:first-child{background:#0a6da9}
+#search .rk-mark{grid-template-columns:repeat(2,8px);grid-template-rows:repeat(2,8px)}
+#search .rk-mark i:first-child{background:#0a6da9}
+#tabs button{display:inline-flex;align-items:center;justify-content:center;gap:5px}
+#tabs button svg{flex:none}
+.card h3 svg,.wel-grid svg{vertical-align:-2px;margin-right:6px;color:var(--acc)}
+#quick button{display:inline-flex;align-items:center;gap:5px}
+#quick button svg{color:var(--acc);flex:none}
+svg.ic{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Panel Gempa Terkini ala beranda BMKG + ticker info */
+#bmkgQuake,#bmkgWeather,#bmkgWarn{margin:12px 12px 0;border:1px solid var(--bord);border-top:4px solid var(--acc);border-radius:10px;background:var(--card);padding:10px 12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#bmkgWarn{border-top-color:#d97706}
+#bmkgQuake h4,#bmkgWeather h4,#bmkgWarn h4{margin:0 0 6px;font-size:12px;letter-spacing:.6px;color:var(--acc);display:flex;align-items:center;gap:6px}
+#bmkgWarn h4{color:#d97706}
+.wx-now{display:flex;align-items:center;gap:12px}.wx-now .t{font-size:30px;font-weight:800;color:var(--acc);line-height:1}
+.wx-row{display:flex;gap:4px;margin-top:8px}.wx-row>div{flex:1;background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:5px 4px;text-align:center;font-size:11px;color:var(--mut2)}
+.warn-item{border-left:4px solid #d97706;background:#fffbeb;border-radius:6px;padding:7px 9px;font-size:12px;color:#7c4a03;margin:6px 0}
+body.dark .warn-item{background:#3a2c07;color:#fde68a}
+#bmkgQuake .mag{font-size:30px;font-weight:800;color:#c0392b;line-height:1}
+#bmkgQuake table{font-size:12px}
+#ticker{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:1500;background:#04264d;color:#fff;display:flex;align-items:center;overflow:hidden;font-size:12.5px}
+#ticker b{background:var(--gold);color:#04264d;padding:0 10px;height:100%;display:flex;align-items:center;flex:none;letter-spacing:.5px}
+#ticker .track{white-space:nowrap;animation:tick 40s linear infinite;padding-left:12px}
+@keyframes tick{from{transform:translateX(60vw)}to{transform:translateX(-100%)}}
+#toast{bottom:42px!important}
+@media(max-width:760px){#side{width:100vw;max-width:100vw}#detail{width:100vw;max-width:100vw;min-width:0}#search,#quick{width:calc(100% - 16px)}#topbar{top:auto;bottom:86px}}
+</style>
+</head>
+<body>
+<div id="app">
+<aside id="side" class="hidden">
+<header><div class="rk-brand"><svg viewBox="0 0 48 48" width="42" height="42" aria-hidden="true"><circle cx="24" cy="24" r="22.5" fill="#005baa" stroke="#daa520" stroke-width="2"/><polygon points="24,3.5 26.8,21.2 44.5,24 26.8,26.8 24,44.5 21.2,26.8 3.5,24 21.2,21.2" fill="#daa520"/><polygon points="24,9 25.6,22.4 39,24 25.6,25.6 24,39 22.4,25.6 9,24 22.4,22.4" fill="#daa520" transform="rotate(45 24 24)" opacity=".85"/><circle cx="24" cy="24" r="12.5" fill="#005baa" stroke="#ffffff" stroke-width="1.6"/><ellipse cx="24" cy="24" rx="5.6" ry="12.5" fill="none" stroke="#ffffff" stroke-width="1"/><line x1="11.5" y1="24" x2="36.5" y2="24" stroke="#ffffff" stroke-width="1"/><path d="M13.5 17.5h21M13.5 30.5h21" stroke="#ffffff" stroke-width=".9" fill="none"/></svg><span class="rk-name"><strong>RUANG<span>KITA</span>+</strong><small>METEOROLOGI · KLIMATOLOGI · GEOFISIKA</small></span></div><button class="ghost" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);padding:6px 9px" onclick="document.getElementById('side').classList.add('hidden')"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><polyline points="14 6 8 12 14 18"/></svg></button></header>
+<div id="bmkgQuake"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>GEMPA BUMI TERKINI — BMKG</h4><div id="bmkgQuakeBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat data gempa terbaru BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Data resmi BMKG · Tema visual mengikuti identitas BMKG — prototype ini bukan situs resmi BMKG.</p></div>
+<div id="bmkgWeather"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><path d="M18 10.5a5 5 0 0 0-9.5-1.6A4.6 4.6 0 0 0 7 18h11a3.6 3.6 0 0 0 0-7.5z"/></svg>CUACA SAAT INI — BMKG</h4><div id="bmkgWeatherBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat prakiraan cuaca BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Mengikuti desa terpilih di GEONUSA (kode adm4). Bawaan: Tegalsari, Kota Surabaya.</p></div>
+<div id="bmkgWarn"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><path d="M12 3 2.5 20h19L12 3z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".4" fill="currentColor"/></svg>PERINGATAN DINI CUACA</h4><div id="bmkgWarnBody"><p style="color:var(--mut);font-size:12px;margin:0">Menilai potensi cuaca signifikan dari prakiraan BMKG 24 jam ke depan…</p></div><button class="ghost" style="margin-top:6px;font-size:12px" onclick="window.open('https://www.bmkg.go.id/cuaca/peringatan-dini-cuaca.bmkg','_blank')">Peringatan Dini Resmi BMKG ↗</button></div>
+<div id="search"><input id="q" type="text" placeholder="Cari wilayah / tempat (Nominatim)…"><button onclick="cari()">Cari</button></div>
+<div id="quick">
+<button onclick="toggleQuake()">🌋 Gempa BMKG</button><button onclick="toggleGibs('modis')">🛰 MODIS</button>
+<button onclick="toggleGibs('viirs')">🛰 VIIRS</button><button onclick="toggleRadar()">🌧 Radar/Hujan</button>
+<button onclick="flyIndo()">🇮🇩 Indonesia</button><button onclick="lokasiSaya()">📍 Lokasi Saya</button>
+</div>
+<nav id="tabs">
+<button class="on" data-p="geonusa">GEONUSA</button><button data-p="geoportal">GEOPORTAL</button>
+<button data-p="geodisaster">GEODISASTER</button><button data-p="geowatch">GEOWATCH</button>
+<button data-p="geotools">GEOTOOLS</button><button data-p="geooss">GEOOSS/KKPR</button><button data-p="geofarm">GEOFARM</button><button data-p="geopangan">GEOPANGAN</button>
+</nav>
+<div id="panels">
+<section class="panel on" id="p-geonusa">
+<div class="card"><h3>📊 Statistik &amp; Pencarian Wilayah — DATA LENGKAP</h3><p><b>38 Provinsi · 514 Kab/Kota · 7.285 Kecamatan · 83.762 Desa/Kelurahan</b> — kode Kemendagri (Kepmendagri 300.2.2-2138/2025), dimuat langsung dari API statis wilayah Indonesia (update data 11 Okt 2026). Angka ini beda dari klaim BIG RBI di situs acuan karena beda sumber: ini kode administrasi Kemendagri, bukan hitungan geometri RBI.</p>
+<label>1. Provinsi</label><select id="prov"><option>Memuat…</option></select>
+<label>2. Kabupaten/Kota</label><select id="kab"><option>Pilih provinsi dahulu</option></select>
+<label>3. Kecamatan</label><select id="kec"><option>Pilih kab/kota dahulu</option></select>
+<label>4. Desa/Kelurahan</label><select id="desa"><option>Pilih kecamatan dahulu</option></select>
+<div class="row"><button onclick="terbangWilayah()">📍 Terbang ke Wilayah</button><button class="ghost" onclick="gambarBatas()">🗺 Gambar Batas</button></div>
+<div class="row"><button class="ghost" onclick="downloadWilayah()">⬇ Download GeoJSON Batas</button><button class="ghost" onclick="resetWilayah()">Reset</button></div>
+<div id="wilayahStatus" style="font-size:12px;color:var(--mut);margin-top:6px"></div></div>
+<div class="card"><h3>👥 Indikator Wilayah Terpilih</h3><div id="indikator"><p>Pilih wilayah di atas — ibu kota, penduduk, luas, elevasi, zona waktu, dan kode pos (desa) tampil di sini dari data API yang sama.</p></div></div>
+<div class="card"><h3>🚌 GeoTrans</h3><p>Layer contoh rute Transjakarta &amp; Trans Jogja dapat ditambah dari GTFS / Geoportal pemda via ArcGIS REST di GEOTOOLS → Muat Data.</p></div>
+</section>
+<section class="panel" id="p-geoportal">
+<div class="card"><h3>🌐 GeoPortal Hub — SatuPeta BIG</h3><p>Basemap Rupabumi BIG tersedia di pemilih layer peta (kanan atas). Layer WMS/WFS/ArcGIS publik bisa dimuat lewat GEOTOOLS → ArcGIS REST.</p>
+<button class="ghost" onclick="setBase('rbi')">Pakai Basemap Rupabumi BIG</button></div>
+<div class="card"><h3>🏔 Unduh DEMNAS (konsep)</h3><p>Alur aslinya: pilih indeks DEMNAS → clip batas wilayah → unduh GeoTIFF tanpa token dari BIG. Di prototype ini gunakan Export di GEOTOOLS untuk GeoJSON hasil gambar.</p></div>
+<div class="card"><h3>🏙 GeoJogja &amp; GeoJakarta</h3><p>Modul regional: di produksi, muat layer tematik Geoportal DIY &amp; batas RT DKI dari layanan ArcGIS masing-masing pemda.</p></div>
+</section>
+<section class="panel" id="p-geodisaster">
+<div class="card"><h3>🌋 Gempa — BMKG Live</h3><p>Sumber: data.bmkg.go.id (gempa terkini &amp; dirasakan).</p><div class="row"><button onclick="loadQuake('terkini')">M 5.0+ Terkini</button><button class="ghost" onclick="loadQuake('dirasakan')">Dirasakan</button></div><div id="quakeList" style="margin-top:8px"></div></div>
+<div class="card"><h3>☁️ Cuaca Sekarang (klik peta)</h3><div id="cuaca">Klik titik mana pun di peta: cuaca Open-Meteo + detail administrasi (reverse geocode) tampil di kartu kiri-bawah.</div></div>
+<div class="card"><h3>🔥 Hotspot &amp; Kualitas Udara</h3><label><input type="checkbox" onchange="toggleGibs('fire',this.checked)"> Hotspot / Fire (NASA GIBS via MODIS thermal — gunakan layer MODIS)</label><label>Opasitas layer citra <input type="range" min="20" max="100" value="85" oninput="setOpacity(this.value)"></label><p>PM2.5 produksi: OpenAQ API (tanpa kunci untuk baca publik).</p></div>
+<div class="card"><h3>🌊 Forecasting</h3><p>Angin, hujan 24 jam, SST, SPI/SPEI: di produksi diambil dari GFS/BMKG sebagai raster RGB/WMS — kerangka slider waktunya sama seperti layer MODIS/VIIRS di GEOPORTAL.</p>
+<label>Tanggal citra NASA <input type="date" id="gibsDate"></label><button class="ghost" onclick="refreshGibs()">Terapkan Tanggal</button></div>
+</section>
+<section class="panel" id="p-geowatch">
+<div class="card"><h3>📹 GEOWATCH — CCTV</h3><input id="cctvQ" type="text" placeholder="Cari CCTV: Monas, Bundaran HI, Pasteur…"><button onclick="cariCctv()">Cari CCTV</button><div id="cctvList"></div><p>Pemutar HLS disiapkan: tempel URL .m3u8 CCTV publik dari Dishub/pemda untuk streaming langsung.</p><input id="hlsUrl" type="text" placeholder="https://…/stream.m3u8"><button class="ghost" onclick="putarHls()">Putar Stream</button><video id="cctvVideo" controls style="width:100%;margin-top:8px"></video></div>
+</section>
+<section class="panel" id="p-geotools">
+<div class="card"><h3>✏️ Gambar &amp; Ukur</h3><p>Aktifkan alat gambar di peta (kiri atas peta): titik, garis, poligon, persegi, lingkaran. Luas/jarak muncul saat selesai menggambar.</p><div class="row"><button onclick="exportGeoJSON()">Export GeoJSON</button><button class="ghost" onclick="window.print()">Cetak / PDF</button></div></div>
+<div class="card"><h3>📥 Muat Data</h3><label>GeoJSON / GPX / KML <input type="file" id="fileData" accept=".geojson,.json,.gpx,.kml"></label><button onclick="muatFile()">Tampilkan di Peta</button>
+<label>URL ArcGIS REST / GeoServer WFS (GeoJSON)<input type="text" id="restUrl" placeholder="https://…/query?where=1=1&outFields=*&f=geojson"></label><button class="ghost" onclick="muatRest()">Muat URL</button></div>
+<div class="card"><h3>⚙️ Geoprocessing — Buffer</h3><label>Jarak buffer (meter)<input type="number" id="bufM" value="500"></label><button onclick="bufferLayer()">Buffer Layer Gambar Terakhir</button><div id="gpStatus"></div></div>
+<div class="card"><h3>🔄 Konverter Koordinat</h3><label>Koordinat (lat, lng)<input type="text" id="coordIn" placeholder="-6.200000, 106.816666"></label><button onclick="konversi()">Konversi DD / DMS / UTM</button><div id="coordOut"></div></div>
+<div class="card"><h3>🤖 Tanya Ruang (Beta)</h3><input id="aiQ" type="text" placeholder="Tanya: gempa terakhir? cara buffer? basemap satelit?"><button onclick="tanyaRuang()">Tanya</button><div id="aiOut"></div></div>
+</section>
+<section class="panel" id="p-geooss">
+<div class="card"><h3>⚖️ GeoOSS — Pre-OSS Spatial Checker</h3><p>Pemeriksaan <b>awal</b> zona peruntukan (RDTR) sebelum proses resmi di OSS. Hasilnya screening saja — <b>bukan</b> izin dan bukan keputusan ATR/BPN/pemda, sama seperti penegasan di situs acuan.</p>
+<label>Wilayah (pakai pilihan di GEONUSA, atau isi kode)</label><div id="geoossWilayah" style="font-size:13px">Belum ada wilayah dipilih — pilih di tab GEONUSA.</div>
+<label>Area yang dinilai</label><p style="margin:0 0 6px">Gambar poligon di peta (alat gambar), lalu kembali ke sini. Luas area dihitung geodesik.</p>
+<label>Kegiatan yang mau dinilai</label><input type="text" id="geoossKegiatan" list="kegiatanList" placeholder="Ketik kegiatan: perdagangan, gudang, perumahan…">
+<datalist id="kegiatanList"><option>Perdagangan Eceran</option><option>Perdagangan Besar / Gudang</option><option>Perumahan / Real Estat</option><option>Industri Pengolahan</option><option>Pertanian / Perkebunan</option><option>Peternakan</option><option>Perhotelan / Pariwisata</option><option>Rumah Makan / Kuliner</option><option>Perkantoran / Jasa</option><option>Pendidikan</option><option>Kesehatan / Klinik</option><option>Bengkel / Otomotif</option><option>SPBU / Energi</option><option>Pertambangan</option></datalist>
+<div class="row"><button onclick="runGeoOSS()">🔎 Jalankan Screening RDTR (Live GISTARU)</button><button class="ghost" onclick="resetGeoOSS()">Reset</button></div>
+<div id="geoossStatus" style="margin-top:8px"></div><div id="geoossOutput"></div>
+<div class="row" style="margin-top:8px"><button class="ghost" onclick="window.open('https://oss.go.id','_blank')">Buka OSS Resmi ↗</button><button class="ghost" onclick="window.open('https://gistaru.atrbpn.go.id','_blank')">Buka GISTARU ↗</button></div></div>
+<div class="card"><h3>📜 KKPR — Cari Bidang / Permohonan</h3><p>Data permohonan KKPR ATR/BPN GISTARU (layer KKPR_BERUSAHA &amp; KKPR_OSS_ALL). Satu NIB bisa muncul di lebih dari satu kab/kota, hasil ditampilkan sebagai daftar.</p>
+<label>Mode pencarian</label><select id="kkprMode"><option value="nib">Per NIB (Nomor Induk Bidang / NIB berusaha)</option><option value="nama">Per Nama Pemohon</option></select>
+<label id="kkprLabel">NIB</label><input type="text" id="kkprInput" placeholder="Contoh format: 13 digit angka">
+<div class="row"><button onclick="runKKPR()">🔎 Cari di GISTARU (Live)</button><button class="ghost" onclick="resetKKPR()">Reset</button></div>
+<div id="kkprStatus" style="margin-top:8px"></div><div id="kkprOutput"></div></div>
+<div class="card"><h3>🧭 Cek NIB Tanah — Persil GISTARU</h3><p>Mencari bidang tanah per NIB lewat WFS GISTARU ATR/BPN (atlas.atrbpn.go.id). Menampilkan penggunaan, tipe hak, dan luas bidang bila ditemukan. Keberadaan bidang di sini bukan bukti status hukum sertifikat.</p>
+<label>Nomor Induk Bidang (NIB tanah)</label><input type="text" id="nibInput" placeholder="Huruf, angka, titik, strip — maks 32 karakter">
+<button onclick="runCekNIB()">🔎 Cek NIB Tanah (Live)</button>
+<div id="nibStatus" style="margin-top:8px"></div><div id="nibOutput"></div></div>
+</section>
+<section class="panel" id="p-geofarm">
+<div class="card"><h3>🌱 GeoFarm — Kalkulator Benih &amp; Pupuk</h3><label>Luas lahan (ha)<input type="number" id="gfLuas" value="1" step="0.1"></label><label>Jarak tanam padi (cm × cm)<input type="text" id="gfJarak" value="25x25"></label><button onclick="hitungFarm()">Hitung Kebutuhan</button><div id="gfOut"></div><p>Acuan dosis mengikuti rekomendasi umum padi; sesuaikan BPP/dinas setempat. Analisis NDVI produksi: Sentinel-2 via time slider + statistik poligon.</p></div>
+<div class="card"><h3>📖 Referensi Pertanian</h3><p>Kamus, varietas, hama/penyakit, pestisida &amp; e-book Pertanian Press: di produksi dimuat malas (lazy fetch) saat kartu dibuka, sama seperti situs acuan.</p></div>
+</section>
+<section class="panel" id="p-geopangan">
+<div class="card"><h3>🛒 GEOPANGAN — Harga Pangan</h3><label>Komoditas</label><select id="pgKom"><option>Beras Medium</option><option>Cabai Merah</option><option>Bawang Merah</option><option>Minyak Goreng</option><option>Gula Pasir</option></select><button onclick="loadPangan()">Tampilkan Harga &amp; Grafik</button><div id="pgOut"></div><canvas id="pgChart" height="160"></canvas><p>Contoh data tertanam untuk demo UI. Produksi: PIHPS Bank Indonesia &amp; SP2KP Kemendag.</p></div>
+</section>
+</div>
+<div style="padding:10px;border-top:1px solid var(--bord);display:flex;gap:6px"><button class="ghost" onclick="toggleTheme()">🌙/☀️ Mode</button><button class="ghost" onclick="minAll()">Minimalkan Semua Layer</button></div>
+</aside>
+<button id="sideToggle" title="Buka menu" onclick="document.getElementById('side').classList.remove('hidden')"><svg class="ic" viewBox="0 0 24 24" width="18" height="18"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+<div id="mapwrap"><div id="map"></div>
+<div id="topbar"><button class="ghost" onclick="setBase('sat')">🛰 Satelit</button><button class="ghost" onclick="setBase('osm')">🗺 Jalan</button><button class="ghost" onclick="setBase('dark')">🌑 Gelap</button></div>
+<div id="detail"><button id="detailClose" class="ghost" onclick="document.getElementById('detail').classList.remove('open')">✕</button><b>Detail Administrasi</b> <span style="color:var(--mut)">(klik peta)</span><div id="detailBody">—</div><div id="weatherBody"></div></div>
+<div id="toast"></div>
+</div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/@turf/turf@7.1.0/turf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.5/dist/hls.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
+<script>
+const map=L.map('map',{preferCanvas:true,maxZoom:22,minZoom:3,zoomControl:false}).setView([-2.5,118],5);
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
+const bases={
+ osm:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}),
+ sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri World Imagery'}),
+ dark:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}),
+ topo:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri'}),
+ rbi:L.tileLayer('https://geoservices.big.go.id/rbi/rest/services/BASEMAP/Rupabumi_Indonesia/MapServer/tile/{z}/{y}/{x}?blankTile=false',{maxZoom:18,attribution:'BIG Rupabumi Indonesia'})
+};
+let curBase=bases.sat; curBase.addTo(map);
+L.control.layers({'Satelit Esri':bases.sat,'OSM':bases.osm,'Gelap':bases.dark,'Topo':bases.topo,'Rupabumi BIG':bases.rbi},null,{position:'topright'}).addTo(map);
+function setBase(k){map.removeLayer(curBase);curBase=bases[k];curBase.addTo(map)}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',4200)}
+function flyIndo(){map.flyTo([-2.5,118],5)}
+function lokasiSaya(){map.locate({setView:true,maxZoom:14})}
+map.on('locationfound',e=>{L.marker(e.latlng).addTo(map).bindPopup('Lokasi Anda').openPopup()});
+// Tabs
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+b.dataset.p).classList.add('on')});
+function toggleTheme(){document.body.classList.toggle('dark')}
+function minAll(){[quakeLayer,gibsLayer,drawnItems].forEach(l=>{if(l)map.removeLayer(l)});toast('Semua layer overlay dimatikan')}
+// NASA GIBS time layers
+let gibsLayer=null,gibsKind=null;
+function gibsUrl(kind,date){const d=date||new Date(Date.now()-864e5).toISOString().slice(0,10);const id=kind==='viirs'?'VIIRS_NOAA20_CorrectedReflectance_TrueColor':'MODIS_Terra_CorrectedReflectance_TrueColor';return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${id}/default/${d}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`}
+function toggleGibs(kind,force){if(gibsLayer&&gibsKind===kind&&force!==true){map.removeLayer(gibsLayer);gibsLayer=null;return}if(gibsLayer)map.removeLayer(gibsLayer);gibsKind=kind;gibsLayer=L.tileLayer(gibsUrl(kind,document.getElementById('gibsDate').value||undefined),{opacity:.85,attribution:'NASA GIBS'});gibsLayer.addTo(map);toast('Layer citra '+kind.toUpperCase()+' aktif')}
+function refreshGibs(){if(gibsLayer){const k=gibsKind;map.removeLayer(gibsLayer);gibsLayer=null;toggleGibs(k,true)}else toast('Aktifkan dulu layer MODIS/VIIRS')}
+function setOpacity(v){if(gibsLayer)gibsLayer.setOpacity(v/100)}
+function toggleRadar(){toggleGibs('modis')}
+// BMKG earthquakes
+let quakeLayer=null;
+async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(`<b>M ${g.Magnitude}</b> — ${g.Wilayah}<br>${g.Tanggal} ${g.Jam}<br>Kedalaman: ${g.Kedalaman}`);quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
+function toggleQuake(){document.querySelector('[data-p="geodisaster"]').click();loadQuake('terkini')}
+// Click: reverse geocode + weather
+map.on('click',async e=>{const {lat,lng}=e.latlng;document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Memuat alamat…`;
+try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18`,{headers:{'Accept-Language':'id'}});const j=await r.json();document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>${j.display_name||'-'}`}catch(_){document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`}
+try{const w=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto`)).json();const c=w.current;document.getElementById('weatherBody').innerHTML=`<hr>🌡 ${c.temperature_2m}°C · 💧 ${c.relative_humidity_2m}% · 🌬 ${c.wind_speed_10m} km/j · 🌧 ${c.precipitation} mm`}catch(_){}});
+// Search (Nominatim)
+async function cari(){const q=document.getElementById('q').value.trim();if(!q)return;const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q+', Indonesia')}`);const j=await r.json();if(j[0]){map.flyTo([+j[0].lat,+j[0].lon],12);L.marker([+j[0].lat,+j[0].lon]).addTo(map).bindPopup(j[0].display_name).openPopup()}else toast('Tidak ditemukan')}
+// ===== Data Wilayah LENGKAP: API statis Kemendagri (Emsifa v2, CORS terbuka, lazy per level) =====
+const WILAPI='https://www.emsifa.com/api-wilayah-indonesia/v2';
+const provSel=document.getElementById('prov'),kabSel=document.getElementById('kab'),kecSel=document.getElementById('kec'),desaSel=document.getElementById('desa');
+let wilData={prov:null,kab:null,kec:null,desa:null},wilPathGeo=null,wilLayer=null;
+const rpFmt=n=>n==null?'-':Number(n).toLocaleString('id-ID');
+async function wilFetch(path){const r=await fetch(`${WILAPI}/${path}`);if(!r.ok)throw new Error(r.status);const j=await r.json();return j.data}
+function isiSelect(sel,items,ph){sel.innerHTML='';sel.add(new Option(ph,''));items.forEach(x=>{const o=new Option(x.name,x.id);o.dataset.raw=JSON.stringify(x);sel.add(o)})}
+function selObj(sel){const o=sel.options[sel.selectedIndex];if(!o||!o.dataset.raw)return null;try{return JSON.parse(o.dataset.raw)}catch(_){return null}}
+async function initWilayah(){try{const d=await wilFetch('provinces.json');isiSelect(provSel,d,'— Pilih provinsi (38) —');document.getElementById('wilayahStatus').textContent='Data wilayah termuat: 38 provinsi. Pilih berurutan sampai desa.'}catch(e){document.getElementById('wilayahStatus').textContent='Gagal memuat API wilayah — cek koneksi lalu muat ulang halaman.'}}
+provSel.onchange=async()=>{wilData={prov:selObj(provSel),kab:null,kec:null,desa:null};isiSelect(kabSel,[],'Memuat kab/kota…');isiSelect(kecSel,[],'Pilih kab/kota dahulu');isiSelect(desaSel,[],'Pilih kecamatan dahulu');tampilIndikator();if(!provSel.value)return;try{const d=await wilFetch(`regencies/${provSel.value}.json`);isiSelect(kabSel,d,`— Pilih kab/kota (${d.length}) —`)}catch(e){isiSelect(kabSel,[],'Gagal memuat')}};
+kabSel.onchange=async()=>{wilData.kab=selObj(kabSel);wilData.kec=null;wilData.desa=null;isiSelect(kecSel,[],'Memuat kecamatan…');isiSelect(desaSel,[],'Pilih kecamatan dahulu');tampilIndikator();if(!kabSel.value)return;try{const d=await wilFetch(`districts/${kabSel.value}.json`);isiSelect(kecSel,d,`— Pilih kecamatan (${d.length}) —`)}catch(e){isiSelect(kecSel,[],'Gagal memuat')}};
+kecSel.onchange=async()=>{wilData.kec=selObj(kecSel);wilData.desa=null;isiSelect(desaSel,[],'Memuat desa/kelurahan…');tampilIndikator();if(!kecSel.value)return;try{const d=await wilFetch(`villages/${kecSel.value}.json`);isiSelect(desaSel,d,`— Pilih desa/kelurahan (${d.length}) —`)}catch(e){isiSelect(desaSel,[],'Gagal memuat')}};
+desaSel.onchange=()=>{wilData.desa=selObj(desaSel);tampilIndikator()};
+function wilTerpilih(){return wilData.desa||wilData.kec||wilData.kab||wilData.prov}
+function wilNamaLengkap(){return [wilData.desa?.name,wilData.kec?.name,wilData.kab?.name,wilData.prov?.name].filter(Boolean).join(', ')}
+function tampilIndikator(){const w=wilTerpilih();const el=document.getElementById('indikator');const gw=document.getElementById('geoossWilayah');if(gw)gw.textContent=wilNamaLengkap()?('Wilayah: '+wilNamaLengkap()+' (kode '+(w?w.id:'')+')'):'Belum ada wilayah dipilih — pilih di tab GEONUSA.';if(!w){el.innerHTML='<p>Belum ada wilayah dipilih.</p>';return}
+let h=`<table><tr><td>Kode Kemendagri</td><td><b>${w.id}</b></td></tr><tr><td>Nama</td><td><b>${w.name}</b></td></tr>`;if(w.capital)h+=`<tr><td>Ibu kota</td><td>${w.capital}</td></tr>`;if(w.population)h+=`<tr><td>Penduduk</td><td>${rpFmt(w.population)} jiwa</td></tr>`;if(w.total_area)h+=`<tr><td>Luas</td><td>${rpFmt(w.total_area)} km²</td></tr>`;if(w.elv!=null)h+=`<tr><td>Elevasi</td><td>${w.elv} mdpl</td></tr>`;if(w.tz)h+=`<tr><td>Zona waktu</td><td>UTC+${w.tz}</td></tr>`;if(w.postal_code)h+=`<tr><td>Kode pos</td><td>${w.postal_code}</td></tr>`;if(w.lat)h+=`<tr><td>Titik pusat</td><td>${Number(w.lat).toFixed(5)}, ${Number(w.lng).toFixed(5)}</td></tr>`;el.innerHTML=h+'</table>'}
+function terbangWilayah(){const w=wilTerpilih();if(!w||w.lat==null){toast('Pilih wilayah dulu sampai level yang punya koordinat');return}const z=wilData.desa?15:wilData.kec?13:wilData.kab?11:8;map.flyTo([w.lat,w.lng],z);L.marker([w.lat,w.lng]).addTo(map).bindPopup('<b>'+wilNamaLengkap()+'</b>').openPopup();toast(wilNamaLengkap())}
+async function ambilPath(code){const d=await wilFetch(`paths/${code}.json`);return d.path}
+async function gambarBatas(){const w=wilTerpilih();if(!w){toast('Pilih wilayah dulu');return}if(w.has_path===false){toast('Wilayah ini belum punya polygon di API');return}const st=document.getElementById('wilayahStatus');st.textContent='Memuat polygon batas '+w.name+'…';try{const path=await ambilPath(w.id);wilPathGeo=path;if(wilLayer)map.removeLayer(wilLayer);wilLayer=L.polygon(path,{color:'#38bdf8',weight:2,fillColor:'#22c55e',fillOpacity:.15}).addTo(map);map.fitBounds(wilLayer.getBounds());wilLayer.bindPopup('<b>'+wilNamaLengkap()+'</b>').openPopup();st.textContent='Batas '+w.name+' tampil di peta ('+path.length+' poligon).'}catch(e){st.textContent='Gagal memuat polygon batas wilayah ini.'}}
+function downloadWilayah(){if(!wilPathGeo){toast('Klik "Gambar Batas" dulu');return}const w=wilTerpilih();const fc={type:'FeatureCollection',features:[{type:'Feature',properties:{kode:w.id,nama:wilNamaLengkap()},geometry:{type:'MultiPolygon',coordinates:wilPathGeo.map(poly=>[poly.map(p=>[p[1],p[0]])])}}]};const b=new Blob([JSON.stringify(fc)],{type:'application/geo+json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='batas-'+w.id+'.geojson';a.click()}
+function resetWilayah(){if(wilLayer)map.removeLayer(wilLayer);wilLayer=null;wilPathGeo=null;provSel.selectedIndex=0;kabSel.innerHTML='<option>Pilih provinsi dahulu</option>';kecSel.innerHTML='<option>Pilih kab/kota dahulu</option>';desaSel.innerHTML='<option>Pilih kecamatan dahulu</option>';wilData={prov:null,kab:null,kec:null,desa:null};tampilIndikator();document.getElementById('wilayahStatus').textContent='Pilihan wilayah direset.'}
+initWilayah();
+// Draw & measure
+const drawnItems=new L.FeatureGroup();map.addLayer(drawnItems);let lastDrawn=null;
+map.addControl(new L.Control.Draw({edit:{featureGroup:drawnItems},draw:{polygon:{allowIntersection:false,showArea:true},polyline:{showLength:true},rectangle:true,circle:true,marker:true}}));
+map.on(L.Draw.Event.CREATED,e=>{drawnItems.addLayer(e.layer);lastDrawn=e.layer;let info='Layer digambar';try{const gj=e.layer.toGeoJSON();const a=turf.area(gj);if(a>0)info=`Luas geodesik ≈ ${a>=1e6?(a/1e6).toFixed(3)+' km²':a.toFixed(1)+' m²'}`}catch(_){}toast(info);document.getElementById('gpStatus').innerHTML=info});
+function exportGeoJSON(){const data=drawnItems.toGeoJSON();const b=new Blob([JSON.stringify(data,null,2)],{type:'application/geo+json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ruangkita-export.geojson';a.click()}
+function bufferLayer(){if(!lastDrawn){toast('Gambar dulu satu poligon/garis');return}const m=+document.getElementById('bufM').value||500;const out=turf.buffer(lastDrawn.toGeoJSON(),m,{units:'meters'});L.geoJSON(out,{style:{color:'#22c55e'}}).addTo(map);toast('Buffer '+m+' m dibuat (Turf.js)')}
+// Import files + REST
+function muatFile(){const f=document.getElementById('fileData').files[0];if(!f){toast('Pilih file dulu');return}const rd=new FileReader();rd.onload=()=>{try{let gj;if(f.name.endsWith('.geojson')||f.name.endsWith('.json'))gj=JSON.parse(rd.result);else{const dom=new DOMParser().parseFromString(rd.result,'text/xml');gj=toGeoJSON[f.name.endsWith('.gpx')?'gpx':'kml'](dom)}const l=L.geoJSON(gj,{style:{color:'#38bdf8'}}).addTo(map);map.fitBounds(l.getBounds());toast('File dimuat: '+f.name)}catch(e){toast('Format tidak terbaca')}};rd.readAsText(f)}
+async function muatRest(){const u=document.getElementById('restUrl').value.trim();if(!u)return;try{const j=await (await fetch(u)).json();const l=L.geoJSON(j).addTo(map);map.fitBounds(l.getBounds());toast('Layer REST dimuat')}catch(e){toast('Gagal memuat URL (cek CORS/format GeoJSON)')}}
+// Coordinate converter (DD/DMS/UTM via proj4)
+function konversi(){const v=document.getElementById('coordIn').value.split(',').map(x=>parseFloat(x));if(v.length<2||v.some(isNaN)){toast('Format: lat, lng');return}const[la,ln]=v;const dms=x=>{const a=Math.abs(x),d=Math.floor(a),m=Math.floor((a-d)*60),s=((a-d)*60-m)*60;return `${d}° ${m}' ${s.toFixed(2)}"`};const zone=Math.floor((ln+180)/6)+1;const utm=proj4('EPSG:4326',`+proj=utm +zone=${zone} ${la<0?'+south':''} +datum=WGS84 +units=m`,[ln,la]);document.getElementById('coordOut').innerHTML=`<p>DD: ${la.toFixed(6)}, ${ln.toFixed(6)}<br>DMS: ${dms(la)} , ${dms(ln)}<br>UTM zona ${zone}${la<0?'S':'N'}: E ${utm[0].toFixed(1)} · N ${utm[1].toFixed(1)}</p>`}
+// ===== GeoOSS / KKPR / Cek NIB — GISTARU ATR/BPN (query live, timeout jujur, tanpa hasil karangan) =====
+const GISTARU='https://gistaru.atrbpn.go.id/arcgis/rest/services';
+async function fetchTimeout(url,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms||20000);try{return await fetch(url,{signal:c.signal})}finally{clearTimeout(t)}}
+async function arcQuery(service,where,geom){const p=new URLSearchParams({where:where||'1=1',outFields:'*',returnGeometry:!!geom,f:'json',resultRecordCount:'20'});if(geom){p.set('geometry',JSON.stringify(geom));p.set('geometryType','esriGeometryPolygon');p.set('spatialRel','esriSpatialRelIntersects');p.set('inSR','4326');p.set('outSR','4326')}
+const urls=[`${GISTARU}/${service}/query?${p}`,`https://gistaru.atrbpn.go.id/tres/proxy.ashx?${GISTARU}/${service}/query?${p}`];let lastErr=null;for(const u of urls){try{const r=await fetchTimeout(u,20000);const j=await r.json();if(j.error)throw new Error(j.error.message||'ArcGIS error');return j}catch(e){lastErr=e}}throw lastErr||new Error('gagal')}
+function statusBox(id,msg){document.getElementById(id).innerHTML='<p>'+msg+'</p>'}
+async function runGeoOSS(){const keg=document.getElementById('geoossKegiatan').value.trim();const out=document.getElementById('geoossOutput');out.innerHTML='';if(!lastDrawn){statusBox('geoossStatus','⚠️ Gambar dulu poligon area di peta (alat gambar di kiri peta), supaya screening punya area yang dinilai.');return}if(!keg){statusBox('geoossStatus','⚠️ Isi dulu kegiatan yang mau dinilai.');return}
+let luasTxt='';try{const a=turf.area(lastDrawn.toGeoJSON());luasTxt=a>=1e4?(a/1e4).toFixed(2)+' ha':a.toFixed(1)+' m²'}catch(_){}
+statusBox('geoossStatus','⏳ Menghubungi layanan RDTR GISTARU ATR/BPN… server GISTARU dikenal lambat, batas tunggu 20 detik per jalur.');
+try{const gj=lastDrawn.toGeoJSON();const rings=gj.geometry.type==='Polygon'?gj.geometry.coordinates:(gj.geometry.coordinates[0]||[]);const geom={rings:rings,spatialReference:{wkid:4326}};const j=await arcQuery('RDTR/RDTR_SEAMLESS/MapServer/0',null,geom);const feats=j.features||[];if(!feats.length){out.innerHTML=`<p>✅ Query RDTR selesai — <b>tidak ada fitur zona RDTR yang beririsan</b> dengan area seluas ${luasTxt} untuk kegiatan “${keg}”. Artinya RDTR digital untuk area ini kemungkinan belum tersedia di layanan seamless; verifikasi ke pemda/DPMPTSP setempat sebelum proses OSS.</p>`}else{out.innerHTML='<p>✅ Zona RDTR yang beririsan dengan area ('+luasTxt+'):</p>'+feats.map(f=>{const a=f.attributes||{};const zona=a.NAMOBJ||a.ZONA||a.SUB_ZONA||a.KETERANGAN||'Zona RDTR';const ket=Object.entries(a).slice(0,6).map(([k,v])=>k+': '+v).join(' · ');return `<p>• <b>${zona}</b><br><span style="color:var(--mut)">${ket}</span></p>`}).join('')+`<p>Kegiatan dinilai: <b>${keg}</b>. Ini screening awal — kesesuaian final ditentukan proses KKPR di OSS.</p>`}statusBox('geoossStatus','Selesai — hasil screening RDTR live dari GISTARU untuk wilayah: '+(wilNamaLengkap()||'(wilayah belum dipilih di GEONUSA)'))}catch(e){out.innerHTML=`<p>🌐 Layanan GISTARU tidak menjawab dalam batas waktu (server lambat / CORS / proxy). <b>Tidak ada hasil yang dikarang.</b></p><p>Checklist manual untuk area ${luasTxt} · kegiatan “${keg}” · wilayah ${wilNamaLengkap()||'-'}:<br>1) Buka GISTARU (tombol di bawah) → tampilkan layer RDTR wilayah ini.<br>2) Cocokkan zona area dengan daftar kegiatan yang diizinkan di zona itu.<br>3) Lanjut pengajuan resmi di OSS bila zona mendukung.</p>`;statusBox('geoossStatus','Query live belum berhasil — checklist manual ditampilkan, coba lagi beberapa menit lagi.')}}
+function resetGeoOSS(){document.getElementById('geoossKegiatan').value='';document.getElementById('geoossOutput').innerHTML='';statusBox('geoossStatus','Direset.')}
+function kkprWhere(mode,val){const v=val.replace(/'/g,"''");return mode==='nib'?`NIB='${v}'`:`UPPER(NAMA_PMHN) LIKE UPPER('%${v}%')`}
+async function runKKPR(){const mode=document.getElementById('kkprMode').value;const val=document.getElementById('kkprInput').value.trim();const out=document.getElementById('kkprOutput');out.innerHTML='';if(!val){statusBox('kkprStatus','⚠️ Isi dulu '+(mode==='nib'?'NIB':'nama pemohon')+'.');return}if(mode==='nib'&&!/^[A-Za-z0-9._-]{1,32}$/.test(val)){statusBox('kkprStatus','⚠️ Format NIB tidak valid (huruf/angka/titik/strip, maks 32).');return}
+statusBox('kkprStatus','⏳ Mencari di layer KKPR_BERUSAHA GISTARU… batas tunggu 20 detik per jalur.');
+try{let j=await arcQuery('KKPR/KKPR_BERUSAHA/MapServer/0',kkprWhere(mode,val),false);let feats=j.features||[];let sumber='KKPR_BERUSAHA';if(!feats.length){const j2=await arcQuery('KKPR/KKPR_OSS_ALL/MapServer/0',kkprWhere(mode,val),false);feats=j2.features||[];sumber='KKPR_OSS_ALL'}
+if(!feats.length){out.innerHTML='<p>🔎 Query selesai — <b>tidak ditemukan</b> permohonan KKPR untuk "'+val+'" di layer BERUSAHA maupun OSS_ALL. Itu bukan bukti NIB tidak ada; bisa jadi data belum terpublikasi di layer ini.</p>'}else{out.innerHTML='<p>✅ Ditemukan '+feats.length+' baris dari '+sumber+':</p>'+feats.map(f=>{const a=f.attributes||{};return '<p>• '+Object.entries(a).filter(([k,v])=>v!=null&&v!=='').slice(0,7).map(([k,v])=>k+': <b>'+v+'</b>').join(' · ')+'</p>'}).join('')}statusBox('kkprStatus','Selesai — hasil live GISTARU.')}catch(e){out.innerHTML='<p>🌐 GISTARU tidak menjawab dalam batas waktu. <b>Tidak ada hasil yang dikarang</b> — coba lagi nanti, atau cari langsung di GISTARU (tombol GeoOSS di atas).</p>';statusBox('kkprStatus','Query live belum berhasil.')}}
+function resetKKPR(){document.getElementById('kkprInput').value='';document.getElementById('kkprOutput').innerHTML='';statusBox('kkprStatus','Direset.')}
+document.getElementById('kkprMode').onchange=e=>{document.getElementById('kkprLabel').textContent=e.target.value==='nib'?'NIB':'Nama Pemohon';document.getElementById('kkprInput').placeholder=e.target.value==='nib'?'Contoh format: 13 digit angka':'Ketik nama usaha / pemohon'};
+async function runCekNIB(){const nib=document.getElementById('nibInput').value.trim();const out=document.getElementById('nibOutput');out.innerHTML='';if(!/^[A-Za-z0-9._-]{1,32}$/.test(nib)){statusBox('nibStatus','⚠️ Format NIB tanah tidak valid.');return}
+statusBox('nibStatus','⏳ Menghubungi WFS GISTARU (atlas.atrbpn.go.id)… NIB yang tidak terdaftar bisa lama dijawab server; batas tunggu 20 detik.');
+const wfs=`https://atlas.atrbpn.go.id/geoserver/gistaru/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gistaru%3Apersil&outputFormat=application%2Fjson&CQL_FILTER=${encodeURIComponent("NIB='"+nib.replace(/'/g,"''")+"'")}&propertyName=NIB,PENGGUNAAN,TIPEHAK,LUAS,LUASPETA`;
+try{const r=await fetchTimeout(wfs,20000);const j=await r.json();const feats=j.features||[];if(!feats.length){out.innerHTML='<p>🔎 Query selesai — bidang dengan NIB "'+nib+'" tidak ditemukan di WFS persil GISTARU.</p>'}else{out.innerHTML='<p>✅ Ditemukan '+feats.length+' bidang:</p>'+feats.map(f=>{const p=f.properties||{};return '<p>• NIB: <b>'+(p.NIB||nib)+'</b> · Penggunaan: '+(p.PENGGUNAAN||'-')+' · Tipe hak: '+(p.TIPEHAK||'-')+' · Luas peta: '+(p.LUASPETA||p.LUAS||'-')+'</p>'}).join('');feats.forEach(f=>{if(f.geometry){const l=L.geoJSON(f,{style:{color:'#f59e0b',weight:2}}).addTo(map);map.fitBounds(l.getBounds())}})}statusBox('nibStatus','Selesai — hasil live WFS GISTARU.')}catch(e){out.innerHTML='<p>🌐 WFS GISTARU tidak menjawab / terblokir CORS dari browser. <b>Tidak ada hasil yang dikarang.</b> Di situs acuan, query ini dilewatkan proxy khusus — untuk produksi, pasang proxy CORS sendiri (Cloudflare Worker) lalu arahkan URL WFS ke sana.</p>';statusBox('nibStatus','Query live belum berhasil.')}}
+// CCTV demo + HLS
+const CCTV=[{n:'CCTV Monas — Jakarta Pusat',c:[-6.1754,106.8272]},{n:'CCTV Bundaran HI — Jakarta Pusat',c:[-6.1951,106.8230]},{n:'CCTV Pasteur — Bandung',c:[-6.8857,107.5787]},{n:'CCTV Tunjungan — Surabaya',c:[-7.2550,112.7400]}];
+function cariCctv(){const q=(document.getElementById('cctvQ').value||'').toLowerCase();const hit=CCTV.filter(x=>x.n.toLowerCase().includes(q));document.getElementById('cctvList').innerHTML=hit.map((x,i)=>`<p>📹 ${x.n} <button class="ghost" onclick="map.flyTo([${x.c}],15)">Lihat</button></p>`).join('')||'<p>Tidak ada hasil contoh.</p>';hit.forEach(x=>L.marker(x.c).addTo(map).bindPopup('📹 '+x.n))}
+function putarHls(){const u=document.getElementById('hlsUrl').value.trim();const v=document.getElementById('cctvVideo');if(Hls.isSupported()){const h=new Hls();h.loadSource(u);h.attachMedia(v)}else v.src=u}
+// GeoFarm calculator
+function hitungFarm(){const luas=+document.getElementById('gfLuas').value||0;const [a,b]=document.getElementById('gfJarak').value.toLowerCase().split('x').map(x=>+x||25);const lubang=luas*10000/((a/100)*(b/100));const benih=(lubang*3*0.02/1000)*1.1;document.getElementById('gfOut').innerHTML=`<p>Lubang tanam ≈ <b>${Math.round(lubang).toLocaleString('id-ID')}</b><br>Kebutuhan benih padi ≈ <b>${benih.toFixed(1)} kg</b> (3 benih/lubang + cadangan 10%)<br>Pupuk acuan per ha: Urea 250 kg · SP-36 100 kg · KCl 75 kg → untuk ${luas} ha: Urea <b>${(250*luas).toFixed(0)} kg</b>, SP-36 <b>${(100*luas).toFixed(0)} kg</b>, KCl <b>${(75*luas).toFixed(0)} kg</b></p>`}
+// GeoPangan demo chart
+let pgChart=null;const PANGAN={'Beras Medium':[13100,13200,13350,13400,13550,13600],'Cabai Merah':[42000,44500,47000,45200,48900,51000],'Bawang Merah':[31000,32500,31800,33200,34000,35500],'Minyak Goreng':[17200,17400,17300,17600,17800,17900],'Gula Pasir':[16800,17000,17250,17400,17500,17700]};
+function loadPangan(){const k=document.getElementById('pgKom').value;const s=PANGAN[k];document.getElementById('pgOut').innerHTML=`<p>Harga terakhir <b>${k}</b>: Rp ${s[s.length-1].toLocaleString('id-ID')}/kg · perubahan 6 periode: ${(((s[s.length-1]-s[0])/s[0])*100).toFixed(1)}%</p>`;const ctx=document.getElementById('pgChart');if(pgChart)pgChart.destroy();pgChart=new Chart(ctx,{type:'line',data:{labels:['P1','P2','P3','P4','P5','P6'],datasets:[{label:k+' (Rp/kg)',data:s,borderColor:'#22c55e',tension:.3}]}})}
+// Tanya Ruang (rule-based lokal; produksi: sambungkan LLM)
+function tanyaRuang(){const q=document.getElementById('aiQ').value.toLowerCase();let a='Coba tanya: "gempa terakhir", "cara buffer", atau "basemap satelit".';if(q.includes('gempa')){a='Membuka GEODISASTER & memuat gempa BMKG live…';toggleQuake()}else if(q.includes('buffer'))a='Gambar poligon dulu (alat di peta), lalu GEOTOOLS → Geoprocessing → Buffer Layer Gambar Terakhir.';else if(q.includes('satelit')){setBase('sat');a='Basemap satelit Esri aktif. Untuk citra harian, aktifkan MODIS/VIIRS di quick bar.'}else if(q.includes('cuaca'))a='Klik titik di peta — cuaca Open-Meteo tampil otomatis di kartu Detail Administrasi.';document.getElementById('aiOut').innerHTML='<p>🤖 '+a+'</p>'}
+document.getElementById('gibsDate').value=new Date(Date.now()-864e5).toISOString().slice(0,10);
+toast('Selamat datang di RUANG KITA+ — klik peta untuk cuaca & alamat, atau muat Gempa BMKG.');
+</script>
+<script>
+// ===== Shell v2: elemen melayang, loading, modal sambutan (struktur mengikuti situs acuan) =====
+(function(){
+ // Search & quick bar adalah elemen melayang di atas peta (bukan isi sidebar) — pindahkan ke body
+ const s=document.getElementById('search'),q=document.getElementById('quick');
+ if(s)document.body.appendChild(s); if(q)document.body.appendChild(q);
+ // Tambah item quick-layer sesuai daftar situs acuan
+ if(q){const extra=[['🔥 Hotspot',"toggleGibs('modis')"],['🚌 Transjakarta',"toast('GeoTrans ada di tab GEONUSA — buka menu ☰')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"gambarBatas()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"],['🌴 Sawit',"toast('Layer sawit/konsesi: muat via GEOTOOLS → ArcGIS REST (SIMONTANA/GFW)')"]];
+ extra.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.setAttribute('onclick',fn);q.appendChild(b)});}
+ // Klik peta membuka sheet detail kanan
+ map.on('click',()=>{document.getElementById('detail').classList.add('open')});
+ // ===== Panel Gempa Terkini BMKG (autogempa) + ticker, ala beranda bmkg.go.id =====
+ const tick=document.createElement('div');tick.id='ticker';tick.innerHTML='<b>INFO BMKG</b><span class="track" id="tickerText">Memuat informasi gempa terkini BMKG…</span>';document.body.appendChild(tick);
+ async function loadBmkgQuake(){try{const j=await (await fetch('https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json')).json();const g=j.Infogempa.gempa;const [la,ln]=String(g.Coordinates).split(',').map(Number);
+ document.getElementById('bmkgQuakeBody').innerHTML=`<div style="display:flex;gap:12px;align-items:center"><div class="mag">M ${g.Magnitude}</div><div style="font-size:12px;color:var(--mut2)">${g.Tanggal} · ${g.Jam}<br>Kedalaman: ${g.Kedalaman}</div></div><table><tr><td>Koordinat</td><td><b>${g.Lintang} — ${g.Bujur}</b></td></tr><tr><td>Wilayah</td><td>${g.Wilayah}</td></tr><tr><td>Potensi</td><td>${g.Potensi}</td></tr>${g.Dirasakan?`<tr><td>Dirasakan</td><td>${g.Dirasakan}</td></tr>`:''}</table><button class="ghost" style="margin-top:6px;font-size:12px" onclick="map.flyTo([${la},${ln}],9);L.circleMarker([${la},${ln}],{radius:10,color:'#c0392b',fillColor:'#e74c3c',fillOpacity:.6}).addTo(map).bindPopup('<b>M ${g.Magnitude}</b> — ${g.Wilayah}').openPopup()">Lihat di Peta</button>`;
+ document.getElementById('tickerText').textContent=`Gempa terkini: M ${g.Magnitude} — ${g.Wilayah} · ${g.Tanggal} ${g.Jam} · Kedalaman ${g.Kedalaman} · ${g.Potensi} ——— Data: BMKG (data.bmkg.go.id) · Peta: RUANG KITA+ · Informasi bersifat informatif, verifikasi ke sumber resmi untuk keperluan formal.`;}catch(e){document.getElementById('bmkgQuakeBody').innerHTML='<p style="color:var(--mut);font-size:12px;margin:0">Gagal memuat data BMKG saat ini — coba muat ulang.</p>'}}
+ loadBmkgQuake();setInterval(loadBmkgQuake,300000);
+ // ===== Cuaca Saat Ini + Peringatan Dini BMKG (API publik per adm4, fallback Open-Meteo berlabel) =====
+ const WXDEF={adm4:'35.78.05.1001',lat:-7.270754,lng:112.737619,nama:'Tegalsari, Kota Surabaya'};
+ function wxJam(e){const s=e.local_datetime||e.datetime||e.utc_datetime||'';const m=String(s).match(/(\d{2}):(\d{2})/);return m?m[1]+':'+m[2]:''}
+ function wxWaktu(e){const s=e.local_datetime||e.datetime||'';const d=new Date(String(s).replace(' ','T'));return isNaN(d)?null:d}
+ function renderWarn(list,nama,sumber){const el=document.getElementById('bmkgWarnBody');if(!list.length){el.innerHTML=`<div class="warn-item" style="border-left-color:#009444;background:#ecfdf3;color:#14532d">Tidak ada potensi cuaca signifikan (hujan lebat / hujan petir / angin kencang) di ${nama} dalam 24 jam ke depan menurut ${sumber}.</div>`;return}
+ el.innerHTML=list.map(w=>`<div class="warn-item"><b>${w.jenis}</b> — potensi pada ${w.kapan} di ${nama}. Waspada dampak turunan (genangan, pohon tumbang, jarak pandang turun). Ini penilaian otomatis dari prakiraan, bukan Peringatan Dini resmi — rujuk tombol resmi BMKG di bawah.</div>`).join('')}
+ async function loadBmkgWeather(adm4,lat,lng,namaLabel){const wb=document.getElementById('bmkgWeatherBody');wb.innerHTML='<p style="color:var(--mut);font-size:12px;margin:0">Memuat prakiraan cuaca BMKG…</p>';
+ try{const r=await fetchTimeout(`https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${adm4}`,15000);if(!r.ok)throw new Error('http '+r.status);const j=await r.json();
+ const grup=(j.data&&j.data[0]&&j.data[0].cuaca)||[];const flat=[];grup.forEach(h=>{if(Array.isArray(h))h.forEach(e=>flat.push(e))});if(!flat.length)throw new Error('struktur kosong');
+ const lok=(j.data[0]&&j.data[0].lokasi)||j.lokasi||{};const nama=namaLabel||[lok.desa,lok.kecamatan,lok.kotakab].filter(Boolean).join(', ')||adm4;
+ const now=new Date();let idx=flat.findIndex(e=>{const d=wxWaktu(e);return d&&d>=new Date(now.getTime()-90*60000)});if(idx<0)idx=0;const e=flat[idx];
+ wb.innerHTML=`<div class="wx-now"><div class="t">${e.t}°C</div><div style="font-size:12.5px;color:var(--mut2)"><b style="color:var(--txt)">${e.weather_desc||'-'}</b><br>${nama}<br>💧 ${e.hu}% · 💨 ${e.ws} km/j ${e.wd||''} · 🌧 ${e.tp} mm${e.vs_text?` · 👁 ${e.vs_text}`:''}</div></div><div class="wx-row">${flat.slice(idx+1,idx+5).map(x=>`<div>${wxJam(x)}<br><b>${x.weather_desc||''}</b><br>${x.t}°C</div>`).join('')}</div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Sumber: API publik BMKG per wilayah adm4 ${adm4} · diperbarui ${new Date().toLocaleTimeString('id-ID')}.</p>`;
+ const batas=new Date(now.getTime()+24*3600000);const warns=[];flat.forEach(x=>{const d=wxWaktu(x);if(!d||d<now||d>batas)return;const ds=String(x.weather_desc||'');if(/petir/i.test(ds))warns.push({jenis:'Hujan Petir',kapan:wxJam(x)+' ('+d.toLocaleDateString('id-ID',{weekday:'short'})+')'});else if(/lebat/i.test(ds))warns.push({jenis:'Hujan Lebat',kapan:wxJam(x)+' ('+d.toLocaleDateString('id-ID',{weekday:'short'})+')'});if(Number(x.ws)>=38)warns.push({jenis:'Angin Kencang '+x.ws+' km/j',kapan:wxJam(x)})});
+ renderWarn(warns.slice(0,4),nama,'prakiraan BMKG')}catch(err){
+ // Fallback transparan: Open-Meteo pada titik wilayah
+ try{const w=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=weather_code,wind_speed_10m&forecast_days=2&timezone=auto`)).json();const c=w.current;const kode={0:'Cerah',1:'Cerah Berawan',2:'Berawan',3:'Berawan Tebal',45:'Berkabut',48:'Berkabut',51:'Gerimis Ringan',53:'Gerimis',55:'Gerimis Lebat',61:'Hujan Ringan',63:'Hujan Sedang',65:'Hujan Lebat',71:'Salju',80:'Hujan Ringan',81:'Hujan Sedang',82:'Hujan Lebat',95:'Hujan Petir',96:'Hujan Petir & Es',99:'Hujan Petir & Es'};
+ wb.innerHTML=`<div class="wx-now"><div class="t">${c.temperature_2m}°C</div><div style="font-size:12.5px;color:var(--mut2)"><b style="color:var(--txt)">${kode[c.weather_code]||'—'}</b><br>${namaLabel||'Wilayah terpilih'}<br>💧 ${c.relative_humidity_2m}% · 💨 ${c.wind_speed_10m} km/j</div></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">API BMKG belum terjangkau dari browser ini — menampilkan cadangan Open-Meteo untuk titik yang sama. Bukan data BMKG.</p>`;
+ const warns=[];const jam=w.hourly.time||[],kc=w.hourly.weather_code||[],ws=w.hourly.wind_speed_10m||[];const now2=new Date();for(let i=0;i<jam.length;i++){const d=new Date(jam[i]);if(d<now2||d>new Date(now2.getTime()+24*3600000))continue;if([95,96,99].includes(kc[i]))warns.push({jenis:'Hujan Petir',kapan:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})});else if([65,82].includes(kc[i]))warns.push({jenis:'Hujan Lebat',kapan:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})});if(ws[i]>=38)warns.push({jenis:'Angin Kencang '+ws[i]+' km/j',kapan:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})})}
+ renderWarn(warns.slice(0,4),namaLabel||'wilayah ini','prakiraan cadangan Open-Meteo')}catch(e2){wb.innerHTML='<p style="color:var(--mut);font-size:12px;margin:0">Cuaca belum bisa dimuat (BMKG & cadangan gagal). Coba lagi nanti.</p>'}}}
+ loadBmkgWeather(WXDEF.adm4,WXDEF.lat,WXDEF.lng,WXDEF.nama);setInterval(()=>loadBmkgWeather(WXCUR.adm4,WXCUR.lat,WXCUR.lng,WXCUR.nama),1800000);
+ let WXCUR={...WXDEF};
+ if(typeof desaSel!=='undefined'){desaSel.addEventListener('change',()=>{const o=(typeof selObj==='function')?selObj(desaSel):null;if(desaSel.value&&/^\d{2}\.\d{2}\.\d{2}\.\d{4}$/.test(desaSel.value)){WXCUR={adm4:desaSel.value,lat:o&&o.lat!=null?o.lat:WXDEF.lat,lng:o&&o.lng!=null?o.lng:WXDEF.lng,nama:(typeof wilNamaLengkap==='function'&&wilNamaLengkap())||desaSel.value};loadBmkgWeather(WXCUR.adm4,WXCUR.lat,WXCUR.lng,WXCUR.nama)}})}
+ // ===== Ikon SVG garis (gambar sendiri, gaya ikon garis 14px) =====
+ const IC=(p,s)=>`<svg class="ic" viewBox="0 0 24 24" width="${s||16}" height="${s||16}">${p}</svg>`;
+ const ICONS={
+ pin:IC('<path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="3"/>',14),
+ globe:IC('<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2c3.2 3.4 4.8 6.4 4.8 10s-1.6 6.6-4.8 10c-3.2-3.4-4.8-6.4-4.8-10S8.8 5.4 12 2z"/>',14),
+ cloud:IC('<path d="M18 10.5a5 5 0 0 0-9.5-1.6A4.6 4.6 0 0 0 7 18h11a3.6 3.6 0 0 0 0-7.5z"/>',14),
+ alert:IC('<path d="M12 3 2.5 20h19L12 3z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".4" fill="currentColor"/>',14),
+ video:IC('<rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 10.5 22 7v10l-7-3.5z"/>',14),
+ sliders:IC('<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/>',14),
+ scale:IC('<path d="M12 3v18M6 21h12"/><path d="M8 6 5 12.5h6L8 6zM16 6l-3 6.5h6L16 6z"/><path d="M4 6h16"/>',14),
+ sprout:IC('<path d="M12 22v-8"/><path d="M12 14a5 5 0 0 0-5-5H4a5 5 0 0 0 5 5h3z"/><path d="M12 10a5 5 0 0 1 5-5h3a5 5 0 0 1-5 5h-3z"/>',14),
+ cart:IC('<circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.2h10.6L20 7H6"/>',14),
+ chart:IC('<line x1="4" y1="20" x2="20" y2="20"/><path d="M7 20v-6M12 20V6M17 20v-9"/>'),
+ users:IC('<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.4 2.7-5.5 6-5.5s6 2.1 6 5.5"/><circle cx="17" cy="9" r="2.6"/><path d="M16.2 14.7c2.7.3 4.8 2 4.8 5.3"/>'),
+ bus:IC('<rect x="4" y="3" width="16" height="14" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><circle cx="8" cy="20" r="1.5"/><circle cx="16" cy="20" r="1.5"/>'),
+ mountain:IC('<path d="M3 19 9.5 6.5 14 14l2.5-4L21 19z"/>'),
+ city:IC('<rect x="5" y="4" width="9" height="16"/><rect x="14" y="9" width="6" height="11"/><path d="M8.5 8h.4M8.5 12h.4M8.5 16h.4M17 13h.4M17 17h.4"/>'),
+ activity:IC('<polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/>'),
+ flame:IC('<path d="M12 22a6 6 0 0 0 6-6c0-4-3-5.6-3-9-3 1.6-4.6 4-4.8 7C9.6 12.7 9 11.3 9 9c-1.9 1.8-3 3.9-3 7a6 6 0 0 0 6 6z"/>'),
+ wave:IC('<path d="M2 9c2.5 0 2.5 2.5 5 2.5S9.5 9 12 9s2.5 2.5 5 2.5S19.5 9 22 9M2 15c2.5 0 2.5 2.5 5 2.5S9.5 15 12 15s2.5 2.5 5 2.5S19.5 15 22 15"/>'),
+ pencil:IC('<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1z"/>'),
+ inbox:IC('<path d="M12 3v10M7.5 9.5 12 14l4.5-4.5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>'),
+ refresh:IC('<path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v4h-4"/>'),
+ bot:IC('<rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 8V4M8 4h8"/><circle cx="9" cy="13" r=".5" fill="currentColor"/><circle cx="15" cy="13" r=".5" fill="currentColor"/><path d="M9.5 16.5h5"/>'),
+ book:IC('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>'),
+ doc:IC('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>'),
+ compass:IC('<circle cx="12" cy="12" r="10"/><polygon points="15.5 8.5 13.8 13.8 8.5 15.5 10.2 10.2"/>')};
+ const TABICON={geonusa:'pin',geoportal:'globe',geodisaster:'alert',geowatch:'video',geotools:'sliders',geooss:'scale',geofarm:'sprout',geopangan:'cart'};
+ document.querySelectorAll('#tabs button').forEach(b=>{const k=TABICON[b.dataset.p];if(k)b.insertAdjacentHTML('afterbegin',ICONS[k])});
+ const EMOJIICON={'📊':'chart','👥':'users','🚌':'bus','🌐':'globe','🏔':'mountain','🏙':'city','🌋':'activity','☁️':'cloud','🔥':'flame','🌊':'wave','📹':'video','✏️':'pencil','📥':'inbox','⚙️':'sliders','🔄':'refresh','🤖':'bot','🌱':'sprout','📖':'book','🛒':'cart','⚖️':'scale','📜':'doc','🧭':'compass','📍':'pin','🛰':'globe','🧰':'sliders'};
+ document.querySelectorAll('.card h3,.wel-grid div').forEach(el=>{const t=el.innerHTML.trimStart();for(const [e,k] of Object.entries(EMOJIICON)){if(t.startsWith(e)){el.innerHTML=el.innerHTML.replace(e,ICONS[k]);break}}});
+ // Quick bar & topbar: chips teks bersih tanpa emoji (seperti situs acuan)
+ document.querySelectorAll('#quick button,#topbar button').forEach(b=>{b.textContent=b.textContent.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'').trim()});
+ // Search bar: mark mini + tombol ikon kaca pembesar
+ if(s){s.insertAdjacentHTML('afterbegin','<span class="rk-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>');const sb=s.querySelector('button');if(sb)sb.innerHTML=IC('<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>',15)}
+ // Loading overlay
+ const lo=document.createElement('div');lo.id='loadingOverlay';lo.innerHTML='<div style="font-size:26px;font-weight:800;letter-spacing:1px">RUANG <span style="color:#daa520">KITA+</span></div><div style="font-size:12px;letter-spacing:3px;color:#dbeafe">MENYIAPKAN PETA INTERAKTIF…</div><div class="loadbar"><i></i></div>';document.body.appendChild(lo);
+ // Modal sambutan (ringkasan fitur dengan kata sendiri)
+ const wm=document.createElement('div');wm.id='welcomeModal';wm.innerHTML=`<div class="wel-card"><small style="color:var(--acc);font-weight:700;letter-spacing:2px">SELAMAT DATANG DI</small><h2>RUANG KITA+ — Satu Peta untuk Nusantara</h2><p style="color:var(--mut)">Peta interaktif Indonesia: data wilayah lengkap, citra satelit, pemantauan bencana & cuaca, alat geospasial, pertanian, dan harga pangan dalam satu tampilan.</p><div class="wel-grid"><div>📍 <b>Data Wilayah Lengkap</b><br>38 provinsi sampai 83.762 desa/kelurahan + polygon batas & download GeoJSON.</div><div>🛰 <b>Citra Satelit</b><br>Basemap satelit & Rupabumi BIG, layer harian NASA MODIS/VIIRS per tanggal.</div><div>🌋 <b>Gempa & Cuaca Live</b><br>Gempa BMKG terkini/dirasakan dan cuaca titik dari Open-Meteo saat peta diklik.</div><div>🧰 <b>GeoTools & GeoOSS</b><br>Gambar/ukur, impor data, geoprocessing, screening RDTR & KKPR GISTARU.</div></div><p style="color:var(--mut);font-size:12px">Catatan: informasi di sini bersifat informatif untuk eksplorasi & pendidikan, bukan produk hukum — untuk keperluan resmi verifikasi ke instansi berwenang (BIG, BMKG, ATR/BPN).</p><button style="width:100%" onclick="document.getElementById('welcomeModal').classList.remove('open')">Mulai Jelajahi →</button></div>`;document.body.appendChild(wm);
+ document.querySelectorAll('.wel-grid div').forEach(el=>{const t=el.innerHTML.trimStart();for(const [e,k] of Object.entries(EMOJIICON)){if(t.startsWith(e)){el.innerHTML=el.innerHTML.replace(e,ICONS[k]);break}}});
+ window.addEventListener('load',()=>{setTimeout(()=>{lo.classList.add('hide');wm.classList.add('open')},700)});
+ setTimeout(()=>{lo.classList.add('hide')},3500); // pengaman bila event load sudah lewat
+})();
+</script>
+</body>
+</html>
