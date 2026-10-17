@@ -294,7 +294,7 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 <script>
-const map=L.map('map',{preferCanvas:true,maxZoom:22,minZoom:3,zoomControl:false}).setView([3.3270177,117.5682619],12);
+const map=L.map('map',{preferCanvas:false,maxZoom:22,minZoom:3,zoomControl:false}).setView([3.3270177,117.5682619],12);
 map._controlCorners.bottomcenter=L.DomUtil.create('div','leaflet-bottom leaflet-center',map._controlContainer);
 L.control.zoom({position:'bottomcenter'}).addTo(map);
 L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
