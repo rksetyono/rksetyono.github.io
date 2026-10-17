@@ -229,6 +229,10 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
  #sheetHandle{display:flex}
  #detail{z-index:1600}
 }
+.lpgroup{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--acc);margin:10px 0 4px}
+.lprow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;border-bottom:1px dashed var(--bord);font-size:13px}
+.lprow:last-child{border-bottom:none}
+.lprow .mini.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 </style>
 </head>
 <body>
@@ -245,12 +249,12 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <button onclick="flyIndo()">🇮🇩 Indonesia</button><button onclick="lokasiSaya()">📍 Lokasi Saya</button>
 </div>
 <nav id="tabs">
-<button class="on" data-p="geonusa">GEONUSA</button><button data-p="geoportal">GEOPORTAL</button>
+<button class="on" data-p="geoportal">LAPISAN</button><button data-p="geonusa">GEONUSA</button>
 <button data-p="geodisaster">GEODISASTER</button><button data-p="penerbangan">PENERBANGAN</button>
 <button data-p="geotools">GEOTOOLS</button>
 </nav>
 <div id="panels">
-<section class="panel on" id="p-geonusa">
+<section class="panel" id="p-geonusa">
 <div class="card"><h3>📊 Statistik &amp; Pencarian Wilayah — DATA LENGKAP</h3><p><b>38 Provinsi · 514 Kab/Kota · 7.285 Kecamatan · 83.762 Desa/Kelurahan</b> — kode Kemendagri (Kepmendagri 300.2.2-2138/2025), dimuat langsung dari API statis wilayah Indonesia (update data 11 Okt 2026). Angka ini beda dari klaim BIG RBI di situs acuan karena beda sumber: ini kode administrasi Kemendagri, bukan hitungan geometri RBI.</p>
 <label>1. Provinsi</label><select id="prov"><option>Memuat…</option></select>
 <label>2. Kabupaten/Kota</label><select id="kab"><option>Pilih provinsi dahulu</option></select>
@@ -261,17 +265,26 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <div id="wilayahStatus" style="font-size:12px;color:var(--mut);margin-top:6px"></div></div>
 <div class="card"><h3>👥 Indikator Wilayah Terpilih</h3><div id="indikator"><p>Pilih wilayah di atas — ibu kota, penduduk, luas, elevasi, zona waktu, dan kode pos (desa) tampil di sini dari data API yang sama.</p></div></div>
 </section>
-<section class="panel" id="p-geoportal">
+<section class="panel on" id="p-geoportal">
 <div class="card"><h3>🛰 Citra Satelit &amp; Radar — BMKG</h3><p>Citra geostasioner resmi BMKG (satellite.bmkg.go.id), produk penerbangan InaSIAM &amp; radar cuaca nasional (gis.bmkg.go.id). Pilih produk dari satu menu di bawah, geser waktu, atau putar animasinya.</p>
+<div class="lpgroup">Citra Satelit</div>
 <label>Produk citra <select id="satMenu" onchange="satMenuChange(this.value)" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--bord);background:var(--bg2);color:var(--txt);font-size:13px;margin-top:4px"><option value="">— Pilih produk citra —</option><optgroup label="Citra BMKG"><option value="eh">Himawari-9 IR Enhanced</option><option value="nc">Natural Color</option><option value="wv">Water Vapor</option><option value="rp">Rainfall</option><option value="gk">GK-2A IR Enhanced</option></optgroup><optgroup label="Produk Penerbangan — InaSIAM"><option value="ia:fog">Fog &amp; Stratus Rendah</option><option value="ia:cloud_top">Cloud Top Phase/Icing</option><option value="ia:ir_ct">IR Cloud Top Icing</option><option value="ia:sandwich">Sandwich VIS+IR</option><option value="ia:vis">Visible</option><option value="ia:wv_mid">WV Mid</option><option value="ia:wv_upper">WV Upper</option></optgroup></select></label> <label>Waktu citra <span id="satTime" style="color:var(--txt)">—</span></label>
 <input type="range" id="satSlider" min="0" max="0" value="0" oninput="satSliderMove(this.value)" style="width:100%">
 <div class="row"><button class="ghost" id="satPlayBtn" onclick="satPlayToggle()">▶ Putar Animasi</button><button class="ghost" onclick="satMenuChange('')">Matikan Citra</button></div>
 <label>Opasitas citra <input type="range" min="20" max="100" value="85" oninput="setSatOpacity(this.value)"></label>
 <div id="iaBar" style="display:none;margin-top:6px"><div id="iaGrad" style="height:10px;border-radius:5px;border:1px solid var(--bord)"></div><div class="dim" id="iaCap" style="display:flex;justify-content:space-between;margin-top:2px"><span></span><span></span></div></div>
 <div class="dim" id="iaStatus">Citra penerbangan dari tiler InaSIAM BMKG — run terbaru dijejak otomatis tiap 10 menit.</div>
+<div class="lpgroup">Radar &amp; Presipitasi</div>
 <div class="row"><button class="ghost" id="radarBtn" onclick="toggleRadar()">📡 Radar BMKG: Nonaktif</button></div>
 <div id="radarLegend" style="display:none;margin-top:6px"><div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#a0d8ef,#01b8ff,#00e500,#b4dc00,#ffdc00,#ff7100,#ff0000,#b800d6)"></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>5 dBZ ringan</span><span>35 deras</span><span>55 ekstrem</span><span>75 hail</span></div></div>
 <div class="row" style="margin-top:6px"><button class="ghost" id="rainBtn" onclick="toggleRain()">🌧 Hujan Satelit (IMERG): Nonaktif</button></div> <div id="rainLegend" style="display:none;margin-top:6px"><div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#8fe388,#22c55e,#a3e635,#facc15,#fb923c,#ef4444,#a855f7)"></div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>ringan</span><span>sedang</span><span>lebat</span><span>sangat lebat</span></div><p style="font-size:10px;color:var(--mut);margin:4px 0 0">Laju hujan estimasi satelit GPM IMERG (NASA/JAXA) — terpisah dari radar darat BMKG; tanggal mengikuti pemilih tanggal citra NASA, bawaan 2 hari lalu karena jeda pemrosesan data.</p></div> <p id="satStatus" style="font-size:12px;color:var(--mut)">Citra diperbarui mengikuti model run BMKG (±10 menit). Waktu ditampilkan dalam WITA (waktu Tarakan).</p></div>
+<div class="card"><h3>🗂 Lapisan Peta</h3><p class="dim">Lapisan data di atas peta — nyalakan atau matikan tanpa berpindah panel.</p>
+<div class="lprow"><span>🛬 Titik Bandara (METAR)</span><button class="mini" id="lpDots" onclick="avDotsToggle();setTimeout(lpSync,200)">Aktif</button></div>
+<div class="lprow"><span>🌋 Gempa Bumi BMKG</span><button class="mini" id="lpQuake" onclick="lpQuakeToggle()">Nonaktif</button></div>
+<div class="lprow"><span>🛰 Citra Harian VIIRS</span><button class="mini" id="lpGibs" onclick="toggleGibs('viirs');setTimeout(lpSync,300)">Nonaktif</button></div>
+<div class="lprow"><span>📡 Radar BMKG</span><button class="mini" id="lpRadar" onclick="toggleRadar();setTimeout(lpSync,300)">Nonaktif</button></div>
+<div class="lprow"><span>🌧 Hujan Satelit (IMERG)</span><button class="mini" id="lpRain" onclick="toggleRain();setTimeout(lpSync,300)">Nonaktif</button></div>
+</div>
 <div class="card"><h3>🌐 GeoPortal Hub — SatuPeta BIG</h3><p>Basemap Rupabumi BIG tersedia di pemilih layer peta (kanan atas). Layer WMS/WFS/ArcGIS publik bisa dimuat lewat GEOTOOLS → ArcGIS REST.</p>
 <button class="ghost" onclick="setBase('rbi')">Pakai Basemap Rupabumi BIG</button></div>
 <div class="card"><h3>🏔 Unduh DEMNAS (konsep)</h3><p>Alur aslinya: pilih indeks DEMNAS → clip batas wilayah → unduh GeoTIFF tanpa token dari BIG. Di prototype ini gunakan Export di GEOTOOLS untuk GeoJSON hasil gambar.</p></div>
@@ -320,6 +333,6 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
-<script src="sigap-app.js?v=20261017-3"></script>
+<script src="sigap-app.js?v=20261017-4"></script>
 </body>
 </html>
