@@ -8,7 +8,6 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
 <style>
 /* ===== Shell UI v2 — struktur mengikuti situs acuan: peta fullscreen, tema TERANG bawaan, sidebar overlay kaca 360px, search & quick bar melayang, sheet detail kanan ===== */
 :root{--bg:#ffffff;--bg2:#f4f8fc;--bg3:#e8f1f9;--panel:rgba(255,255,255,.95);--panel2:#ffffff;--card:#ffffff;--txt:#14304d;--mut:#5b7a99;--mut2:#33526e;--acc:#005baa;--acc2:#0072bc;--gold:#daa520;--grn:#009444;--bord:#d7e5f2;--shadow:0 8px 32px rgba(4,38,77,.18)}
@@ -311,10 +310,10 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <div class="card"><h3>🛫 Bandara di Kalimantan &amp; Sekitarnya</h3><div id="avAptList"><p style="color:var(--mut)">Daftar dimuat saat tab dibuka.</p></div></div>
 </section>
 <section class="panel" id="p-geotools">
-<div class="card"><h3>✏️ Gambar &amp; Ukur</h3><p>Aktifkan alat gambar di peta (kiri atas peta): titik, garis, poligon, persegi, lingkaran. Luas/jarak muncul saat selesai menggambar.</p><div class="row"><button onclick="exportGeoJSON()">Export GeoJSON</button><button class="ghost" onclick="window.print()">Cetak / PDF</button></div></div>
+
 <div class="card"><h3>📥 Muat Data</h3><label>GeoJSON / GPX / KML <input type="file" id="fileData" accept=".geojson,.json,.gpx,.kml"></label><button onclick="muatFile()">Tampilkan di Peta</button>
-<label>URL ArcGIS REST / GeoServer WFS (GeoJSON)<input type="text" id="restUrl" placeholder="https://…/query?where=1=1&outFields=*&f=geojson"></label><button class="ghost" onclick="muatRest()">Muat URL</button></div>
-<div class="card"><h3>⚙️ Geoprocessing — Buffer</h3><label>Jarak buffer (meter)<input type="number" id="bufM" value="500"></label><button onclick="bufferLayer()">Buffer Layer Gambar Terakhir</button><div id="gpStatus"></div></div>
+<label>URL ArcGIS REST / GeoServer WFS (GeoJSON)<input type="text" id="restUrl" placeholder="https://…/query?where=1=1&outFields=*&f=geojson"></label><button class="ghost" onclick="muatRest()">Muat URL</button><button class="ghost" onclick="window.print()">Cetak / PDF</button></div>
+
 <div class="card"><h3>🔄 Konverter Koordinat</h3><label>Koordinat (lat, lng)<input type="text" id="coordIn" placeholder="-6.200000, 106.816666"></label><button onclick="konversi()">Konversi DD / DMS / UTM</button><div id="coordOut"></div></div>
 <div class="card"><h3>🤖 Tanya SIGAP (Beta)</h3><input id="aiQ" type="text" placeholder="Tanya: gempa terakhir? cara buffer? basemap satelit?"><button onclick="tanyaSigap()">Tanya</button><div id="aiOut"></div></div>
 </section>
@@ -331,13 +330,12 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.min.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://unpkg.com/@turf/turf@7.1.0/turf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.min.js"></script>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
-<script src="sigap-app.js?v=20261017-13"></script>
+<script src="sigap-app.js?v=20261017-14"></script>
 </body>
 </html>
