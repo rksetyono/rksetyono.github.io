@@ -124,7 +124,7 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 /* ===== RESPONSIVE FIX: sidebar app-shell, tab muat, panel scroll mandiri ===== */
 #side{height:100vh;height:100dvh;z-index:1450}
 #side>header{flex:0 0 auto;order:0}
-#tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:8px 10px;flex:0 0 auto;order:1;flex-wrap:nowrap}
+#tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:8px 10px;flex:0 0 auto;order:1;flex-wrap:nowrap}
 #tabs button{flex:none;flex-direction:column;gap:3px;font-size:9.5px;letter-spacing:.2px;padding:7px 1px;line-height:1.15;text-align:center;min-width:0;overflow:hidden}
 .panel{order:2}
 .panel.on{flex:1 1 auto;overflow-y:auto;min-height:0;padding:12px 12px 28px;-webkit-overflow-scrolling:touch}
@@ -138,6 +138,13 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 #geonusaSeg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px}
 #geonusaSeg button{background:var(--bg2);color:var(--mut);border:1px solid var(--bord);padding:8px 4px;font-size:12px;border-radius:8px}
 #geonusaSeg button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.avgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.avgrid>div{background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:7px 9px}
+.avgrid small{display:block;color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
+.avgrid b{font-size:13px}
+.avraw{font-family:ui-monospace,monospace;font-size:12px;background:#0b2440;color:#dbeafe;border-radius:8px;padding:9px 11px;word-break:break-word;margin:8px 0;line-height:1.5}
+.avapt{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px;text-align:left}
+.avapt.on{background:var(--acc)!important;color:#fff!important}
 #sheetHandle{display:none;align-items:center;justify-content:center;padding:8px 0 4px;cursor:pointer;flex:0 0 auto;order:-1}
 #sheetHandle i{width:46px;height:5px;border-radius:3px;background:#cbd5e1;display:block}
 @media(max-width:900px){
@@ -166,7 +173,7 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 </div>
 <nav id="tabs">
 <button class="on" data-p="geonusa">GEONUSA</button><button data-p="geoportal">GEOPORTAL</button>
-<button data-p="geodisaster">GEODISASTER</button>
+<button data-p="geodisaster">GEODISASTER</button><button data-p="penerbangan">PENERBANGAN</button>
 <button data-p="geotools">GEOTOOLS</button>
 </nav>
 <div id="panels">
@@ -202,6 +209,15 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 <div class="card"><h3>🔥 Hotspot &amp; Kualitas Udara</h3><label><input type="checkbox" onchange="toggleGibs('fire',this.checked)"> Hotspot / Fire (NASA GIBS via MODIS thermal — gunakan layer MODIS)</label><label>Opasitas layer citra <input type="range" min="20" max="100" value="85" oninput="setOpacity(this.value)"></label><p>PM2.5 produksi: OpenAQ API (tanpa kunci untuk baca publik).</p></div>
 <div class="card"><h3>🌊 Forecasting</h3><p>Angin, hujan 24 jam, SST, SPI/SPEI: di produksi diambil dari GFS/BMKG sebagai raster RGB/WMS — kerangka slider waktunya sama seperti layer MODIS/VIIRS di GEOPORTAL.</p>
 <label>Tanggal citra NASA <input type="date" id="gibsDate"></label><button class="ghost" onclick="refreshGibs()">Terapkan Tanggal</button></div>
+</section>
+<section class="panel" id="p-penerbangan">
+<div class="card"><h3>✈ <span id="avTitle">Cuaca Penerbangan — WAQQ</span></h3>
+<div style="display:flex;gap:14px;align-items:center;font-family:ui-monospace,monospace;font-size:13px;margin-bottom:8px"><span id="avUtc">--:--:-- UTC</span><span id="avWita" style="color:var(--mut)">--:--:-- WITA</span><button class="ghost" style="margin-left:auto;padding:4px 9px" onclick="loadAvMetar();loadAvTaf()">Muat Ulang</button></div>
+<div id="avMetarBody"><p style="color:var(--mut)">METAR dimuat saat tab dibuka.</p></div></div>
+<div class="card"><h3>📋 Prakiraan Bandara (TAF)</h3><div id="avTafBody"><p style="color:var(--mut)">TAF dimuat saat tab dibuka.</p></div>
+<div class="row"><a href="https://inasiam.bmkg.go.id/id?zoom=4.11&amp;lat=-0.4&amp;lng=113.85" target="_blank" rel="noopener"><button class="ghost" type="button">Buka InaSIAM BMKG ↗</button></a></div>
+<p style="font-size:11px;color:var(--mut)">SIGMET, SIGWX, petir &amp; aliran angin penerbangan tersedia lengkap di InaSIAM (platform resmi BMKG); tab ini memfokuskan METAR/TAF Juwata &amp; bandara sekitar.</p></div>
+<div class="card"><h3>🛫 Bandara di Kalimantan &amp; Sekitarnya</h3><div id="avAptList"><p style="color:var(--mut)">Daftar dimuat saat tab dibuka.</p></div></div>
 </section>
 <section class="panel" id="p-geotools">
 <div class="card"><h3>✏️ Gambar &amp; Ukur</h3><p>Aktifkan alat gambar di peta (kiri atas peta): titik, garis, poligon, persegi, lingkaran. Luas/jarak muncul saat selesai menggambar.</p><div class="row"><button onclick="exportGeoJSON()">Export GeoJSON</button><button class="ghost" onclick="window.print()">Cetak / PDF</button></div></div>
@@ -284,6 +300,97 @@ function toggleRadar(){const btn=document.getElementById('radarBtn');if(radarLay
  if(radarTimer)clearInterval(radarTimer);radarTimer=setInterval(()=>{if(radarLayer)radarLayer.redraw();updateProdPill()},360000)}
 function updateProdPill(){let pill=document.getElementById('prodPill');if(!pill){pill=document.createElement('div');pill.id='prodPill';document.body.appendChild(pill)}
  if(radarLayer){pill.style.display='block';pill.textContent='📡 Radar BMKG · '+fmtWita(new Date().toISOString())}else if(satKey&&satRuns.length){pill.style.display='block';pill.textContent='🛰 '+SATPROD[satKey].label+' · '+fmtWita(satRuns[satIdx])}else if(typeof gibsLayer!=='undefined'&&gibsLayer){pill.style.display='block';pill.textContent='🛰 '+(gibsKind==='modis'?'MODIS Terra':gibsKind==='viirs'?'VIIRS NOAA-20 Thermal Anomalies':'Hotspot / Fire')+' · NASA GIBS'}else pill.style.display='none'}
+// ===== Penerbangan — METAR/TAF (MET Norway & AviationWeather/NOAA) =====
+const AVSTATIONS=[
+ {icao:'WAQQ',name:'Juwata Intl — Tarakan',lat:3.327,lon:117.568},
+ {icao:'WBKW',name:'Tawau — Sabah, Malaysia',lat:4.316,lon:118.119},
+ {icao:'WBKS',name:'Sandakan — Sabah, Malaysia',lat:5.901,lon:118.059},
+ {icao:'WBKK',name:'Kota Kinabalu Intl — Sabah, Malaysia',lat:5.937,lon:116.051},
+ {icao:'WBSB',name:'Brunei Intl — Brunei',lat:4.944,lon:114.928},
+ {icao:'WALL',name:'Sepinggan Intl — Balikpapan',lat:-1.268,lon:116.894},
+ {icao:'WAOO',name:'Syamsudin Noor — Banjarmasin',lat:-3.44,lon:114.759},
+ {icao:'WIOO',name:'Supadio — Pontianak',lat:-0.151,lon:109.404}];
+let avIcao='WAQQ',avInit=false,avTimer=null;
+const WXID={RA:'Hujan',DZ:'Gerimis',TS:'Badai petir',SH:'Hujan shower',FU:'Asap',HZ:'Kabut asap (haze)',BR:'Kabut tipis (mist)',FG:'Kabut tebal (fog)',GR:'Hujan es',GS:'Hujan es kecil',SN:'Salju',SQ:'Squall',NSW:'Tidak ada cuaca signifikan'};
+const COVID={FEW:'Sedikit (few)',SCT:'Tersebar (scattered)',BKN:'Menutup sebagian besar (broken)',OVC:'Menutup penuh (overcast)',SKC:'Cerah',CLR:'Cerah',NSC:'Tidak ada awan signifikan',NCD:'Tidak terdeteksi (AUTO)',VV:'Langit tertutup vertikal'};
+function avParseMetar(raw){
+ const tk=raw.replace(/=/g,'').split(/\s+/).filter(Boolean);const o={raw,clouds:[],wx:[]};
+ let i=tk.findIndex(t=>/^\d{6}Z$/.test(t));if(i<0)return o;
+ o.time=tk[i];i++;
+ if(tk[i]==='AUTO'){o.auto=true;i++}
+ if(tk[i]==='COR')i++;
+ const wm=/^(\d{3}|VRB)(\d{2,3})(G(\d{2,3}))?(KT|MPS)$/.exec(tk[i]||'');
+ if(wm){o.wind={dir:wm[1]==='VRB'?null:+wm[1],spd:wm[5]==='MPS'?Math.round(+wm[2]*1.944):+wm[2],gust:wm[4]?+wm[4]:null};i++}
+ if(/^\d{3}V\d{3}$/.test(tk[i]||'')){o.windVar=tk[i];i++}
+ if(tk[i]==='CAVOK'){o.vis=9999;o.cavok=true;i++}
+ else if(/^\d{4}$/.test(tk[i]||'')){o.vis=+tk[i];i++}
+ else if(/^\d+SM$/.test(tk[i]||'')){o.vis=Math.round(parseFloat(tk[i])*1609);i++}
+ else if(/^\d+\/\d+SM$/.test(tk[i]||'')){const ab=tk[i].replace('SM','').split('/');o.vis=Math.round((+ab[0]/+ab[1])*1609);i++}
+ for(;i<tk.length;i++){const t=tk[i];
+  if(/^R\d{2}/.test(t)||t==='NOSIG'){if(t==='NOSIG')o.nosig=true;continue}
+  const cm=/^(FEW|SCT|BKN|OVC)(\d{3})/.exec(t);if(cm){o.clouds.push({cover:cm[1],baseFt:+cm[2]*100});continue}
+  const vv=/^VV(\d{3})$/.exec(t);if(vv){o.clouds.push({cover:'VV',baseFt:+vv[1]*100});continue}
+  if(/^(SKC|CLR|NSC|NCD)$/.test(t)){o.clouds.push({cover:t,baseFt:null});continue}
+  const tm=/^(M?\d{2})\/(M?\d{2})$/.exec(t);if(tm){o.temp=tm[1][0]==='M'?-(+tm[1].slice(1)):+tm[1];o.dewp=tm[2][0]==='M'?-(+tm[2].slice(1)):+tm[2];continue}
+  const q=/^Q(\d{4})$/.exec(t);if(q){o.qnh=+q[1];continue}
+  if(/^[+-]?(VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|PO|SQ|FC|SS|DS)+$/.test(t)&&t.length>=2){o.wx.push(t);continue}
+ }
+ o.ceiling=null;for(const c of o.clouds){if((c.cover==='BKN'||c.cover==='OVC'||c.cover==='VV')&&c.baseFt!=null)o.ceiling=o.ceiling==null?c.baseFt:Math.min(o.ceiling,c.baseFt)}
+ return o}
+function avObsDate(ts){const m=/^(\d{2})(\d{2})(\d{2})Z$/.exec(ts||'');if(!m)return null;const now=new Date();let d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),+m[1],+m[2],+m[3]));if(d-now>6*3600e3)d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-1,+m[1],+m[2],+m[3]));if(now-d>20*24*3600e3)d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,+m[1],+m[2],+m[3]));return d}
+function avCat(o){if(o.vis==null&&o.ceiling==null)return{cat:'—',color:'#64748b',label:'Visibilitas/ceiling tidak dilaporkan pada METAR ini'};
+ const v=o.vis==null?99999:o.vis,c=o.ceiling==null?99999:o.ceiling;
+ if(v<1600||c<500)return{cat:'LIFR',color:'#c026d3',label:'LIFR — sangat rendah'};
+ if(v<4800||c<1000)return{cat:'IFR',color:'#dc2626',label:'IFR — rendah'};
+ if(v<=8000||c<=3000)return{cat:'MVFR',color:'#2563eb',label:'MVFR — marginal'};
+ return{cat:'VFR',color:'#16a34a',label:'VFR — baik'}}
+function avVisClass(v){if(v==null)return{color:'#94a3b8',label:'Tidak dilaporkan'};if(v>8000)return{color:'#16a34a',label:'> 8 km'};if(v>=4800)return{color:'#84cc16',label:'4,8 – 8 km'};if(v>=1600)return{color:'#f59e0b',label:'1,6 – 4,8 km'};return{color:'#dc2626',label:'< 1,6 km'}}
+function avWxText(w){let s=w.replace(/^[+-]/,'');if(s.startsWith('VC'))s=s.slice(2);s=s.replace(/^(SH|TS|FZ|MI|BC|DR|BL)/,'');return WXID[s]||w}
+async function loadAvMetar(){const body=document.getElementById('avMetarBody');if(!body)return;body.innerHTML='<p style="color:var(--mut)">Memuat METAR '+avIcao+'…</p>';
+ try{const r=await fetchTimeout('https://api.met.no/weatherapi/tafmetar/1.0/?content=metar&content_type=text/plain&icao='+avIcao,15000);const txt=await r.text();
+ const lines=txt.split('\n').map(s=>s.trim()).filter(s=>s.startsWith(avIcao));
+ if(!lines.length)throw new Error('kosong');
+ const o=avParseMetar(lines[lines.length-1]);const cat=avCat(o);const vc=avVisClass(o.vis);const od=avObsDate(o.time);
+ const age=od!=null?Math.max(0,Math.round((Date.now()-od)/60000)):null;
+ const windTxt=o.wind?(o.wind.spd===0?'Tenang (calm)':((o.wind.dir==null?'Variabel (VRB)':String(o.wind.dir).padStart(3,'0')+'°')+' · '+o.wind.spd+' kt'+(o.wind.gust?' · gust '+o.wind.gust+' kt':''))+(o.windVar?' · arah bervariasi '+o.windVar:'')):'—';
+ const cloudTxt=o.cavok?'CAVOK — cerah, vis ≥ 10 km':(o.clouds.length?o.clouds.map(c=>(COVID[c.cover]||c.cover)+(c.baseFt!=null?' · '+c.baseFt.toLocaleString('id-ID')+' ft':'')).join('; '):'—');
+ const wxTxt=o.wx.length?o.wx.map(avWxText).join(', '):(o.nosig?'NOSIG — tidak ada perubahan signifikan':'Tidak ada cuaca terlaporkan');
+ body.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="background:${cat.color};color:#fff;font-weight:800;font-size:12px;padding:4px 10px;border-radius:999px">${cat.cat}</span><span style="font-size:12px;color:var(--mut)">${cat.label}</span><span style="margin-left:auto;font-size:12px;color:var(--mut)">${od?('Obs '+od.toISOString().slice(11,16)+' UTC · '+fmtWita(od.toISOString())):''}${age!=null?' · '+age+' mnt lalu':''}</span></div>
+ <div class="avgrid">
+ <div><small>Angin</small><b>${windTxt}</b></div>
+ <div><small>Visibilitas</small><b><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${vc.color};margin-right:5px"></span>${o.vis!=null?(o.vis>=9999?'≥ 10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'—'}</b> <span style="color:var(--mut);font-size:11px">${vc.label}</span></div>
+ <div><small>Suhu / Titik Embun</small><b>${o.temp!=null?o.temp+' °C / '+o.dewp+' °C':'—'}</b></div>
+ <div><small>QNH</small><b>${o.qnh?o.qnh+' hPa':'—'}</b></div>
+ <div><small>Cuaca</small><b>${wxTxt}</b></div>
+ <div><small>Awan${o.ceiling!=null?' — ceiling '+o.ceiling.toLocaleString('id-ID')+' ft':''}</small><b>${cloudTxt}</b></div>
+ </div>
+ <div class="avraw">${o.raw}</div>
+ <p style="font-size:11px;color:var(--mut)">Sumber: observasi METAR stasiun ${avIcao} via MET Norway (api.met.no) — data BMKG yang diteruskan lewat jaringan WMO, isi sama dengan tampilan InaSIAM. Auto-refresh 10 menit.</p>`;
+ }catch(e){body.innerHTML='<p style="color:var(--mut)">METAR belum dapat dimuat — periksa koneksi lalu tekan Muat Ulang.</p>'}}
+async function loadAvTaf(){const el=document.getElementById('avTafBody');if(!el)return;el.innerHTML='<p style="color:var(--mut)">Memuat TAF '+avIcao+'…</p>';
+ const url='https://aviationweather.gov/api/data/taf?ids='+avIcao+'&format=json';
+ let raw=null,valid=null;
+ try{const r=await fetchTimeout(url,12000);const j=await r.json();if(j&&j[0]&&j[0].rawTAF){raw=j[0].rawTAF;valid=[j[0].validTimeFrom,j[0].validTimeTo]}}catch(e){}
+ if(!raw){try{const r=await fetchTimeout('https://api.allorigins.win/raw?url='+encodeURIComponent(url),20000);const j=await r.json();if(j&&j[0]&&j[0].rawTAF){raw=j[0].rawTAF;valid=[j[0].validTimeFrom,j[0].validTimeTo]}}catch(e){}}
+ if(!raw){el.innerHTML='<p style="color:var(--mut)">TAF belum dapat dimuat dari server (pembatasan akses lintas-situs). Gunakan tombol InaSIAM di bawah untuk TAF resmi, atau tekan Muat Ulang pada kartu METAR.</p>';return}
+ const f=e=>{const d=new Date(e*1000);const pz=x=>String(x).padStart(2,'0');return d.getUTCDate()+' '+BULAN[d.getUTCMonth()]+' '+pz(d.getUTCHours())+':'+pz(d.getUTCMinutes())+' UTC'};
+ const vtxt=valid&&valid[0]?('Berlaku '+f(valid[0])+' s/d '+f(valid[1])):'';
+ el.innerHTML=(vtxt?`<p style="font-size:12px"><b>${vtxt}</b> · ${fmtWita(new Date(valid[0]*1000).toISOString())} s/d ${fmtWita(new Date(valid[1]*1000).toISOString())}</p>`:'')+`<div class="avraw">${raw}</div><p style="font-size:11px;color:var(--mut)">Sumber: TAF ${avIcao} via AviationWeather (NOAA), teks resmi apa adanya.</p>`}
+function havKm(a,b,c,d){const R=6371,t=Math.PI/180;const s=Math.sin((c-a)*t/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin((d-b)*t/2)**2;return 2*R*Math.asin(Math.sqrt(s))}
+async function loadAvList(){const el=document.getElementById('avAptList');if(!el)return;el.innerHTML='<p style="color:var(--mut)">Memuat METAR bandara sekitar…</p>';
+ const rows=await Promise.allSettled(AVSTATIONS.map(async s=>{const r=await fetchTimeout('https://api.met.no/weatherapi/tafmetar/1.0/?content=metar&content_type=text/plain&icao='+s.icao,12000);const t=await r.text();const lines=t.split('\n').map(x=>x.trim()).filter(x=>x.startsWith(s.icao));if(!lines.length)throw new Error('kosong');return{s,o:avParseMetar(lines[lines.length-1]),dKm:Math.round(havKm(3.327,117.568,s.lat,s.lon))}}));
+ const ok=rows.filter(r=>r.status==='fulfilled').map(r=>r.value).sort((a,b)=>a.dKm-b.dKm);
+ if(!ok.length){el.innerHTML='<p style="color:var(--mut)">Data bandara sekitar belum dapat dimuat.</p>';return}
+ el.innerHTML=ok.map(({s,o,dKm})=>{const vc=avVisClass(o.vis);const od=avObsDate(o.time);return `<button class="ghost avapt ${s.icao===avIcao?'on':''}" onclick="pilihBandara('${s.icao}',${s.lat},${s.lon})"><span style="width:9px;height:9px;border-radius:50%;background:${vc.color};flex:0 0 auto"></span><b>${s.icao}</b><span style="flex:1;text-align:left">${s.name}</span><span style="font-size:11px;opacity:.75">${dKm} km · ${od?od.toISOString().slice(11,16)+'Z':''} · ${o.wind?o.wind.spd+' kt':''} ${o.temp!=null?o.temp+'°C':''} · ${o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'vis —'}</span></button>`}).join('')+'<p style="font-size:11px;color:var(--mut)">Titik warna = kelas visibilitas ala InaSIAM. Klik bandara untuk memuat METAR/TAF-nya dan terbang ke lokasinya.</p>'}
+function pilihBandara(icao,lat,lon){avIcao=icao;document.getElementById('avTitle').textContent='Cuaca Penerbangan — '+icao;map.flyTo([lat,lon],9);loadAvMetar();loadAvTaf();loadAvList()}
+function avClocks(){const u=document.getElementById('avUtc'),w=document.getElementById('avWita');if(!u)return;const n=new Date();const pz=x=>String(x).padStart(2,'0');u.textContent=pz(n.getUTCHours())+':'+pz(n.getUTCMinutes())+':'+pz(n.getUTCSeconds())+' UTC';const wt=new Date(n.getTime()+8*3600e3);w.textContent=pz(wt.getUTCHours())+':'+pz(wt.getUTCMinutes())+':'+pz(wt.getUTCSeconds())+' WITA'}
+setInterval(avClocks,1000);
+function initAv(){avClocks();if(avInit)return;avInit=true;loadAvMetar();loadAvTaf();loadAvList();avTimer=setInterval(()=>{loadAvMetar();loadAvList()},600000)}
+function openAv(){document.getElementById('side').classList.remove('hidden');document.querySelector('[data-p="penerbangan"]').click()}
+document.querySelector('[data-p="penerbangan"]').addEventListener('click',initAv);
+const avIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50%;background:#005baa;border:2px solid #daa520;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(4,38,77,.4)">✈</div>',iconSize:[30,30],iconAnchor:[15,15]});
+L.marker([3.3270177,117.5682619],{icon:avIcon}).addTo(map).bindPopup('<b>WAQQ — Juwata Intl, Tarakan</b><br>Stasiun Meteorologi Juwata · BMKG<br><button onclick="openAv()" style="margin-top:6px">Buka Cuaca Penerbangan</button>');
+
 // BMKG earthquakes
 let quakeLayer=null;
 async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(`<b>M ${g.Magnitude}</b> — ${g.Wilayah}<br>${g.Tanggal} ${g.Jam}<br>Kedalaman: ${g.Kedalaman}`);quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
@@ -344,7 +451,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  const s=document.getElementById('search'),q=document.getElementById('quick');
  if(s)document.body.appendChild(s); if(q)document.body.appendChild(q);
  // Tambah item quick-layer sesuai daftar situs acuan
- if(q){const extra=[['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['📡 Radar',"toggleRadar()"],['🔥 Hotspot',"toggleGibs('modis')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"gambarBatas()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
+ if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['📡 Radar',"toggleRadar()"],['🔥 Hotspot',"toggleGibs('modis')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"gambarBatas()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
  extra.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.setAttribute('onclick',fn);q.appendChild(b)});}
  // Klik peta membuka sheet detail kanan
  map.on('click',()=>{document.getElementById('detail').classList.add('open')});
@@ -409,6 +516,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  cloud:IC('<path d="M18 10.5a5 5 0 0 0-9.5-1.6A4.6 4.6 0 0 0 7 18h11a3.6 3.6 0 0 0 0-7.5z"/>',14),
  alert:IC('<path d="M12 3 2.5 20h19L12 3z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".4" fill="currentColor"/>',14),
  video:IC('<rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 10.5 22 7v10l-7-3.5z"/>',14),
+ plane:IC('<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',14),
  sliders:IC('<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/>',14),
  scale:IC('<path d="M12 3v18M6 21h12"/><path d="M8 6 5 12.5h6L8 6zM16 6l-3 6.5h6L16 6z"/><path d="M4 6h16"/>',14),
  sprout:IC('<path d="M12 22v-8"/><path d="M12 14a5 5 0 0 0-5-5H4a5 5 0 0 0 5 5h3z"/><path d="M12 10a5 5 0 0 1 5-5h3a5 5 0 0 1-5 5h-3z"/>',14),
@@ -428,7 +536,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  book:IC('<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>'),
  doc:IC('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>'),
  compass:IC('<circle cx="12" cy="12" r="10"/><polygon points="15.5 8.5 13.8 13.8 8.5 15.5 10.2 10.2"/>')};
- const TABICON={geonusa:'pin',geoportal:'globe',geodisaster:'alert',geotools:'sliders'};
+ const TABICON={geonusa:'pin',geoportal:'globe',geodisaster:'alert',penerbangan:'plane',geotools:'sliders'};
  document.querySelectorAll('#tabs button').forEach(b=>{const k=TABICON[b.dataset.p];if(k)b.insertAdjacentHTML('afterbegin',ICONS[k])});
  const EMOJIICON={'📊':'chart','👥':'users','🚌':'bus','🌐':'globe','🏔':'mountain','🏙':'city','🌋':'activity','☁️':'cloud','🔥':'flame','🌊':'wave','📹':'video','✏️':'pencil','📥':'inbox','⚙️':'sliders','🔄':'refresh','🤖':'bot','🌱':'sprout','📖':'book','🛒':'cart','⚖️':'scale','📜':'doc','🧭':'compass','📍':'pin','🛰':'globe','🧰':'sliders'};
  document.querySelectorAll('.card h3,.wel-grid div').forEach(el=>{const t=el.innerHTML.trimStart();for(const [e,k] of Object.entries(EMOJIICON)){if(t.startsWith(e)){el.innerHTML=el.innerHTML.replace(e,ICONS[k]);break}}});
