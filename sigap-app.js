@@ -53,7 +53,7 @@ function satUrl(key,iso){const p=SATPROD[key];return `https://satellite.bmkg.go.
 function satLabel(){const el=document.getElementById('satTime');if(!satRuns.length){el.textContent='—';return}el.textContent=fmtWita(satRuns[satIdx])+(satIdx===0?' (terbaru)':'');updateProdPill()}
 const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]],himawari9fd:[[-66.5,67.5],[66.5,213.75]]};
 function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;return map.getBoundsZoom(L.latLngBounds(b),true)}
-function satFrame(key){const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
+function satFrame(key){if(key&&SATPROD[key]&&SATPROD[key].fd)return;const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
 function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'){satLockZ=satFillZoom(key);if(satLockZ!==null)map.options.minZoom=satLockZ}else{satLockZ=null;map.options.minZoom=3}}
 let satResizeT=null;
