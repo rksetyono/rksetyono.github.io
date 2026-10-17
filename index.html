@@ -145,6 +145,19 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 .avraw{font-family:ui-monospace,monospace;font-size:12px;background:#0b2440;color:#dbeafe;border-radius:8px;padding:9px 11px;word-break:break-word;margin:8px 0;line-height:1.5}
 .avapt{display:flex;align-items:center;gap:8px;width:100%;margin-bottom:6px;text-align:left}
 .avapt.on{background:var(--acc)!important;color:#fff!important}
+/* Dashboard Info ringkas — target: gempa + cuaca + peringatan dini muat 1 layar */
+#geonusaSeg{margin:8px 10px 0;padding:3px}
+#geonusaSeg button{padding:6px 4px;font-size:12.5px}
+#bmkgQuake,#bmkgWeather,#bmkgWarn{margin:8px 10px 0;padding:8px 10px}
+#bmkgQuake h4,#bmkgWeather h4,#bmkgWarn h4{font-size:11px;margin-bottom:4px}
+#bmkgQuake .mag{font-size:23px}
+#bmkgQuake table{font-size:11.5px;line-height:1.35}
+#bmkgQuake table td{padding:1px 6px 1px 0;vertical-align:top}
+#bmkgQuake>p,#bmkgWeather>p,#bmkgWarn>p{font-size:10.5px!important;margin-top:4px!important;line-height:1.35}
+.wx-now{gap:9px}.wx-now .t{font-size:24px}
+.wx-row{margin-top:6px;gap:3px}.wx-row>div{padding:4px 2px;font-size:10.5px;line-height:1.3}
+.warn-item{padding:5px 8px;font-size:11.5px;margin:4px 0;line-height:1.4}
+#tabs button{font-size:8.8px;letter-spacing:-.4px;min-width:0;padding-left:1px;padding-right:1px}
 #sheetHandle{display:none;align-items:center;justify-content:center;padding:8px 0 4px;cursor:pointer;flex:0 0 auto;order:-1}
 #sheetHandle i{width:46px;height:5px;border-radius:3px;background:#cbd5e1;display:block}
 @media(max-width:900px){
@@ -161,9 +174,9 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 <body>
 <div id="app">
 <aside id="side" class="hidden">
-<header><div class="rk-brand"><img id="brandLogo" alt="Logo BMKG" width="34" height="42" style="background:#fff;border-radius:9px;padding:3px;box-shadow:0 1px 5px rgba(4,38,77,.35)"><span class="rk-name"><strong>SIGAP <span>JUWATA</span></strong><small>STASIUN METEOROLOGI JUWATA TARAKAN · BMKG</small></span></div><button class="ghost" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);padding:6px 9px" onclick="document.getElementById('side').classList.add('hidden')"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><polyline points="14 6 8 12 14 18"/></svg></button></header>
-<div id="bmkgQuake"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>GEMPA BUMI TERKINI — BMKG</h4><div id="bmkgQuakeBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat data gempa terbaru BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Data resmi BMKG · Portal prototype Stasiun Meteorologi Juwata Tarakan — bukan situs resmi bmkg.go.id.</p></div>
-<div id="bmkgWeather"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><path d="M18 10.5a5 5 0 0 0-9.5-1.6A4.6 4.6 0 0 0 7 18h11a3.6 3.6 0 0 0 0-7.5z"/></svg>CUACA SAAT INI — BMKG</h4><div id="bmkgWeatherBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat prakiraan cuaca BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Mengikuti desa terpilih di GEONUSA (kode adm4). Bawaan: Karang Anyar Pantai, Kota Tarakan.</p></div>
+<header><div class="rk-brand"><img id="brandLogo" alt="Logo BMKG" width="34" height="42" style="background:#fff;border-radius:9px;padding:3px;box-shadow:0 1px 5px rgba(4,38,77,.35)"><span class="rk-name"><strong>SIGAP <span>JUWATA</span></strong><small>STASIUN METEOROLOGI JUWATA TARAKAN</small></span></div><button class="ghost" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3);padding:6px 9px" onclick="document.getElementById('side').classList.add('hidden')"><svg class="ic" viewBox="0 0 24 24" width="16" height="16"><polyline points="14 6 8 12 14 18"/></svg></button></header>
+<div id="bmkgQuake"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>GEMPA BUMI TERKINI</h4><div id="bmkgQuakeBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat data gempa terbaru BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Data resmi BMKG · Portal prototype Stasiun Meteorologi Juwata Tarakan — bukan situs resmi bmkg.go.id.</p></div>
+<div id="bmkgWeather"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><path d="M18 10.5a5 5 0 0 0-9.5-1.6A4.6 4.6 0 0 0 7 18h11a3.6 3.6 0 0 0 0-7.5z"/></svg>CUACA SAAT INI</h4><div id="bmkgWeatherBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat prakiraan cuaca BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Mengikuti desa terpilih di GEONUSA (kode adm4). Bawaan: Karang Anyar Pantai, Kota Tarakan.</p></div>
 <div id="bmkgWarn"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><path d="M12 3 2.5 20h19L12 3z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".4" fill="currentColor"/></svg>PERINGATAN DINI CUACA</h4><div id="bmkgWarnBody"><p style="color:var(--mut);font-size:12px;margin:0">Menilai potensi cuaca signifikan dari prakiraan BMKG 24 jam ke depan…</p></div><button class="ghost" style="margin-top:6px;font-size:12px" onclick="window.open('https://www.bmkg.go.id/cuaca/peringatan-dini-cuaca.bmkg','_blank')">Peringatan Dini Resmi BMKG ↗</button></div>
 <div id="search"><input id="q" type="text" placeholder="Cari wilayah"><button onclick="cari()">Cari</button></div>
 <div id="quick">
@@ -468,7 +481,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
    if(bq)geoPanel.prepend(bq,bw,bn);
    geoPanel.querySelectorAll(':scope > .card').forEach(c=>c.classList.add('subB'));
    const seg=document.createElement('div');seg.id='geonusaSeg';
-   seg.innerHTML='<button class="on" data-seg="A">Info BMKG</button><button data-seg="B">Data Wilayah</button>';
+   seg.innerHTML='<button class="on" data-seg="A">Info Terkini</button><button data-seg="B">Data Wilayah</button>';
    geoPanel.insertBefore(seg, geoPanel.firstChild);
    const applySeg=A=>{geoPanel.querySelectorAll('.subA').forEach(e=>e.style.display=A?'':'none');geoPanel.querySelectorAll('.subB').forEach(e=>e.style.display=A?'none':'');geoPanel.scrollTop=0};
    seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{seg.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');applySeg(b.dataset.seg==='A')});
@@ -481,7 +494,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  if(modalCard&&!modalCard.querySelector('.bmkg-emblem')){const im=document.createElement('img');im.className='bmkg-emblem';im.src=BMKG_URI;im.alt='Logo BMKG';im.width=61;im.height=76;im.style.cssText='display:block;margin:2px auto 8px';modalCard.insertBefore(im,modalCard.firstChild)}
  const loadCard=document.querySelector('#loading .load-card, #loading>div');
  if(loadCard&&!loadCard.querySelector('.bmkg-emblem')){const im2=document.createElement('img');im2.className='bmkg-emblem';im2.src=BMKG_URI;im2.alt='Logo BMKG';im2.width=52;im2.height=64;im2.style.cssText='display:block;margin:0 auto 8px';loadCard.insertBefore(im2,loadCard.firstChild)}
- const tick=document.createElement('div');tick.id='ticker';tick.innerHTML='<b>INFO BMKG</b><span class="track" id="tickerText">Memuat informasi gempa terkini BMKG…</span>';document.body.appendChild(tick);
+ const tick=document.createElement('div');tick.id='ticker';tick.innerHTML='<b>INFO TERKINI</b><span class="track" id="tickerText">Memuat informasi gempa terkini BMKG…</span>';document.body.appendChild(tick);
  async function loadBmkgQuake(){try{const j=await (await fetch('https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json')).json();const g=j.Infogempa.gempa;const [la,ln]=String(g.Coordinates).split(',').map(Number);
  document.getElementById('bmkgQuakeBody').innerHTML=`<div style="display:flex;gap:12px;align-items:center"><div class="mag">M ${g.Magnitude}</div><div style="font-size:12px;color:var(--mut2)">${g.Tanggal} · ${g.Jam}<br>Kedalaman: ${g.Kedalaman}</div></div><table><tr><td>Koordinat</td><td><b>${g.Lintang} — ${g.Bujur}</b></td></tr><tr><td>Wilayah</td><td>${g.Wilayah}</td></tr><tr><td>Potensi</td><td>${g.Potensi}</td></tr>${g.Dirasakan?`<tr><td>Dirasakan</td><td>${g.Dirasakan}</td></tr>`:''}</table><button class="ghost" style="margin-top:6px;font-size:12px" onclick="map.flyTo([${la},${ln}],9);L.circleMarker([${la},${ln}],{radius:10,color:'#c0392b',fillColor:'#e74c3c',fillOpacity:.6}).addTo(map).bindPopup('<b>M ${g.Magnitude}</b> — ${g.Wilayah}').openPopup()">Lihat di Peta</button>`;
  document.getElementById('tickerText').textContent=`Gempa terkini: M ${g.Magnitude} — ${g.Wilayah} · ${g.Tanggal} ${g.Jam} · Kedalaman ${g.Kedalaman} · ${g.Potensi} ——— Data: BMKG (data.bmkg.go.id) · Peta: SIGAP JUWATA · Stasiun Meteorologi Juwata Tarakan · Informasi bersifat informatif, verifikasi ke sumber resmi untuk keperluan formal.`;}catch(e){document.getElementById('bmkgQuakeBody').innerHTML='<p style="color:var(--mut);font-size:12px;margin:0">Gagal memuat data BMKG saat ini — coba muat ulang.</p>'}}
