@@ -168,17 +168,17 @@ const AVSTATIONS=[
  {icao:'WIBB',name:'Sultan Syarif Kasim II — Pekanbaru',lat:0.461,lon:101.42},
  {icao:'WIDD',name:'Hang Nadim — Batam',lat:1.121,lon:104.119},
  {icao:'WIPP',name:'Sultan Mahmud Badaruddin II — Palembang',lat:-2.9,lon:104.7},
- {icao:'WIPT',name:'Minangkabau Intl — Padang',lat:-0.787,lon:100.281},
+ {icao:'WIEE',name:'Minangkabau Intl — Padang',lat:-0.7855,lon:100.2805},
  {icao:'WITT',name:'Sultan Iskandar Muda — Banda Aceh',lat:5.524,lon:95.42},
  {icao:'WAHI',name:'Yogyakarta Intl — Kulon Progo',lat:-7.788,lon:110.057},
  {icao:'WAHS',name:'Ahmad Yani — Semarang',lat:-6.973,lon:110.375},
  {icao:'WADL',name:'Lombok Intl — Praya',lat:-8.757,lon:116.277},
  {icao:'WATT',name:'El Tari — Kupang',lat:-10.172,lon:123.671},
  {icao:'WAMM',name:'Sam Ratulangi — Manado',lat:1.549,lon:124.927},
- {icao:'WAML',name:'Mutiara SIS Al-Jufri — Palu',lat:-0.918,lon:119.91},
+ {icao:'WAFF',name:'Mutiara SIS Al-Jufri — Palu',lat:-0.9146,lon:119.9075},
  {icao:'WAWW',name:'Haluoleo — Kendari',lat:-4.082,lon:122.418},
  {icao:'WAGG',name:'Tjilik Riwut — Palangkaraya',lat:-2.225,lon:113.943},
- {icao:'WAAP',name:'Pattimura — Ambon',lat:-3.707,lon:128.089},
+ {icao:'WAPP',name:'Pattimura — Ambon',lat:-3.708,lon:128.0869},
  {icao:'WAEE',name:'Babullah — Ternate',lat:0.832,lon:127.381},
  {icao:'WASS',name:'Domine Eduard Osok — Sorong',lat:-0.894,lon:131.288},
  {icao:'WAJJ',name:'Sentani — Jayapura',lat:-2.577,lon:140.516}];
@@ -482,7 +482,15 @@ async function avDotsRefresh(){
     }
   }catch(e){}
   if(done)return;
-if(!avDots)avDots=L.layerGroup();const rs=await Promise.allSettled(AVSTATIONS.map(s=>fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+s.icao+'?active=true',12000).then(r=>r.json())));avDots.clearLayers();rs.forEach((r,i)=>{const s=AVSTATIONS[i];let o=null,raw=null;if(r.status==='fulfilled'&&r.value&&r.value.metar&&r.value.metar.raw){raw=r.value.metar.raw;o=avParseMetar(raw)}const vc=avVisClass(o?o.vis:null);const cat=o?avCat(o):null;const visTxt=o&&o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'tidak dilaporkan';const m=L.circleMarker([s.lat,s.lon],{radius:6,color:'#ffffff',weight:1.5,fillColor:vc.color,fillOpacity:.95});m.bindPopup('<b>'+s.name+'</b><br><span style="font-size:11px;color:#5b7a99">'+s.icao+' · visibilitas '+visTxt+(cat?' · '+cat.cat:'')+'</span>'+(raw?'<div style="font-family:monospace;font-size:10.5px;background:#f4f8fc;border:1px solid #d7e5f2;border-radius:6px;padding:5px 7px;margin:6px 0">'+raw+'</div>':'<div style="font-size:11px;margin:6px 0">METAR belum tersedia.</div>')+'<button class="mini" onclick="pilihBandara(\''+s.icao+'\','+s.lat+','+s.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>');m.addTo(avDots)})
+const rs=await Promise.allSettled(AVSTATIONS.map(s=>fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+s.icao+'?active=true',12000).then(r=>r.json())));
+  const raws=rs.map(r=>(r.status==='fulfilled'&&r.value&&r.value.metar&&r.value.metar.raw)?r.value.metar.raw:null);
+  const miss=[];raws.forEach((x,ix)=>{if(!x)miss.push(ix)});
+  if(miss.length){
+    const rn=await Promise.allSettled(miss.map(ix=>fetchTimeout('https://api.met.no/weatherapi/tafmetar/1.0/?content=metar&content_type=text/plain&icao='+AVSTATIONS[ix].icao,12000).then(r=>r.text())));
+    rn.forEach((r,k)=>{if(r.status==='fulfilled'&&r.value){const lines=String(r.value).split('\n').map(s=>s.trim()).filter(s=>s.startsWith(AVSTATIONS[miss[k]].icao));if(lines.length)raws[miss[k]]=lines[lines.length-1]}});
+  }
+  avDots.clearLayers();
+  AVSTATIONS.forEach((s,ix)=>{const raw=raws[ix];const o=raw?avParseMetar(raw):null;const vc=avVisClass(o?o.vis:null);const cat=o?avCat(o):null;const visTxt=o&&o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'tidak dilaporkan';const m=L.circleMarker([s.lat,s.lon],{radius:6,color:'#ffffff',weight:1.5,fillColor:vc.color,fillOpacity:.95});m.bindPopup('<b>'+s.name+'</b><br><span style="font-size:11px;color:#5b7a99">'+s.icao+' · visibilitas '+visTxt+(cat?' · '+cat.cat:'')+'</span>'+(raw?'<div style="font-family:monospace;font-size:10.5px;background:#f4f8fc;border:1px solid #d7e5f2;border-radius:6px;padding:5px 7px;margin:6px 0">'+raw+'</div>':'<div style="font-size:11px;margin:6px 0">METAR belum tersedia.</div>')+'<button class="mini" onclick="pilihBandara(\''+s.icao+'\','+s.lat+','+s.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>');m.addTo(avDots)});
 }
 function avDotsToggle(force){const on=typeof force==='boolean'?force:!avDotsOn;avDotsOn=on;const b=document.getElementById('avDotsBtn');if(b)b.textContent=on?'🛬 Titik Bandara di Peta: Aktif':'🛬 Titik Bandara di Peta: Nonaktif';if(on){if(!avDots)avDots=L.layerGroup();avDots.addTo(map);avDotsRefresh();if(avDotsTimer)clearInterval(avDotsTimer);avDotsTimer=setInterval(()=>{if(avDotsOn)avDotsRefresh()},600000)}else{if(avDots)map.removeLayer(avDots);if(avDotsTimer)clearInterval(avDotsTimer)}if(typeof wxRender==='function')wxRender()}
 setTimeout(()=>{try{if(!satKey)satMenuChange('eh')}catch(e){}try{avDotsToggle(true)}catch(e){}},900);
