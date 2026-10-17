@@ -134,13 +134,14 @@ function wxIaSec(nm,P,ints){let s='<div class="wxsec"><b>🛰 '+nm+'</b>'+wxGrad
 function wxRender(){const secs=[];
  if(typeof iaKey!=='undefined'&&iaKey&&IAPROD[iaKey])secs.push(wxIaSec(IAPROD[iaKey].n+' — InaSIAM',IAPROD[iaKey],IAINT[iaKey]));
  if(satKey){if(satKey==='eh'||satKey==='ehs')secs.push(wxIaSec('Himawari-9 IR Enhanced',{u:'K',cb:IRCB},IAINT.ir));else secs.push('<div class="wxsec"><b>🛰 '+SATPROD[satKey].label+'</b><div class="wxrow">Citra satelit BMKG</div></div>')}
+ if(typeof avDotsOn!=='undefined'&&avDotsOn)secs.push('<div class="wxsec"><b>\U0001f6ec Visibilitas Bandara (METAR)</b>'+[8001,4800,1600,0,null].map(v=>{const vc=avVisClass(v);return '<div class="wxrow"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+vc.color+';margin-right:6px"></span>'+vc.label+'</div>'}).join('')+'</div>');
  if(typeof radarLayer!=='undefined'&&radarLayer)secs.push('<div class="wxsec"><b>📡 Radar BMKG (dBZ)</b><div class="wxgrad" style="background:linear-gradient(90deg,#a0d8ef,#01b8ff,#00e500,#b4dc00,#ffdc00,#ff7100,#ff0000,#b800d6)"></div><div class="wxcap"><span>5 ringan</span><span>35 deras</span><span>55 ekstrem</span><span>75 hail</span></div></div>');
  if(typeof rainLayer!=='undefined'&&rainLayer)secs.push('<div class="wxsec"><b>🌧 Hujan — GPM IMERG</b><div class="wxrow">Estimasi laju hujan satelit (mm/jam) · data '+(rainLayer._date||'')+'</div></div>');
  if(typeof gibsLayer!=='undefined'&&gibsLayer)secs.push('<div class="wxsec"><b>🛰 VIIRS NOAA-20 True Color</b><div class="wxrow">Citra warna asli NASA GIBS · '+(gibsLayer._date||'')+'</div></div>');
  if(typeof quakeLayer!=='undefined'&&quakeLayer&&map.hasLayer(quakeLayer))secs.push('<div class="wxsec"><b>🌋 Gempa BMKG — magnitudo</b>'+[[6,'#b91c1c','≥ 6'],[5,'#dc2626','5 – 6'],[4,'#ea580c','4 – 5'],[3,'#d97706','3 – 4'],[0,'#009444','< 3']].map(r=>'<div class="wxrow"><span class="wxdot" style="background:'+r[1]+';border-radius:50%"></span>M '+r[2]+'</div>').join('')+'</div>');
  const el=wxLegendEl();if(!secs.length){el.style.display='none';return}
  el.style.display='block';document.getElementById('wxBadge').textContent=secs.length;document.getElementById('wxBody').style.display=wxLegOpen?'block':'none';document.getElementById('wxChev').textContent=wxLegOpen?'▾':'▸';document.getElementById('wxBody').innerHTML=secs.join('')}
-let wxSigLast='';setInterval(()=>{const sig=[typeof iaKey!=='undefined'&&iaKey,satKey,typeof radarLayer!=='undefined'&&!!radarLayer,typeof rainLayer!=='undefined'&&!!rainLayer,typeof gibsLayer!=='undefined'&&!!gibsLayer,typeof quakeLayer!=='undefined'&&!!quakeLayer&&map.hasLayer(quakeLayer)].join('|');if(sig!==wxSigLast){wxSigLast=sig;wxRender()}},1500);
+let wxSigLast='';setInterval(()=>{const sig=[typeof iaKey!=='undefined'&&iaKey,satKey,typeof radarLayer!=='undefined'&&!!radarLayer,typeof rainLayer!=='undefined'&&!!rainLayer,typeof gibsLayer!=='undefined'&&!!gibsLayer,typeof quakeLayer!=='undefined'&&!!quakeLayer&&map.hasLayer(quakeLayer),typeof avDotsOn!=='undefined'&&avDotsOn].join('|');if(sig!==wxSigLast){wxSigLast=sig;wxRender()}},1500);
 (function(){const nm=document.querySelector('#side header .rk-name')||document.querySelector('#side header');if(!nm)return;const c=document.createElement('div');c.id='utcClock';c.style.cssText='font-size:11px;font-weight:600;letter-spacing:.03em;opacity:.88;margin-top:3px';nm.appendChild(c);const q=n=>String(n).padStart(2,'0');const tick=()=>{const d=new Date();const w=new Date(d.getTime()+8*3600*1000);c.textContent='🕐 UTC '+q(d.getUTCHours())+':'+q(d.getUTCMinutes())+':'+q(d.getUTCSeconds())+' · WITA '+q(w.getUTCHours())+':'+q(w.getUTCMinutes())+':'+q(w.getUTCSeconds())};tick();setInterval(tick,1000)})();
 function satMenuChange(v){const sel=document.getElementById('satMenu');if(v===''){if(satKey)setSatProduct(satKey);if(typeof iaKey!=='undefined'&&iaKey)iaOff();if(sel)sel.value='';return}
  if(v.indexOf('ia:')===0){const k=v.slice(3);if(typeof iaKey==='undefined'||iaKey!==k)setIa(k)}else if(v!==satKey)setSatProduct(v)}
@@ -155,7 +156,29 @@ const AVSTATIONS=[
  {icao:'WBSB',name:'Brunei Intl — Brunei',lat:4.944,lon:114.928},
  {icao:'WALL',name:'Sepinggan Intl — Balikpapan',lat:-1.268,lon:116.894},
  {icao:'WAOO',name:'Syamsudin Noor — Banjarmasin',lat:-3.44,lon:114.759},
- {icao:'WIOO',name:'Supadio — Pontianak',lat:-0.151,lon:109.404}];
+ {icao:'WIOO',name:'Supadio — Pontianak',lat:-0.151,lon:109.404},
+ {icao:'WIII',name:'Soekarno-Hatta Intl — Jakarta',lat:-6.126,lon:106.656},
+ {icao:'WADD',name:'Ngurah Rai Intl — Denpasar, Bali',lat:-8.748,lon:115.167},
+ {icao:'WARR',name:'Juanda — Surabaya',lat:-7.38,lon:112.787},
+ {icao:'WAAA',name:'Sultan Hasanuddin — Makassar',lat:-5.062,lon:119.554},
+ {icao:'WIMM',name:'Kualanamu Intl — Medan',lat:3.642,lon:98.885},
+ {icao:'WIBB',name:'Sultan Syarif Kasim II — Pekanbaru',lat:0.461,lon:101.42},
+ {icao:'WIDD',name:'Hang Nadim — Batam',lat:1.121,lon:104.119},
+ {icao:'WIPP',name:'Sultan Mahmud Badaruddin II — Palembang',lat:-2.9,lon:104.7},
+ {icao:'WIPT',name:'Minangkabau Intl — Padang',lat:-0.787,lon:100.281},
+ {icao:'WITT',name:'Sultan Iskandar Muda — Banda Aceh',lat:5.524,lon:95.42},
+ {icao:'WAHI',name:'Yogyakarta Intl — Kulon Progo',lat:-7.788,lon:110.057},
+ {icao:'WAHS',name:'Ahmad Yani — Semarang',lat:-6.973,lon:110.375},
+ {icao:'WADL',name:'Lombok Intl — Praya',lat:-8.757,lon:116.277},
+ {icao:'WATT',name:'El Tari — Kupang',lat:-10.172,lon:123.671},
+ {icao:'WAMM',name:'Sam Ratulangi — Manado',lat:1.549,lon:124.927},
+ {icao:'WAML',name:'Mutiara SIS Al-Jufri — Palu',lat:-0.918,lon:119.91},
+ {icao:'WAWW',name:'Haluoleo — Kendari',lat:-4.082,lon:122.418},
+ {icao:'WAGG',name:'Tjilik Riwut — Palangkaraya',lat:-2.225,lon:113.943},
+ {icao:'WAAP',name:'Pattimura — Ambon',lat:-3.707,lon:128.089},
+ {icao:'WAEE',name:'Babullah — Ternate',lat:0.832,lon:127.381},
+ {icao:'WASS',name:'Domine Eduard Osok — Sorong',lat:-0.894,lon:131.288},
+ {icao:'WAJJ',name:'Sentani — Jayapura',lat:-2.577,lon:140.516}];
 let avIcao='WAQQ',avInit=false,avTimer=null;
 const WXID={RA:'Hujan',DZ:'Gerimis',TS:'Badai petir',SH:'Hujan shower',FU:'Asap',HZ:'Kabut asap (haze)',BR:'Kabut tipis (mist)',FG:'Kabut tebal (fog)',GR:'Hujan es',GS:'Hujan es kecil',SN:'Salju',SQ:'Squall',NSW:'Tidak ada cuaca signifikan'};
 const COVID={FEW:'Sedikit (few)',SCT:'Tersebar (scattered)',BKN:'Menutup sebagian besar (broken)',OVC:'Menutup penuh (overcast)',SKC:'Cerah',CLR:'Cerah',NSC:'Tidak ada awan signifikan',NCD:'Tidak terdeteksi (AUTO)',VV:'Langit tertutup vertikal'};
@@ -193,10 +216,13 @@ function avCat(o){if(o.vis==null&&o.ceiling==null)return{cat:'—',color:'#64748
 function avVisClass(v){if(v==null)return{color:'#94a3b8',label:'Tidak dilaporkan'};if(v>8000)return{color:'#16a34a',label:'> 8 km'};if(v>=4800)return{color:'#84cc16',label:'4,8 – 8 km'};if(v>=1600)return{color:'#f59e0b',label:'1,6 – 4,8 km'};return{color:'#dc2626',label:'< 1,6 km'}}
 function avWxText(w){let s=w.replace(/^[+-]/,'');if(s.startsWith('VC'))s=s.slice(2);s=s.replace(/^(SH|TS|FZ|MI|BC|DR|BL)/,'');return WXID[s]||w}
 async function loadAvMetar(){const body=document.getElementById('avMetarBody');if(!body)return;body.innerHTML='<p style="color:var(--mut)">Memuat METAR '+avIcao+'…</p>';
- try{const r=await fetchTimeout('https://api.met.no/weatherapi/tafmetar/1.0/?content=metar&content_type=text/plain&icao='+avIcao,15000);const txt=await r.text();
+ let avLine=null,avSrc='MET Norway (api.met.no)';
+ try{const r=await fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+avIcao+'?active=true',12000);const j=await r.json();if(j&&j.metar&&j.metar.raw){avLine=j.metar.raw;avSrc='BMKG — OPMET InaSIAM'}}catch(e){}
+ try{
+ if(!avLine){const r=await fetchTimeout('https://api.met.no/weatherapi/tafmetar/1.0/?content=metar&content_type=text/plain&icao='+avIcao,15000);const txt=await r.text();
  const lines=txt.split('\n').map(s=>s.trim()).filter(s=>s.startsWith(avIcao));
- if(!lines.length)throw new Error('kosong');
- const o=avParseMetar(lines[lines.length-1]);const cat=avCat(o);const vc=avVisClass(o.vis);const od=avObsDate(o.time);
+ if(!lines.length)throw new Error('kosong');avLine=lines[lines.length-1]}
+ const o=avParseMetar(avLine);const cat=avCat(o);const vc=avVisClass(o.vis);const od=avObsDate(o.time);
  const age=od!=null?Math.max(0,Math.round((Date.now()-od)/60000)):null;
  const windTxt=o.wind?(o.wind.spd===0?'Tenang (calm)':((o.wind.dir==null?'Variabel (VRB)':String(o.wind.dir).padStart(3,'0')+'°')+' · '+o.wind.spd+' kt'+(o.wind.gust?' · gust '+o.wind.gust+' kt':''))+(o.windVar?' · arah bervariasi '+o.windVar:'')):'—';
  const cloudTxt=o.cavok?'CAVOK — cerah, vis ≥ 10 km':(o.clouds.length?o.clouds.map(c=>(COVID[c.cover]||c.cover)+(c.baseFt!=null?' · '+c.baseFt.toLocaleString('id-ID')+' ft':'')).join('; '):'—');
@@ -211,20 +237,21 @@ async function loadAvMetar(){const body=document.getElementById('avMetarBody');i
  <div><small>Awan${o.ceiling!=null?' — ceiling '+o.ceiling.toLocaleString('id-ID')+' ft':''}</small><b>${cloudTxt}</b></div>
  </div>
  <div class="avraw">${o.raw}</div>
- <p style="font-size:11px;color:var(--mut)">Sumber: observasi METAR stasiun ${avIcao} via MET Norway (api.met.no) — data BMKG yang diteruskan lewat jaringan WMO, isi sama dengan tampilan InaSIAM. Auto-refresh 10 menit.</p>`;
+ <p style="font-size:11px;color:var(--mut)">Sumber: observasi METAR stasiun ${avIcao} via ${avSrc}. Auto-refresh 10 menit.</p>`;
  }catch(e){body.innerHTML='<p style="color:var(--mut)">METAR belum dapat dimuat — periksa koneksi lalu tekan Muat Ulang.</p>'}}
 async function loadAvTaf(){const el=document.getElementById('avTafBody');if(!el)return;el.innerHTML='<p style="color:var(--mut)">Memuat TAF '+avIcao+'…</p>';
  const url='https://aviationweather.gov/api/data/taf?ids='+avIcao+'&format=json';
- let raw=null,valid=null;
- try{const r=await fetchTimeout(url,12000);const j=await r.json();if(j&&j[0]&&j[0].rawTAF){raw=j[0].rawTAF;valid=[j[0].validTimeFrom,j[0].validTimeTo]}}catch(e){}
+ let raw=null,valid=null,tafSrc='AviationWeather (NOAA)';
+ try{const r=await fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+avIcao+'?active=true',12000);const j=await r.json();if(j&&j.taf&&j.taf.raw){raw=j.taf.raw;valid=[Date.parse(j.taf.validFrom)/1000,Date.parse(j.taf.validTo)/1000];tafSrc='BMKG — OPMET InaSIAM'}}catch(e){}
+ if(!raw)try{const r=await fetchTimeout(url,12000);const j=await r.json();if(j&&j[0]&&j[0].rawTAF){raw=j[0].rawTAF;valid=[j[0].validTimeFrom,j[0].validTimeTo]}}catch(e){}
  if(!raw){try{const r=await fetchTimeout('https://api.allorigins.win/raw?url='+encodeURIComponent(url),20000);const j=await r.json();if(j&&j[0]&&j[0].rawTAF){raw=j[0].rawTAF;valid=[j[0].validTimeFrom,j[0].validTimeTo]}}catch(e){}}
  if(!raw){el.innerHTML='<p style="color:var(--mut)">TAF belum dapat dimuat dari server (pembatasan akses lintas-situs). Gunakan tombol InaSIAM di bawah untuk TAF resmi, atau tekan Muat Ulang pada kartu METAR.</p>';return}
  const f=e=>{const d=new Date(e*1000);const pz=x=>String(x).padStart(2,'0');return d.getUTCDate()+' '+BULAN[d.getUTCMonth()]+' '+pz(d.getUTCHours())+':'+pz(d.getUTCMinutes())+' UTC'};
  const vtxt=valid&&valid[0]?('Berlaku '+f(valid[0])+' s/d '+f(valid[1])):'';
- el.innerHTML=(vtxt?`<p style="font-size:12px"><b>${vtxt}</b> · ${fmtWita(new Date(valid[0]*1000).toISOString())} s/d ${fmtWita(new Date(valid[1]*1000).toISOString())}</p>`:'')+`<div class="avraw">${raw}</div><p style="font-size:11px;color:var(--mut)">Sumber: TAF ${avIcao} via AviationWeather (NOAA), teks resmi apa adanya.</p>`}
+ el.innerHTML=(vtxt?`<p style="font-size:12px"><b>${vtxt}</b> · ${fmtWita(new Date(valid[0]*1000).toISOString())} s/d ${fmtWita(new Date(valid[1]*1000).toISOString())}</p>`:'')+`<div class="avraw">${raw}</div><p style="font-size:11px;color:var(--mut)">Sumber: TAF ${avIcao} via ${tafSrc}, teks resmi apa adanya.</p>`}
 function havKm(a,b,c,d){const R=6371,t=Math.PI/180;const s=Math.sin((c-a)*t/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin((d-b)*t/2)**2;return 2*R*Math.asin(Math.sqrt(s))}
 async function loadAvList(){const el=document.getElementById('avAptList');if(!el)return;el.innerHTML='<p style="color:var(--mut)">Memuat METAR bandara sekitar…</p>';
- const rows=await Promise.allSettled(AVSTATIONS.map(async s=>{const r=await fetchTimeout('https://api.met.no/weatherapi/tafmetar/1.0/?content=metar&content_type=text/plain&icao='+s.icao,12000);const t=await r.text();const lines=t.split('\n').map(x=>x.trim()).filter(x=>x.startsWith(s.icao));if(!lines.length)throw new Error('kosong');return{s,o:avParseMetar(lines[lines.length-1]),dKm:Math.round(havKm(3.327,117.568,s.lat,s.lon))}}));
+ const rows=await Promise.allSettled(AVSTATIONS.map(async s=>{let line=null;try{const r=await fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+s.icao+'?active=true',12000);const j=await r.json();if(j&&j.metar&&j.metar.raw)line=j.metar.raw}catch(e){} if(!line){const r=await fetchTimeout('https://api.met.no/weatherapi/tafmetar/1.0/?content=metar&content_type=text/plain&icao='+s.icao,12000);const t=await r.text();const lines=t.split('\n').map(x=>x.trim()).filter(x=>x.startsWith(s.icao));if(!lines.length)throw new Error('kosong');line=lines[lines.length-1]}return{s,o:avParseMetar(line),dKm:Math.round(havKm(3.327,117.568,s.lat,s.lon))}}));
  const ok=rows.filter(r=>r.status==='fulfilled').map(r=>r.value).sort((a,b)=>a.dKm-b.dKm);
  if(!ok.length){el.innerHTML='<p style="color:var(--mut)">Data bandara sekitar belum dapat dimuat.</p>';return}
  el.innerHTML=ok.map(({s,o,dKm})=>{const vc=avVisClass(o.vis);const od=avObsDate(o.time);return `<button class="ghost avapt ${s.icao===avIcao?'on':''}" onclick="pilihBandara('${s.icao}',${s.lat},${s.lon})"><span style="width:9px;height:9px;border-radius:50%;background:${vc.color};flex:0 0 auto"></span><b>${s.icao}</b><span style="flex:1;text-align:left">${s.name}</span><span style="font-size:11px;opacity:.75">${dKm} km · ${od?od.toISOString().slice(11,16)+'Z':''} · ${o.wind?o.wind.spd+' kt':''} ${o.temp!=null?o.temp+'°C':''} · ${o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'vis —'}</span></button>`}).join('')+'<p style="font-size:11px;color:var(--mut)">Titik warna = kelas visibilitas ala InaSIAM. Klik bandara untuk memuat METAR/TAF-nya dan terbang ke lokasinya.</p>'}
@@ -429,3 +456,9 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  setTimeout(()=>{lo.classList.add('hide')},3500); // pengaman bila event load sudah lewat
 })();
 
+
+/* ===== Titik bandara di peta (OPMET BMKG) + bawaan awal ===== */
+let avDots=null,avDotsOn=false,avDotsTimer=null;
+async function avDotsRefresh(){if(!avDots)avDots=L.layerGroup();const rs=await Promise.allSettled(AVSTATIONS.map(s=>fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+s.icao+'?active=true',12000).then(r=>r.json())));avDots.clearLayers();rs.forEach((r,i)=>{const s=AVSTATIONS[i];let o=null,raw=null;if(r.status==='fulfilled'&&r.value&&r.value.metar&&r.value.metar.raw){raw=r.value.metar.raw;o=avParseMetar(raw)}const vc=avVisClass(o?o.vis:null);const cat=o?avCat(o):null;const visTxt=o&&o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'tidak dilaporkan';const m=L.circleMarker([s.lat,s.lon],{radius:6,color:'#ffffff',weight:1.5,fillColor:vc.color,fillOpacity:.95});m.bindPopup('<b>'+s.name+'</b><br><span style="font-size:11px;color:#5b7a99">'+s.icao+' · visibilitas '+visTxt+(cat?' · '+cat.cat:'')+'</span>'+(raw?'<div style="font-family:monospace;font-size:10.5px;background:#f4f8fc;border:1px solid #d7e5f2;border-radius:6px;padding:5px 7px;margin:6px 0">'+raw+'</div>':'<div style="font-size:11px;margin:6px 0">METAR belum tersedia.</div>')+'<button class="mini" onclick="pilihBandara(\''+s.icao+'\','+s.lat+','+s.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>');m.addTo(avDots)})}
+function avDotsToggle(force){const on=typeof force==='boolean'?force:!avDotsOn;avDotsOn=on;const b=document.getElementById('avDotsBtn');if(b)b.textContent=on?'🛬 Titik Bandara di Peta: Aktif':'🛬 Titik Bandara di Peta: Nonaktif';if(on){if(!avDots)avDots=L.layerGroup();avDots.addTo(map);avDotsRefresh();if(avDotsTimer)clearInterval(avDotsTimer);avDotsTimer=setInterval(()=>{if(avDotsOn)avDotsRefresh()},600000)}else{if(avDots)map.removeLayer(avDots);if(avDotsTimer)clearInterval(avDotsTimer)}if(typeof wxRender==='function')wxRender()}
+setTimeout(()=>{try{if(!satKey)satMenuChange('eh')}catch(e){}try{avDotsToggle(true)}catch(e){}},900);
