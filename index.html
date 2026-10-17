@@ -285,6 +285,7 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 </section>
 <section class="panel" id="p-penerbangan">
 <div class="card"><h3>✈ <span id="avTitle">Cuaca Penerbangan — WAQQ</span></h3>
+<button class="ghost" id="avDotsBtn" style="width:100%;margin:2px 0 8px" onclick="avDotsToggle()">🛬 Titik Bandara di Peta: Aktif</button>
 <div style="display:flex;gap:14px;align-items:center;font-family:ui-monospace,monospace;font-size:13px;margin-bottom:8px"><span id="avUtc">--:--:-- UTC</span><span id="avWita" style="color:var(--mut)">--:--:-- WITA</span><button class="ghost" style="margin-left:auto;padding:4px 9px" onclick="loadAvMetar();loadAvTaf()">Muat Ulang</button></div>
 <div id="avMetarBody"><p style="color:var(--mut)">METAR dimuat saat tab dibuka.</p></div></div>
 <div class="card"><h3>📋 Prakiraan Bandara (TAF)</h3><div id="avTafBody"><p style="color:var(--mut)">TAF dimuat saat tab dibuka.</p></div>
@@ -319,6 +320,6 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
-<script src="sigap-app.js?v=20261017-1"></script>
+<script src="sigap-app.js?v=20261017-2"></script>
 </body>
 </html>
