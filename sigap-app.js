@@ -65,7 +65,7 @@ function satApplyLayer(){if(satPlaying)satStopPlay();if(satBuf){map.removeLayer(
 async function setSatProduct(key){const st=document.getElementById('satStatus');if(!key||key===satKey){satKey=null;satZoomLock(null);if(satLayer)map.removeLayer(satLayer);satLayer=null;chipState('Himawari',false);satStopPlay();document.querySelectorAll('.satbtn').forEach(b=>b.classList.remove('on'));document.getElementById('satTime').textContent='—';updateProdPill();return}
  satKey=key;if(typeof iaKey!=='undefined'&&iaKey)iaOff();document.querySelectorAll('.satbtn').forEach(b=>b.classList.toggle('on',b.dataset.sat===key));st.textContent='Menghubungi server citra BMKG…';
  try{const data=await getModelRuns();satRuns=(data[SATPROD[key].model]||[]).slice();if(!satRuns.length){st.textContent='Tidak ada model run untuk produk ini saat ini di server BMKG.';return}satIdx=0;const sl=document.getElementById('satSlider');sl.max=satRuns.length-1;sl.value=satRuns.length-1;satApplyLayer();satZoomLock(key);satFrame(key);chipState('Himawari',true);st.textContent=satProdLabel(key)+' aktif — '+satRuns.length+' waktu tersedia, geser slider untuk mundur ke citra sebelumnya.'}catch(e){st.textContent='Server citra BMKG belum menjawab — coba lagi sebentar lagi.';satZoomLock(null)}
- if(satRefreshTimer)clearInterval(satRefreshTimer);satRefreshTimer=setInterval(async()=>{if(!satKey)return;modelrunCache=null;try{const data=await getModelRuns();const runs=(data[SATPROD[satKey].model]||[]).slice();if(runs.length&&runs[0]!==satRuns[0]){const ikutTerbaru=satIdx===0;satRuns=runs;const sl=document.getElementById('satSlider');sl.max=runs.length-1;if(ikutTerbaru){satIdx=0;sl.value=runs.length-1}satApplyLayer()}}catch(e){}},600000)}
+ if(satRefreshTimer)clearInterval(satRefreshTimer);satRefreshTimer=setInterval(async()=>{if(!satKey)return;modelrunCache=null;try{const data=await getModelRuns();const runs=(data[SATPROD[satKey].model]||[]).slice();if(runs.length&&runs[0]!==satRuns[0]){const ikutTerbaru=satIdx===0;satRuns=runs;const sl=document.getElementById('satSlider');sl.max=runs.length-1;if(ikutTerbaru){satIdx=0;sl.value=runs.length-1}const wasP=satPlaying;satApplyLayer();if(wasP)setTimeout(()=>{if(satKey&&!satPlaying&&satRuns.length>=2)satPlayToggle()},1500)}}catch(e){}},600000)}
 function satProdLabel(k){return SATPROD[k].label}
 function satSliderMove(v){if(satPlaying)satStopPlay();if(!satRuns.length)return;satIdx=satRuns.length-1-(+v);if(satLayer)satLayer.setUrl(satUrl(satKey,satRuns[satIdx]));satMarkLoading()}
 let satBuf=null,satOldLayer=null,satPlaying=false,satBufReady=false,satPendingAdv=false,satFadeTimer=null;
@@ -147,7 +147,7 @@ function wxRender(){const secs=[];
 let wxSigLast='';setInterval(()=>{const sig=[typeof iaKey!=='undefined'&&iaKey,satKey,typeof radarLayer!=='undefined'&&!!radarLayer,typeof rainLayer!=='undefined'&&!!rainLayer,typeof gibsLayer!=='undefined'&&!!gibsLayer,typeof quakeLayer!=='undefined'&&!!quakeLayer&&map.hasLayer(quakeLayer),typeof avDotsOn!=='undefined'&&avDotsOn,typeof sgOn!=='undefined'&&sgOn,typeof ltOn!=='undefined'&&ltOn,typeof firOn!=='undefined'&&firOn].join('|');if(sig!==wxSigLast){wxSigLast=sig;wxRender()}},1500);
 (function(){const nm=document.querySelector('#side header .rk-name')||document.querySelector('#side header');if(!nm)return;const c=document.createElement('div');c.id='utcClock';c.style.cssText='font-size:11px;font-weight:600;letter-spacing:.03em;opacity:.88;margin-top:3px';nm.appendChild(c);const q=n=>String(n).padStart(2,'0');const tick=()=>{const d=new Date();const w=new Date(d.getTime()+8*3600*1000);c.textContent='🕐 UTC '+q(d.getUTCHours())+':'+q(d.getUTCMinutes())+':'+q(d.getUTCSeconds())+' · WITA '+q(w.getUTCHours())+':'+q(w.getUTCMinutes())+':'+q(w.getUTCSeconds())};tick();setInterval(tick,1000)})();
 function satMenuChange(v){const sel=document.getElementById('satMenu');if(v===''){if(satKey)setSatProduct(satKey);if(typeof iaKey!=='undefined'&&iaKey)iaOff();if(sel)sel.value='';return}
- if(v.indexOf('ia:')===0){const k=v.slice(3);if(typeof iaKey==='undefined'||iaKey!==k)setIa(k)}else if(v!==satKey)setSatProduct(v)}
+ if(v.indexOf('ia:')===0){const k=v.slice(3);if(typeof iaKey==='undefined'||iaKey!==k)setIa(k)}else if(v!==satKey)setSatProduct(v);if(v&&v.indexOf('ia:')!==0){const ap=()=>{if(satKey&&!satPlaying&&satRuns.length>=2)satPlayToggle()};setTimeout(ap,2500);setTimeout(ap,6000)}}
 function satMenuSync(){const sel=document.getElementById('satMenu');if(!sel||document.activeElement===sel)return;const cur=(typeof iaKey!=='undefined'&&iaKey)?'ia:'+iaKey:((satKey==='ehs'?'eh':satKey==='wvs'?'wv':satKey)||'');if(sel.value!==cur)sel.value=cur}
 setInterval(satMenuSync,1500);
 // ===== Penerbangan — METAR/TAF (MET Norway & AviationWeather/NOAA) =====
@@ -264,8 +264,8 @@ setInterval(avClocks,1000);
 function initAv(){avClocks();if(avInit)return;avInit=true;loadAvMetar();loadAvTaf();loadAvList();avTimer=setInterval(()=>{loadAvMetar();loadAvList()},600000)}
 function openAv(){document.getElementById('side').classList.remove('hidden');document.querySelector('[data-p="penerbangan"]').click()}
 document.querySelector('[data-p="penerbangan"]').addEventListener('click',initAv);
-const avIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50%;background:#005baa;border:2px solid #daa520;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(4,38,77,.4)">✈</div>',iconSize:[30,30],iconAnchor:[15,15]});
-L.marker([3.3270177,117.5682619],{icon:avIcon}).addTo(map).bindPopup('<b>WAQQ — Juwata Intl, Tarakan</b><br>Stasiun Meteorologi Juwata · BMKG<br><button onclick="openAv()" style="margin-top:6px">Buka Cuaca Penerbangan</button>');
+
+
 
 // BMKG earthquakes
 let quakeLayer=null;
