@@ -560,8 +560,8 @@ async function bndToggle(force){
       const feats=[];parts.forEach(pc=>pc.features.forEach(f=>feats.push(f)));
       const gj={type:'FeatureCollection',features:feats};
       bndLayer=L.layerGroup([
-        L.geoJSON(gj,{style:{color:'#08304f',weight:3.4,opacity:.38,fill:false},interactive:false}),
-        L.geoJSON(gj,{style:{color:'#ffffff',weight:1.4,opacity:.92,fill:false},interactive:false})
+        L.geoJSON(gj,{style:{color:'#0b1c2c',weight:4.6,opacity:.55,fill:false},interactive:false}),
+        L.geoJSON(gj,{style:{color:'#ffd400',weight:2.4,opacity:1,fill:false},interactive:false})
       ]);
     }catch(e){bndLoading=false;toast('Gagal memuat data batas pulau');return}
     bndLoading=false;
