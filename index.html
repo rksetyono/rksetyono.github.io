@@ -172,6 +172,22 @@ body.dark #side header .rk-name small{color:#9db8cc}
 body.dark #brandLogo{background:#fff;border-radius:8px;padding:3px}
 body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!important;border-color:#33526e!important}
 #dashFit{will-change:transform}
+/* Popup gempa informatif & adaptif */
+.qpop-wrap .leaflet-popup-content{margin:0}
+.qpop-wrap .leaflet-popup-content-wrapper{border-radius:12px;overflow:hidden}
+.qpop{font-family:inherit;min-width:228px;color:var(--txt)}
+.qpop-head{display:flex;gap:10px;align-items:center;padding:10px 12px 8px}
+.qpop-mag{color:#fff;font-weight:800;font-size:17px;padding:6px 10px;border-radius:9px;line-height:1;white-space:nowrap}
+.qpop-t b{font-size:14px;display:block;line-height:1.2}
+.qpop-t small{color:var(--mut);font-size:11px}
+.qpop-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 12px}
+.qpop-grid>div{background:var(--bg2);border:1px solid var(--bord);border-radius:8px;padding:5px 8px}
+.qpop-grid small{display:block;color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+.qpop-grid b{font-size:12.5px}
+.qpop-wil{padding:8px 12px 0;margin:0;font-size:12.5px;font-weight:600;line-height:1.4}
+.qpop-row{padding:3px 12px 0;margin:0;font-size:12px;color:var(--mut2);line-height:1.45}
+.qpop-img{display:block;width:calc(100% - 24px);margin:9px 12px 4px;border-radius:8px;border:1px solid var(--bord)}
+.qpop-src{display:block;padding:2px 12px 10px;color:var(--mut);font-size:10.5px}
 #sheetHandle{display:none;align-items:center;justify-content:center;padding:8px 0 4px;cursor:pointer;flex:0 0 auto;order:-1}
 #sheetHandle i{width:46px;height:5px;border-radius:3px;background:#cbd5e1;display:block}
 @media(max-width:900px){
@@ -420,7 +436,12 @@ L.marker([3.3270177,117.5682619],{icon:avIcon}).addTo(map).bindPopup('<b>WAQQ �
 
 // BMKG earthquakes
 let quakeLayer=null;
-async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(`<b>M ${g.Magnitude}</b> — ${g.Wilayah}<br>${g.Tanggal} ${g.Jam}<br>Kedalaman: ${g.Kedalaman}`);quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
+function quakeMagColor(m){m=parseFloat(m);return m>=6?'#b91c1c':m>=5?'#dc2626':m>=4?'#ea580c':m>=3?'#d97706':'#009444'}
+function richQuakePopup(g){const dt=g.DateTime?new Date(g.DateTime):null;const wita=dt&&!isNaN(dt)?fmtWita(dt.toISOString()).split('· ')[1]:'';const jam=(g.Jam||'').replace(/\s*WIB\s*/,'');
+ return `<div class="qpop"><div class="qpop-head"><span class="qpop-mag" style="background:${quakeMagColor(g.Magnitude)}">M ${g.Magnitude}</span><div class="qpop-t"><b>Gempa Bumi</b><small>${g.Tanggal||''} · ${jam} WIB${wita?' · '+wita:''}</small></div></div><div class="qpop-grid"><div><small>Kedalaman</small><b>${g.Kedalaman||'—'}</b></div><div><small>Koordinat</small><b>${g.Lintang||''} — ${g.Bujur||''}</b></div></div><p class="qpop-wil">${g.Wilayah||''}</p>${g.Potensi?`<p class="qpop-row"><b>Potensi:</b> ${g.Potensi}</p>`:''}${g.Dirasakan?`<p class="qpop-row"><b>Dirasakan:</b> ${g.Dirasakan}</p>`:''}${g.Shakemap?`<img class="qpop-img" src="https://data.bmkg.go.id/DataMKG/TEWS/${g.Shakemap}" alt="Shakemap gempa" loading="lazy" onerror="this.style.display='none'"><small class="qpop-src">Shakemap (MMI) · Sumber: BMKG (data.bmkg.go.id)</small>`:'<small class="qpop-src">Sumber: BMKG (data.bmkg.go.id)</small>'}</div>`}
+let lastQuakeMark=null;
+function showQuakePopup(la,ln,g){map.flyTo([la,ln],9);if(lastQuakeMark)lastQuakeMark.remove();lastQuakeMark=L.circleMarker([la,ln],{radius:10,color:'#c0392b',fillColor:'#e74c3c',fillOpacity:.6}).addTo(map).bindPopup(richQuakePopup(g),{className:'qpop-wrap',maxWidth:Math.min(330,Math.round(window.innerWidth*.86))});setTimeout(()=>{if(lastQuakeMark)lastQuakeMark.openPopup()},680)}
+async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(richQuakePopup(g),{className:'qpop-wrap',maxWidth:Math.min(330,Math.round(window.innerWidth*.86))});quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
 function toggleQuake(){document.querySelector('[data-p="geodisaster"]').click();chipState('Gempa',true);loadQuake('terkini')}
 // Click: reverse geocode + weather
 map.on('click',async e=>{const {lat,lng}=e.latlng;document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Memuat alamat…`;
@@ -519,7 +540,8 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  if(loadCard&&!loadCard.querySelector('.bmkg-emblem')){const im2=document.createElement('img');im2.className='bmkg-emblem';im2.src=BMKG_URI;im2.alt='Logo BMKG';im2.width=52;im2.height=64;im2.style.cssText='display:block;margin:0 auto 8px';loadCard.insertBefore(im2,loadCard.firstChild)}
  const tick=document.createElement('div');tick.id='ticker';tick.innerHTML='<b>INFO TERKINI</b><span class="track" id="tickerText">Memuat informasi gempa terkini BMKG…</span>';document.body.appendChild(tick);
  async function loadBmkgQuake(){try{const j=await (await fetch('https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json')).json();const g=j.Infogempa.gempa;const [la,ln]=String(g.Coordinates).split(',').map(Number);
- document.getElementById('bmkgQuakeBody').innerHTML=`<div style="display:flex;gap:12px;align-items:center"><div class="mag">M ${g.Magnitude}</div><div style="font-size:12px;color:var(--mut2)">${g.Tanggal} · ${g.Jam}<br>Kedalaman: ${g.Kedalaman}</div></div><table><tr><td>Koordinat</td><td><b>${g.Lintang} — ${g.Bujur}</b></td></tr><tr><td>Wilayah</td><td>${g.Wilayah}</td></tr><tr><td>Potensi</td><td>${g.Potensi}</td></tr>${g.Dirasakan?`<tr><td>Dirasakan</td><td>${g.Dirasakan}</td></tr>`:''}</table><button class="ghost" style="margin-top:6px;font-size:12px" onclick="map.flyTo([${la},${ln}],9);L.circleMarker([${la},${ln}],{radius:10,color:'#c0392b',fillColor:'#e74c3c',fillOpacity:.6}).addTo(map).bindPopup('<b>M ${g.Magnitude}</b> — ${g.Wilayah}').openPopup()">Lihat di Peta</button>`;
+ window.__gq={la,ln,g};
+ document.getElementById('bmkgQuakeBody').innerHTML=`<div style="display:flex;gap:12px;align-items:center"><div class="mag">M ${g.Magnitude}</div><div style="font-size:12px;color:var(--mut2)">${g.Tanggal} · ${g.Jam}<br>Kedalaman: ${g.Kedalaman}</div></div><table><tr><td>Koordinat</td><td><b>${g.Lintang} — ${g.Bujur}</b></td></tr><tr><td>Wilayah</td><td>${g.Wilayah}</td></tr><tr><td>Potensi</td><td>${g.Potensi}</td></tr>${g.Dirasakan?`<tr><td>Dirasakan</td><td>${g.Dirasakan}</td></tr>`:''}</table><button class="ghost" style="margin-top:6px;font-size:12px" onclick="showQuakePopup(window.__gq.la,window.__gq.ln,window.__gq.g)">Lihat di Peta</button>`;
  document.getElementById('tickerText').textContent=`Gempa terkini: M ${g.Magnitude} — ${g.Wilayah} · ${g.Tanggal} ${g.Jam} · Kedalaman ${g.Kedalaman} · ${g.Potensi} ——— Data: BMKG (data.bmkg.go.id) · Peta: SIGAP JUWATA · Stasiun Meteorologi Juwata Tarakan · Informasi bersifat informatif, verifikasi ke sumber resmi untuk keperluan formal.`;}catch(e){document.getElementById('bmkgQuakeBody').innerHTML='<p style="color:var(--mut);font-size:12px;margin:0">Gagal memuat data BMKG saat ini — coba muat ulang.</p>'}}
  loadBmkgQuake();setInterval(loadBmkgQuake,300000);
  // ===== Cuaca Saat Ini + Peringatan Dini BMKG (API publik per adm4, fallback Open-Meteo berlabel) =====
