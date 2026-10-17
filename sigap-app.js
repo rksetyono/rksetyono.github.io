@@ -478,3 +478,8 @@ function tbSync(){const bar=document.getElementById('timeBar');if(!bar)return;co
  play.disabled=false;play.textContent=satPlaying?'⏸':'▶';
  if(satRuns.length&&satRuns[satIdx]){lab.textContent=fmtWita(satRuns[satIdx])}else lab.textContent='—';
  prev.disabled=satIdx>=satRuns.length-1;next.disabled=satIdx<=0;live.classList.toggle('on',satIdx===0)}
+
+/* ===== Panel Lapisan: sakelar cepat ===== */
+function lpQuakeToggle(){if(quakeLayer&&map.hasLayer(quakeLayer)){map.removeLayer(quakeLayer);chipState('Gempa',false);toast('Layer gempa dimatikan')}else{loadQuake('terkini')}setTimeout(lpSync,400)}
+function lpSync(){const set=(id,on)=>{const b=document.getElementById(id);if(!b)return;b.textContent=on?'Aktif':'Nonaktif';b.classList.toggle('on',!!on)};set('lpDots',typeof avDotsOn!=='undefined'&&avDotsOn);set('lpQuake',typeof quakeLayer!=='undefined'&&!!quakeLayer&&map.hasLayer(quakeLayer));set('lpGibs',typeof gibsLayer!=='undefined'&&!!gibsLayer);set('lpRadar',typeof radarLayer!=='undefined'&&!!radarLayer);set('lpRain',typeof rainLayer!=='undefined'&&!!rainLayer)}
+setInterval(lpSync,1500);
