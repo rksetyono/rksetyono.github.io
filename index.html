@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SIGAP JUWATA | Sistem Informasi Geospasial & Cuaca — Stasiun Meteorologi Juwata Tarakan</title>
-<meta name="description" content="Platform peta interaktif Indonesia: citra satelit NASA/BMKG, gempa BMKG live, cuaca, GeoTools, GeoFarm, GeoPangan, CCTV.">
+<meta name="description" content="Platform peta interaktif Indonesia: citra satelit NASA/BMKG, gempa BMKG live, cuaca, METAR/TAF penerbangan, SIGMET & petir.">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
@@ -124,7 +124,7 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 /* ===== RESPONSIVE FIX: sidebar app-shell, tab muat, panel scroll mandiri ===== */
 @media(min-width:901px){#side{height:100vh;height:100dvh}}#side{z-index:1450}
 #side>header{flex:0 0 auto;order:0}
-#tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:8px 10px;flex:0 0 auto;order:1;flex-wrap:nowrap}
+#tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:8px 10px;flex:0 0 auto;order:1;flex-wrap:nowrap}
 #tabs button{flex:none;flex-direction:column;gap:3px;font-size:9.5px;letter-spacing:.2px;padding:7px 1px;line-height:1.15;text-align:center;min-width:0;overflow:hidden}
 .panel{order:2}
 .panel.on{flex:1 1 auto;overflow-y:auto;min-height:0;padding:12px 12px 28px;-webkit-overflow-scrolling:touch}
@@ -251,7 +251,7 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <nav id="tabs">
 <button class="on" data-p="geoportal">LAPISAN</button><button data-p="geonusa">GEONUSA</button>
 <button data-p="geodisaster">GEODISASTER</button><button data-p="penerbangan">PENERBANGAN</button>
-<button data-p="geotools">GEOTOOLS</button>
+
 </nav>
 <div id="panels">
 <section class="panel" id="p-geonusa">
@@ -288,9 +288,9 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <div class="lprow"><span>⚡ Petir (15 mnt terakhir)</span><button class="mini" id="lpPetir" onclick="ltToggle();setTimeout(lpSync,300)">Aktif</button></div>
 <div class="lprow"><span>🛰 Batas FIR</span><button class="mini" id="lpFir" onclick="firToggle();setTimeout(lpSync,300)">Nonaktif</button></div>
 </div>
-<div class="card"><h3>🌐 GeoPortal Hub — SatuPeta BIG</h3><p>Basemap Rupabumi BIG tersedia di pemilih layer peta (kanan atas). Layer WMS/WFS/ArcGIS publik bisa dimuat lewat GEOTOOLS → ArcGIS REST.</p>
+<div class="card"><h3>🌐 GeoPortal Hub — SatuPeta BIG</h3><p>Basemap Rupabumi BIG tersedia di pemilih layer peta (kanan atas). </p>
 <button class="ghost" onclick="setBase('rbi')">Pakai Basemap Rupabumi BIG</button></div>
-<div class="card"><h3>🏔 Unduh DEMNAS (konsep)</h3><p>Alur aslinya: pilih indeks DEMNAS → clip batas wilayah → unduh GeoTIFF tanpa token dari BIG. Di prototype ini gunakan Export di GEOTOOLS untuk GeoJSON hasil gambar.</p></div>
+<div class="card"><h3>🏔 Unduh DEMNAS (konsep)</h3><p>Alur aslinya: pilih indeks DEMNAS → clip batas wilayah → unduh GeoTIFF tanpa token dari BIG. Di prototype ini unduhan DEMNAS belum tersedia.</p></div>
 </section>
 <section class="panel" id="p-geodisaster">
 <div class="card"><h3>🌋 Gempa — BMKG Live</h3><p>Sumber: data.bmkg.go.id (gempa terkini &amp; dirasakan).</p><div class="row"><button onclick="loadQuake('terkini')">M 5.0+ Terkini</button><button class="ghost" onclick="loadQuake('dirasakan')">Dirasakan</button></div><div id="quakeList" style="margin-top:8px"></div></div>
@@ -309,14 +309,7 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <p style="font-size:11px;color:var(--mut)">SIGMET, SIGWX, petir &amp; aliran angin penerbangan tersedia lengkap di InaSIAM (platform resmi BMKG); tab ini memfokuskan METAR/TAF Juwata &amp; bandara sekitar.</p></div>
 <div class="card"><h3>🛫 Bandara di Kalimantan &amp; Sekitarnya</h3><div id="avAptList"><p style="color:var(--mut)">Daftar dimuat saat tab dibuka.</p></div></div>
 </section>
-<section class="panel" id="p-geotools">
 
-<div class="card"><h3>📥 Muat Data</h3><label>GeoJSON / GPX / KML <input type="file" id="fileData" accept=".geojson,.json,.gpx,.kml"></label><button onclick="muatFile()">Tampilkan di Peta</button>
-<label>URL ArcGIS REST / GeoServer WFS (GeoJSON)<input type="text" id="restUrl" placeholder="https://…/query?where=1=1&outFields=*&f=geojson"></label><button class="ghost" onclick="muatRest()">Muat URL</button><button class="ghost" onclick="window.print()">Cetak / PDF</button></div>
-
-<div class="card"><h3>🔄 Konverter Koordinat</h3><label>Koordinat (lat, lng)<input type="text" id="coordIn" placeholder="-6.200000, 106.816666"></label><button onclick="konversi()">Konversi DD / DMS / UTM</button><div id="coordOut"></div></div>
-<div class="card"><h3>🤖 Tanya SIGAP (Beta)</h3><input id="aiQ" type="text" placeholder="Tanya: gempa terakhir? cara buffer? basemap satelit?"><button onclick="tanyaSigap()">Tanya</button><div id="aiOut"></div></div>
-</section>
 </div>
 <div style="padding:10px;border-top:1px solid var(--bord);display:flex;gap:6px"><button class="ghost" onclick="toggleTheme()">🌙/☀️ Mode</button><button class="ghost" onclick="minAll()">Minimalkan Semua Layer</button></div>
 </aside>
@@ -336,6 +329,6 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
-<script src="sigap-app.js?v=20261017-14"></script>
+<script src="sigap-app.js?v=20261017-15"></script>
 </body>
 </html>
