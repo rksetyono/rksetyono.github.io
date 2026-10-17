@@ -332,7 +332,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  const s=document.getElementById('search'),q=document.getElementById('quick');
  if(s)document.body.appendChild(s); if(q)document.body.appendChild(q);
  // Tambah item quick-layer sesuai daftar situs acuan
- if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"gambarBatas()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
+ if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"bndToggle()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
  extra.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.setAttribute('onclick',fn);q.appendChild(b)});}
  // Klik peta membuka sheet detail kanan
  map.on('click',()=>{document.getElementById('detail').classList.add('open')});
@@ -494,7 +494,7 @@ const rs=await Promise.allSettled(AVSTATIONS.map(s=>fetchTimeout('https://inasia
   AVSTATIONS.forEach((s,ix)=>{const raw=raws[ix];const o=raw?avParseMetar(raw):null;const vc=avVisClass(o?o.vis:null);const cat=o?avCat(o):null;const visTxt=o&&o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'tidak dilaporkan';const m=L.circleMarker([s.lat,s.lon],{radius:6,color:'#ffffff',weight:1.5,fillColor:vc.color,fillOpacity:.95});m.bindPopup('<b>'+s.name+'</b><br><span style="font-size:11px;color:#5b7a99">'+s.icao+' · visibilitas '+visTxt+(cat?' · '+cat.cat:'')+'</span>'+(raw?'<div style="font-family:monospace;font-size:10.5px;background:#f4f8fc;border:1px solid #d7e5f2;border-radius:6px;padding:5px 7px;margin:6px 0">'+raw+'</div>':'<div style="font-size:11px;margin:6px 0">METAR belum tersedia.</div>')+'<button class="mini" onclick="pilihBandara(\''+s.icao+'\','+s.lat+','+s.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>');m.addTo(avDots)});
 }
 function avDotsToggle(force){const on=typeof force==='boolean'?force:!avDotsOn;avDotsOn=on;const b=document.getElementById('avDotsBtn');if(b)b.textContent=on?'🛬 Titik Bandara di Peta: Aktif':'🛬 Titik Bandara di Peta: Nonaktif';if(on){if(!avDots)avDots=L.layerGroup();avDots.addTo(map);avDotsRefresh();if(avDotsTimer)clearInterval(avDotsTimer);avDotsTimer=setInterval(()=>{if(avDotsOn)avDotsRefresh()},600000)}else{if(avDots)map.removeLayer(avDots);if(avDotsTimer)clearInterval(avDotsTimer)}if(typeof wxRender==='function')wxRender()}
-setTimeout(()=>{try{if(!satKey)satMenuChange('eh')}catch(e){}try{avDotsToggle(true)}catch(e){}},900);
+setTimeout(()=>{try{if(!satKey)satMenuChange('eh')}catch(e){}try{bndToggle(true)}catch(e){}try{avDotsToggle(true)}catch(e){}},900);
 
 /* ===== Bilah waktu melayang (bawah-tengah) ===== */
 (function(){const st=document.createElement('style');st.textContent="#timeBar{position:absolute;left:50%;transform:translateX(-50%);bottom:64px;z-index:1300;display:none;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--bord);border-radius:999px;box-shadow:var(--shadow);padding:6px 10px;font-size:12.5px;color:var(--txt);max-width:min(460px,calc(100vw - 20px));box-sizing:border-box}@media(min-width:1100px){#side:not(.hidden)~#timeBar{left:calc(50% + 180px)}}#timeBar button{border:1px solid var(--bord);background:var(--card);color:var(--txt);border-radius:999px;height:30px;min-width:34px;padding:0 10px;cursor:pointer;font-size:13px}#timeBar button:disabled{opacity:.35;cursor:default}#tbLabel{font-weight:600;padding:0 4px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}#tbLive{color:#b91c1c;border-color:#fecaca;background:#fef2f2;font-weight:700}#tbLive.on{background:#dc2626;color:#fff;border-color:#dc2626}@media(max-width:900px){#timeBar{bottom:150px}}@media(max-width:560px){#timeBar{gap:4px;padding:5px 7px;font-size:11.5px}#timeBar button{height:27px;min-width:29px;padding:0 6px;font-size:12px}#tbLive{padding:0 8px}}";document.head.appendChild(st);
@@ -514,7 +514,7 @@ function tbSync(){const bar=document.getElementById('timeBar');if(!bar)return;co
 
 /* ===== Panel Lapisan: sakelar cepat ===== */
 function lpQuakeToggle(){if(quakeLayer&&map.hasLayer(quakeLayer)){map.removeLayer(quakeLayer);chipState('Gempa',false);toast('Layer gempa dimatikan')}else{loadQuake('terkini')}setTimeout(lpSync,400)}
-function lpSync(){const set=(id,on)=>{const b=document.getElementById(id);if(!b)return;b.textContent=on?'Aktif':'Nonaktif';b.classList.toggle('on',!!on)};set('lpDots',typeof avDotsOn!=='undefined'&&avDotsOn);set('lpQuake',typeof quakeLayer!=='undefined'&&!!quakeLayer&&map.hasLayer(quakeLayer));set('lpGibs',typeof gibsLayer!=='undefined'&&!!gibsLayer);set('lpRadar',typeof radarLayer!=='undefined'&&!!radarLayer);set('lpRain',typeof rainLayer!=='undefined'&&!!rainLayer);set('lpSigmet',typeof sgOn!=='undefined'&&sgOn);set('lpPetir',typeof ltOn!=='undefined'&&ltOn);set('lpFir',typeof firOn!=='undefined'&&firOn)}
+function lpSync(){const set=(id,on)=>{const b=document.getElementById(id);if(!b)return;b.textContent=on?'Aktif':'Nonaktif';b.classList.toggle('on',!!on)};set('lpDots',typeof avDotsOn!=='undefined'&&avDotsOn);set('lpQuake',typeof quakeLayer!=='undefined'&&!!quakeLayer&&map.hasLayer(quakeLayer));set('lpGibs',typeof gibsLayer!=='undefined'&&!!gibsLayer);set('lpRadar',typeof radarLayer!=='undefined'&&!!radarLayer);set('lpRain',typeof rainLayer!=='undefined'&&!!rainLayer);set('lpSigmet',typeof sgOn!=='undefined'&&sgOn);set('lpPetir',typeof ltOn!=='undefined'&&ltOn);set('lpFir',typeof firOn!=='undefined'&&firOn);set('lpBnd',typeof bndOn!=='undefined'&&bndOn)}
 setInterval(lpSync,1500);
 
 /* ===== SIGMET, PETIR & FIR — InaSIAM (Tahap 4) ===== */
@@ -545,3 +545,29 @@ async function _getTile(kind,z,lat,lng){const n=Math.pow(2,z),tx=Math.floor((lng
 async function _hitTest(kind,z,lat,lng){const t=await _getTile(kind,z,lat,lng);if(!t)return null;for(const ln in t.layers){const L=t.layers[ln],n=t.n,fx=(lng+180)/360*n-t.tx,latr=lat*Math.PI/180,fy=(1-Math.log(Math.tan(latr)+1/Math.cos(latr))/Math.PI)/2*n-t.ty,px=fx*L.extent,py=fy*L.extent;for(const f of L.feats){if(f.type===3&&f.rings&&_pip(px,py,f.rings))return f.props;if(f.type===1&&f.pts)for(const pt of f.pts){const plng=((t.tx+pt[0]/L.extent)/n)*360-180,plat=Math.atan(Math.sinh(Math.PI*(1-2*((t.ty+pt[1]/L.extent)/n))))*180/Math.PI;if(Math.abs(plng-lng)<0.35&&Math.abs(plat-lat)<0.35)return f.props}}}return null}
 map.on('click',async e=>{if(!sgOn&&!firOn)return;const ll=e.latlng;if(sgOn){const p=await _hitTest('sigmet',6,ll.lat,ll.lng);if(p){L.popup().setLatLng(ll).setContent(sgPopupHtml(p)).openOn(map);return}}if(firOn){const p=await _hitTest('firs',8,ll.lat,ll.lng);if(p&&p.code)L.popup().setLatLng(ll).setContent(firPopupHtml(p)).openOn(map)}});
 setTimeout(()=>ltToggle(true),1700);
+
+
+/* ===== Batas pulau & garis pantai (Natural Earth 50m, berkas lokal) ===== */
+let bndLayer=null,bndOn=false,bndLoading=false;
+function syncBndChip(){document.querySelectorAll('#quick button').forEach(b=>{if(b.textContent.includes('Boundaries'))b.classList.toggle('on',bndOn)})}
+async function bndToggle(force){
+  const on=typeof force==='boolean'?force:!bndOn;
+  if(on&&!bndLayer){
+    if(bndLoading)return;
+    bndLoading=true;
+    try{
+      const parts=await Promise.all([1,2,3].map(i=>fetch('batas-pulau-'+i+'.geojson').then(r=>{if(!r.ok)throw new Error('http');return r.json()})));
+      const feats=[];parts.forEach(pc=>pc.features.forEach(f=>feats.push(f)));
+      const gj={type:'FeatureCollection',features:feats};
+      bndLayer=L.layerGroup([
+        L.geoJSON(gj,{style:{color:'#08304f',weight:3.4,opacity:.38,fill:false},interactive:false}),
+        L.geoJSON(gj,{style:{color:'#ffffff',weight:1.4,opacity:.92,fill:false},interactive:false})
+      ]);
+    }catch(e){bndLoading=false;toast('Gagal memuat data batas pulau');return}
+    bndLoading=false;
+  }
+  if(on){bndLayer.addTo(map);bndLayer.eachLayer(l=>{if(l.bringToBack)l.bringToBack()});bndOn=true}
+  else{if(bndLayer)map.removeLayer(bndLayer);bndOn=false}
+  syncBndChip();
+  if(typeof lpSync==='function')setTimeout(lpSync,60);
+}
