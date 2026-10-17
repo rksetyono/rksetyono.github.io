@@ -303,7 +303,7 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 <script>
-const map=L.map('map',{preferCanvas:false,maxZoom:22,minZoom:4,zoomControl:false,maxBounds:[[-20,85],[15,150]],maxBoundsViscosity:0.9}).setView([-2.5,118],5);
+const map=L.map('map',{preferCanvas:false,maxZoom:22,minZoom:3,zoomControl:false}).setView([-2.5,118],5);
 map._controlCorners.bottomcenter=L.DomUtil.create('div','leaflet-bottom leaflet-center',map._controlContainer);
 L.control.zoom({position:'bottomcenter'}).addTo(map);
 L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
@@ -320,7 +320,10 @@ L.control.layers({'Google Maps':bases.gmap,'Satelit Esri':bases.sat,'OSM':bases.
 function chipState(name,on){document.querySelectorAll('#quick button').forEach(b=>{if(b.textContent.includes(name))b.classList.toggle('on',!!on)})}
 function setBase(k){map.removeLayer(curBase);curBase=bases[k];curBase.addTo(map)}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',4200)}
-function flyIndo(){map.flyTo([-2.5,118],5)}
+const INDO_BOUNDS=[[-11,95],[6,141]];
+function fitIndo(){map.fitBounds(INDO_BOUNDS,{padding:[12,12]})}
+function flyIndo(){fitIndo()}
+setTimeout(fitIndo,400);
 var myLocMark=null,myLocCircle=null;
 function clearMyLoc(){if(myLocMark){map.removeLayer(myLocMark);myLocMark=null}if(myLocCircle){map.removeLayer(myLocCircle);myLocCircle=null}}
 function havKm(a,b,c,d){const R=6371,t=Math.PI/180,x=(c-a)*t,y=(d-b)*t,s=Math.sin(x/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(s))}
@@ -354,14 +357,12 @@ function satLabel(){const el=document.getElementById('satTime');if(!satRuns.leng
 const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]],himawari9fd:[[-66.5,67.5],[66.5,213.75]]};
 function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;return map.getBoundsZoom(L.latLngBounds(b),true)}
 function satFrame(key){const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
-let satLockZ=null;
-function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'){satLockZ=satFillZoom(key);if(satLockZ!==null)map.options.minZoom=satLockZ}else{satLockZ=null;map.options.minZoom=4}}
 let satResizeT=null;
-window.addEventListener('resize',()=>{if(!satKey)return;clearTimeout(satResizeT);satResizeT=setTimeout(()=>{if(satKey){if(satLockZ!==null)satZoomLock(satKey);satFrame(satKey)}},450)});
+window.addEventListener('resize',()=>{if(!satKey)return;clearTimeout(satResizeT);satResizeT=setTimeout(()=>{if(satKey)satFrame(satKey)},450)});
 function satApplyLayer(){if(satPlaying)satStopPlay();if(satBuf){map.removeLayer(satBuf);satBuf=null;satBufReady=false}if(satOldLayer){map.removeLayer(satOldLayer);satOldLayer=null}if(satLayer)map.removeLayer(satLayer);if(!satKey||!satRuns.length)return;satLayer=satMk(satUrl(satKey,satRuns[satIdx]),satTargetOp()).addTo(map);satLabel()}
-async function setSatProduct(key){const st=document.getElementById('satStatus');if(!key||key===satKey){satKey=null;satZoomLock(null);if(satLayer)map.removeLayer(satLayer);satLayer=null;chipState('Himawari',false);satStopPlay();document.querySelectorAll('.satbtn').forEach(b=>b.classList.remove('on'));document.getElementById('satTime').textContent='—';updateProdPill();return}
+async function setSatProduct(key){const st=document.getElementById('satStatus');if(!key||key===satKey){satKey=null;if(satLayer)map.removeLayer(satLayer);satLayer=null;chipState('Himawari',false);satStopPlay();document.querySelectorAll('.satbtn').forEach(b=>b.classList.remove('on'));document.getElementById('satTime').textContent='—';updateProdPill();return}
  satKey=key;document.querySelectorAll('.satbtn').forEach(b=>b.classList.toggle('on',b.dataset.sat===key));st.textContent='Menghubungi server citra BMKG…';
- try{const data=await getModelRuns();satRuns=(data[SATPROD[key].model]||[]).slice();if(!satRuns.length){st.textContent='Tidak ada model run untuk produk ini saat ini di server BMKG.';return}satIdx=0;const sl=document.getElementById('satSlider');sl.max=satRuns.length-1;sl.value=satRuns.length-1;satApplyLayer();satZoomLock(key);satFrame(key);chipState('Himawari',true);st.textContent=satProdLabel(key)+' aktif — '+satRuns.length+' waktu tersedia, geser slider untuk mundur ke citra sebelumnya.'}catch(e){st.textContent='Server citra BMKG belum menjawab — coba lagi sebentar lagi.';satZoomLock(null)}
+ try{const data=await getModelRuns();satRuns=(data[SATPROD[key].model]||[]).slice();if(!satRuns.length){st.textContent='Tidak ada model run untuk produk ini saat ini di server BMKG.';return}satIdx=0;const sl=document.getElementById('satSlider');sl.max=satRuns.length-1;sl.value=satRuns.length-1;satApplyLayer();satFrame(key);chipState('Himawari',true);st.textContent=satProdLabel(key)+' aktif — '+satRuns.length+' waktu tersedia, geser slider untuk mundur ke citra sebelumnya.'}catch(e){st.textContent='Server citra BMKG belum menjawab — coba lagi sebentar lagi.'}
  if(satRefreshTimer)clearInterval(satRefreshTimer);satRefreshTimer=setInterval(async()=>{if(!satKey)return;modelrunCache=null;try{const data=await getModelRuns();const runs=(data[SATPROD[satKey].model]||[]).slice();if(runs.length&&runs[0]!==satRuns[0]){const ikutTerbaru=satIdx===0;satRuns=runs;const sl=document.getElementById('satSlider');sl.max=runs.length-1;if(ikutTerbaru){satIdx=0;sl.value=runs.length-1}satApplyLayer()}}catch(e){}},600000)}
 function satProdLabel(k){return SATPROD[k].label}
 function satSliderMove(v){if(satPlaying)satStopPlay();if(!satRuns.length)return;satIdx=satRuns.length-1-(+v);if(satLayer)satLayer.setUrl(satUrl(satKey,satRuns[satIdx]));satLabel()}
