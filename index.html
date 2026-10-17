@@ -248,7 +248,7 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <section class="panel" id="p-geoportal">
 <div class="card"><h3>🛰 Citra Satelit &amp; Radar — BMKG</h3><p>Citra geostasioner resmi BMKG (sumber: satellite.bmkg.go.id) &amp; radar cuaca nasional (gis.bmkg.go.id). Pilih produk, geser waktu, atau putar animasinya.</p>
 <div class="row" id="satBtns"><button class="ghost satbtn" data-sat="eh" onclick="setSatProduct('eh')">Himawari-9 IR Enhanced</button><button class="ghost satbtn" data-sat="nc" onclick="setSatProduct('nc')">Natural Color</button></div>
-<div class="row"><button class="ghost satbtn" data-sat="wv" onclick="setSatProduct('wv')">Water Vapor</button><button class="ghost satbtn" data-sat="rp" onclick="setSatProduct('rp')">Rainfall</button><button class="ghost satbtn" data-sat="gk" onclick="setSatProduct('gk')">GK-2A IR Enhanced</button></div>
+<div class="row"><button class="ghost satbtn" data-sat="wv" onclick="setSatProduct('wv')">Water Vapor</button><button class="ghost satbtn" data-sat="rp" onclick="setSatProduct('rp')">Rainfall</button><button class="ghost satbtn" data-sat="gk" onclick="setSatProduct('gk')">GK-2A IR Enhanced</button></div> <div class="row"><button class="ghost satbtn" data-sat="fdeh" onclick="setSatProduct('fdeh')">Full Disk IR Enhanced</button><button class="ghost satbtn" data-sat="fdwv" onclick="setSatProduct('fdwv')">Full Disk Water Vapor</button></div>
 <label>Waktu citra <span id="satTime" style="color:var(--txt)">—</span></label>
 <input type="range" id="satSlider" min="0" max="0" value="0" oninput="satSliderMove(this.value)" style="width:100%">
 <div class="row"><button class="ghost" id="satPlayBtn" onclick="satPlayToggle()">▶ Putar Animasi</button><button class="ghost" onclick="setSatProduct(null)">Matikan Citra</button></div>
@@ -344,7 +344,7 @@ function toggleGibs(kind,force){if(gibsLayer&&gibsKind===kind&&force!==true){map
 function refreshGibs(){if(gibsLayer){const k=gibsKind;map.removeLayer(gibsLayer);gibsLayer=null;toggleGibs(k,true)}else toast('Aktifkan dulu layer VIIRS')}
 function setOpacity(v){if(gibsLayer)gibsLayer.setOpacity(v/100)}
 // ===== Citra Satelit & Radar BMKG (satellite.bmkg.go.id + gis.bmkg.go.id) — terverifikasi live =====
-const SATPROD={eh:{model:'himawari9',param:'EH',label:'Himawari-9 IR Enhanced'},nc:{model:'himawari9',param:'NC',label:'Himawari-9 Natural Color'},wv:{model:'himawari9',param:'WV',label:'Himawari-9 Water Vapor'},rp:{model:'himawari9',param:'RP',label:'Himawari-9 Rainfall'},gk:{model:'gk2a',param:'EH',label:'GK-2A IR Enhanced'}};
+const SATPROD={eh:{model:'himawari9',param:'EH',label:'Himawari-9 IR Enhanced'},nc:{model:'himawari9',param:'NC',label:'Himawari-9 Natural Color'},wv:{model:'himawari9',param:'WV',label:'Himawari-9 Water Vapor'},rp:{model:'himawari9',param:'RP',label:'Himawari-9 Rainfall'},gk:{model:'gk2a',param:'EH',label:'GK-2A IR Enhanced'},fdeh:{model:'himawari9fd',param:'EH',label:'Himawari-9 Full Disk IR Enhanced'},fdwv:{model:'himawari9fd',param:'WV',label:'Himawari-9 Full Disk Water Vapor'}};
 const BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 let satLayer=null,satKey=null,satRuns=[],satIdx=0,satPlayTimer=null,modelrunCache=null,modelrunAt=0,radarLayer=null,radarTimer=null,satRefreshTimer=null;
 function fmtWita(iso){const d=new Date(new Date(iso).getTime()+8*3600000);const p=n=>String(n).padStart(2,'0');return `${p(d.getUTCDate())} ${BULAN[d.getUTCMonth()]} ${d.getUTCFullYear()} · ${p(d.getUTCHours())}.${p(d.getUTCMinutes())} WITA`}
