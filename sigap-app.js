@@ -2,7 +2,7 @@
 
 const map=L.map('map',{preferCanvas:false,maxZoom:22,minZoom:3,zoomControl:false}).setView([-2.5,118],5);
 map._controlCorners.bottomcenter=L.DomUtil.create('div','leaflet-bottom leaflet-center',map._controlContainer);
-L.control.zoom({position:'bottomcenter'}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
 L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
 const bases={
  gmap:L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{subdomains:'0123',maxZoom:20,attribution:'© Google Maps'}),
@@ -467,7 +467,7 @@ function avDotsToggle(force){const on=typeof force==='boolean'?force:!avDotsOn;a
 setTimeout(()=>{try{if(!satKey)satMenuChange('eh')}catch(e){}try{avDotsToggle(true)}catch(e){}},900);
 
 /* ===== Bilah waktu melayang (bawah-tengah) ===== */
-(function(){const st=document.createElement('style');st.textContent="#timeBar{position:absolute;left:50%;transform:translateX(-50%);bottom:64px;z-index:1300;display:none;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--bord);border-radius:999px;box-shadow:var(--shadow);padding:6px 10px;font-size:12.5px;color:var(--txt)}@media(min-width:1100px){#side:not(.hidden)~#timeBar{left:calc(50% + 180px)}}#timeBar button{border:1px solid var(--bord);background:var(--card);color:var(--txt);border-radius:999px;height:30px;min-width:34px;padding:0 10px;cursor:pointer;font-size:13px}#timeBar button:disabled{opacity:.35;cursor:default}#tbLabel{font-weight:600;padding:0 4px;white-space:nowrap}#tbLive{color:#b91c1c;border-color:#fecaca;background:#fef2f2;font-weight:700}#tbLive.on{background:#dc2626;color:#fff;border-color:#dc2626}@media(max-width:900px){#timeBar{bottom:150px}}";document.head.appendChild(st);
+(function(){const st=document.createElement('style');st.textContent="#timeBar{position:absolute;left:50%;transform:translateX(-50%);bottom:64px;z-index:1300;display:none;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--bord);border-radius:999px;box-shadow:var(--shadow);padding:6px 10px;font-size:12.5px;color:var(--txt);max-width:min(480px,calc(100vw - 20px));box-sizing:border-box}@media(min-width:1100px){#side:not(.hidden)~#timeBar{left:calc(50% + 180px)}}#timeBar button{border:1px solid var(--bord);background:var(--card);color:var(--txt);border-radius:999px;height:30px;min-width:34px;padding:0 10px;cursor:pointer;font-size:13px}#timeBar button:disabled{opacity:.35;cursor:default}#tbLabel{font-weight:600;padding:0 4px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}#tbLive{color:#b91c1c;border-color:#fecaca;background:#fef2f2;font-weight:700}#tbLive.on{background:#dc2626;color:#fff;border-color:#dc2626}@media(max-width:900px){#timeBar{bottom:150px}}@media(max-width:560px){#timeBar{gap:4px;padding:5px 7px;font-size:11.5px}#timeBar button{height:27px;min-width:29px;padding:0 6px;font-size:12px}#tbLive{padding:0 8px}}";document.head.appendChild(st);
 const bar=document.createElement('div');bar.id='timeBar';bar.innerHTML='<button id="tbPrev" title="Frame lebih lama">⏮</button><button id="tbPlay" title="Putar / jeda animasi">▶</button><button id="tbNext" title="Frame lebih baru">⏭</button><span id="tbLabel">—</span><button id="tbLive" title="Kembali ke waktu terkini">● LIVE</button>';document.getElementById('app').appendChild(bar);
 const $=id=>document.getElementById(id);
 $('tbPrev').onclick=()=>tbStep(1);$('tbNext').onclick=()=>tbStep(-1);
