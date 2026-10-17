@@ -134,7 +134,7 @@ function wxIaSec(nm,P,ints){let s='<div class="wxsec"><b>🛰 '+nm+'</b>'+wxGrad
 function wxRender(){const secs=[];
  if(typeof iaKey!=='undefined'&&iaKey&&IAPROD[iaKey])secs.push(wxIaSec(IAPROD[iaKey].n+' — InaSIAM',IAPROD[iaKey],IAINT[iaKey]));
  if(satKey){if(satKey==='eh'||satKey==='ehs')secs.push(wxIaSec('Himawari-9 IR Enhanced',{u:'K',cb:IRCB},IAINT.ir));else secs.push('<div class="wxsec"><b>🛰 '+SATPROD[satKey].label+'</b><div class="wxrow">Citra satelit BMKG</div></div>')}
- if(typeof avDotsOn!=='undefined'&&avDotsOn)secs.push('<div class="wxsec"><b>\U0001f6ec Visibilitas Bandara (METAR)</b>'+[8001,4800,1600,0,null].map(v=>{const vc=avVisClass(v);return '<div class="wxrow"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+vc.color+';margin-right:6px"></span>'+vc.label+'</div>'}).join('')+'</div>');
+ if(typeof avDotsOn!=='undefined'&&avDotsOn)secs.push('<div class="wxsec"><b>\U0001f6ec Visibilitas Bandara (METAR)</b>'+[8001,4800,1600,0].map(v=>{const vc=avVisClass(v);return '<div class="wxrow"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+vc.color+';margin-right:6px"></span>'+vc.label+'</div>'}).join('')+'<div class="wxrow"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f59e0b;margin-right:6px"></span>AUTO (sensor inoperatif)</div><div class="wxrow"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#9ca3af;margin-right:6px"></span>Data belum diperbarui</div></div>');
  if(typeof sgOn!=='undefined'&&sgOn)secs.push('<div class="wxsec"><b>⛈ SIGMET — Bahaya Penerbangan</b>'+Object.keys(SGDEFS).map(k=>'<div class="wxrow"><span style="display:inline-block;width:9px;height:9px;background:'+SGDEFS[k][0]+';margin-right:6px"></span>'+SGDEFS[k][1]+'</div>').join('')+'</div>');
  if(typeof ltOn!=='undefined'&&ltOn)secs.push('<div class="wxsec"><b>⚡ Petir — 15 Menit Terakhir'+(ltCount?' ('+ltCount+' sambaran)':'')+'</b><div class="wxrow"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-right:6px"></span>Intensitas negatif</div><div class="wxrow"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#fbbf24;margin-right:6px"></span>Intensitas positif</div></div>');
  if(typeof firOn!=='undefined'&&firOn)secs.push('<div class="wxsec"><b>🛰 Batas FIR</b><div class="wxrow"><span style="display:inline-block;width:14px;border-top:2px solid #3b82f6;margin-right:6px"></span>Garis batas FIR — klik peta untuk nama wilayah</div></div>');
@@ -216,7 +216,7 @@ function avCat(o){if(o.vis==null&&o.ceiling==null)return{cat:'—',color:'#64748
  if(v<4800||c<1000)return{cat:'IFR',color:'#dc2626',label:'IFR — rendah'};
  if(v<=8000||c<=3000)return{cat:'MVFR',color:'#2563eb',label:'MVFR — marginal'};
  return{cat:'VFR',color:'#16a34a',label:'VFR — baik'}}
-function avVisClass(v){if(v==null)return{color:'#94a3b8',label:'Tidak dilaporkan'};if(v>8000)return{color:'#16a34a',label:'> 8 km'};if(v>=4800)return{color:'#84cc16',label:'4,8 – 8 km'};if(v>=1600)return{color:'#f59e0b',label:'1,6 – 4,8 km'};return{color:'#dc2626',label:'< 1,6 km'}}
+function avVisClass(v){if(v==null)return{color:'#9ca3af',label:'Data belum diperbarui'};if(v>8000)return{color:'#22c55e',label:'> 8 km'};if(v>=4800)return{color:'#38bdf8',label:'4,8 – 8 km'};if(v>=1600)return{color:'#eab308',label:'1,6 – 4,8 km'};return{color:'#ef4444',label:'< 1,6 km'}}
 function avWxText(w){let s=w.replace(/^[+-]/,'');if(s.startsWith('VC'))s=s.slice(2);s=s.replace(/^(SH|TS|FZ|MI|BC|DR|BL)/,'');return WXID[s]||w}
 async function loadAvMetar(){const body=document.getElementById('avMetarBody');if(!body)return;body.innerHTML='<p style="color:var(--mut)">Memuat METAR '+avIcao+'…</p>';
  let avLine=null,avSrc='MET Norway (api.met.no)';
@@ -452,7 +452,38 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
 
 /* ===== Titik bandara di peta (OPMET BMKG) + bawaan awal ===== */
 let avDots=null,avDotsOn=false,avDotsTimer=null;
-async function avDotsRefresh(){if(!avDots)avDots=L.layerGroup();const rs=await Promise.allSettled(AVSTATIONS.map(s=>fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+s.icao+'?active=true',12000).then(r=>r.json())));avDots.clearLayers();rs.forEach((r,i)=>{const s=AVSTATIONS[i];let o=null,raw=null;if(r.status==='fulfilled'&&r.value&&r.value.metar&&r.value.metar.raw){raw=r.value.metar.raw;o=avParseMetar(raw)}const vc=avVisClass(o?o.vis:null);const cat=o?avCat(o):null;const visTxt=o&&o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'tidak dilaporkan';const m=L.circleMarker([s.lat,s.lon],{radius:6,color:'#ffffff',weight:1.5,fillColor:vc.color,fillOpacity:.95});m.bindPopup('<b>'+s.name+'</b><br><span style="font-size:11px;color:#5b7a99">'+s.icao+' · visibilitas '+visTxt+(cat?' · '+cat.cat:'')+'</span>'+(raw?'<div style="font-family:monospace;font-size:10.5px;background:#f4f8fc;border:1px solid #d7e5f2;border-radius:6px;padding:5px 7px;margin:6px 0">'+raw+'</div>':'<div style="font-size:11px;margin:6px 0">METAR belum tersedia.</div>')+'<button class="mini" onclick="pilihBandara(\''+s.icao+'\','+s.lat+','+s.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>');m.addTo(avDots)})}
+function avDotStyle(p){const st=(p.icon_state||'').toLowerCase();if(st.includes('red'))return{color:'#ef4444',r:6};if(st.includes('yellow'))return{color:'#eab308',r:5.5};if(st.includes('blue'))return{color:'#38bdf8',r:5.5};if(st.includes('green'))return{color:'#22c55e',r:5.5};if(p.metar&&p.metar.includes(' AUTO ')&&(+p.visibility_m<0))return{color:'#f59e0b',r:5};if(+p.visibility_m>=0)return{color:avVisClass(+p.visibility_m).color,r:5.5};return{color:'#9ca3af',r:4}}
+async function avDotsRefresh(){
+  if(!avDots)avDots=L.layerGroup();
+  let done=false;
+  try{
+    const Z=5,seen=new Map(),jobs=[];
+    for(let x=24;x<=28;x++)for(let y=15;y<=17;y++)jobs.push([x,y]);
+    await Promise.all(jobs.map(async([x,y])=>{
+      const r=await fetchTimeout('https://inasiam.bmkg.go.id/api/v1/tiles/opmet/'+Z+'/'+x+'/'+y+'.pbf',15000);
+      if(!r.ok)return;
+      const t=mvtDecode(new Uint8Array(await r.arrayBuffer()));
+      const ly=t['airports'];if(!ly)return;
+      for(const f of ly.feats){const pr=f.props;if(!pr||!pr.icao||seen.has(pr.icao))continue;
+        const pt=f.pts&&f.pts[0];if(!pt)continue;
+        const gx=x+pt[0]/ly.extent,gy=y+pt[1]/ly.extent,n=Math.pow(2,Z);
+        seen.set(pr.icao,{p:pr,lat:Math.atan(Math.sinh(Math.PI*(1-2*gy/n)))*180/Math.PI,lon:gx/n*360-180});}
+    }));
+    if(seen.size>50){
+      avDots.clearLayers();
+      seen.forEach(({p:pr,lat,lon})=>{
+        const ds=avDotStyle(pr);const vm=+pr.visibility_m;
+        const visTxt=vm>=9999?'≥10 km':vm>0?(vm/1000).toLocaleString('id-ID')+' km':'tidak dilaporkan';
+        const vc=vm>=0?avVisClass(vm):null;
+        const m=L.circleMarker([lat,lon],{radius:ds.r,color:'#ffffff',weight:1.2,fillColor:ds.color,fillOpacity:.95});
+        m.bindPopup('<b>'+(pr.name||pr.icao)+'</b><br><span style="font-size:11px;color:#5b7a99">'+pr.icao+' · visibilitas '+visTxt+(pr.flight_rule&&pr.flight_rule!=='NODATA'?' · '+pr.flight_rule:'')+(vc?' · '+vc.label:'')+'</span>'+(pr.metar?'<div style="font-family:monospace;font-size:10.5px;background:#f4f8fc;border:1px solid #d7e5f2;border-radius:6px;padding:5px 7px;margin:6px 0">'+pr.metar+'</div>':'<div style="font-size:11px;margin:6px 0">Data belum diperbarui — METAR belum tersedia.</div>')+'<button class="mini" onclick="pilihBandara(\''+pr.icao+'\','+lat.toFixed(5)+','+lon.toFixed(5)+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>');
+        m.addTo(avDots);});
+      done=true;
+    }
+  }catch(e){}
+  if(done)return;
+if(!avDots)avDots=L.layerGroup();const rs=await Promise.allSettled(AVSTATIONS.map(s=>fetchTimeout('https://inasiam.bmkg.go.id/api/v1/opmet/'+s.icao+'?active=true',12000).then(r=>r.json())));avDots.clearLayers();rs.forEach((r,i)=>{const s=AVSTATIONS[i];let o=null,raw=null;if(r.status==='fulfilled'&&r.value&&r.value.metar&&r.value.metar.raw){raw=r.value.metar.raw;o=avParseMetar(raw)}const vc=avVisClass(o?o.vis:null);const cat=o?avCat(o):null;const visTxt=o&&o.vis!=null?(o.vis>=9999?'≥10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'tidak dilaporkan';const m=L.circleMarker([s.lat,s.lon],{radius:6,color:'#ffffff',weight:1.5,fillColor:vc.color,fillOpacity:.95});m.bindPopup('<b>'+s.name+'</b><br><span style="font-size:11px;color:#5b7a99">'+s.icao+' · visibilitas '+visTxt+(cat?' · '+cat.cat:'')+'</span>'+(raw?'<div style="font-family:monospace;font-size:10.5px;background:#f4f8fc;border:1px solid #d7e5f2;border-radius:6px;padding:5px 7px;margin:6px 0">'+raw+'</div>':'<div style="font-size:11px;margin:6px 0">METAR belum tersedia.</div>')+'<button class="mini" onclick="pilihBandara(\''+s.icao+'\','+s.lat+','+s.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>');m.addTo(avDots)})
+}
 function avDotsToggle(force){const on=typeof force==='boolean'?force:!avDotsOn;avDotsOn=on;const b=document.getElementById('avDotsBtn');if(b)b.textContent=on?'🛬 Titik Bandara di Peta: Aktif':'🛬 Titik Bandara di Peta: Nonaktif';if(on){if(!avDots)avDots=L.layerGroup();avDots.addTo(map);avDotsRefresh();if(avDotsTimer)clearInterval(avDotsTimer);avDotsTimer=setInterval(()=>{if(avDotsOn)avDotsRefresh()},600000)}else{if(avDots)map.removeLayer(avDots);if(avDotsTimer)clearInterval(avDotsTimer)}if(typeof wxRender==='function')wxRender()}
 setTimeout(()=>{try{if(!satKey)satMenuChange('eh')}catch(e){}try{avDotsToggle(true)}catch(e){}},900);
 
