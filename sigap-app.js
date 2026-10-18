@@ -70,7 +70,9 @@ const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]],
 function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;return map.getBoundsZoom(L.latLngBounds(b),true)}
 function satFrame(key){if(key&&SATPROD[key]&&SATPROD[key].fd)return;const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
-function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'||m==='himawari9fd'){map.options.minZoom=3;satLockZ=satFillZoom(key);if(satLockZ!==null)map.options.minZoom=satLockZ}else{satLockZ=null;map.options.minZoom=3}}
+let pmLockZ=null;
+function applyMinZoom(){map.options.minZoom=Math.max(3,satLockZ||0,pmLockZ||0)}
+function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'||m==='himawari9fd'){map.options.minZoom=3;satLockZ=satFillZoom(key);applyMinZoom()}else{satLockZ=null;applyMinZoom()}}
 let satResizeT=null;
 window.addEventListener('resize',()=>{if(!satKey)return;clearTimeout(satResizeT);satResizeT=setTimeout(()=>{if(satKey){if(satLockZ!==null)satZoomLock(satKey);satFrame(satKey)}},450)});
 function satMarkLoading(){const el=document.getElementById('satTime');if(el)el.textContent='⏳ memuat tile…';const L0=satLayer;if(!L0)return;let done=false;const fin=()=>{if(done)return;done=true;if(satLayer===L0)satLabel()};L0.once('load',fin);setTimeout(fin,60000)}
@@ -315,6 +317,8 @@ async function loadPM(force){
   }catch(e){body.innerHTML='<p style="color:var(--mut)">PM2.5 belum dapat dimuat — periksa koneksi lalu tekan Perbarui.</p>'}
 }
 let pmLayer=null,pmOn=false,pmRunInfo='';
+const PMDOMAIN=[[-21.94,78.75],[31.95,157.5]];
+function pmZoomLock(on){if(on){map.options.minZoom=3;pmLockZ=map.getBoundsZoom(L.latLngBounds(PMDOMAIN),true);applyMinZoom();if(pmLockZ!==null&&map.getZoom()<pmLockZ)map.setZoom(pmLockZ)}else{pmLockZ=null;applyMinZoom()}}
 function pmToIspu(v){if(v==null)return null;const B=[[0,15.5,0,50],[15.5,55.4,50,100],[55.4,150.4,100,200],[150.4,250.4,200,300],[250.4,500.4,300,500]];for(const s of B){if(v<=s[1])return Math.round((s[3]-s[2])/(s[1]-s[0])*(v-s[0])+s[2])}return 500}
 const PMSPARTAN='https://spartan.bmkg.go.id/map/rgb_req/pcm_pm25/pm25/1000/';
 function pmDs(d){const q=n=>String(n).padStart(2,'0');return ''+d.getUTCFullYear()+q(d.getUTCMonth()+1)+q(d.getUTCDate())+q(d.getUTCHours())+'00'}
@@ -344,12 +348,12 @@ async function pmTileClick(e){
   }catch(_){pmPopup.setContent('<div class="qpop"><b>PM2.5 — Kualitas Udara</b><br><small>Nilai titik tidak tersedia untuk lokasi ini. Lapisan peta: model PCM BMKG (SPARTAN).</small></div>')}
 }
 async function togglePM(){
-  if(pmOn){pmOn=false;if(pmLayer){map.removeLayer(pmLayer);pmLayer=null}map.off('click',pmTileClick);chipState('PM2.5',false);if(typeof wxRender==='function')wxRender();toast('Layer PM2.5 BMKG dimatikan');return}
+  if(pmOn){pmOn=false;pmZoomLock(false);if(pmLayer){map.removeLayer(pmLayer);pmLayer=null}map.off('click',pmTileClick);chipState('PM2.5',false);if(typeof wxRender==='function')wxRender();toast('Layer PM2.5 BMKG dimatikan');return}
   toast('🌫 Mencari data PM2.5 BMKG (SPARTAN)…');
   const f=await pmFindRun();
   if(!f){toast('⚠️ Tile PM2.5 BMKG belum tersedia saat ini — coba lagi nanti');return}
   pmLayer=L.tileLayer(PMSPARTAN+f.mr+'/'+f.fc+'/{z}/{x}/{y}.png',{tms:true,maxNativeZoom:8,opacity:.7,attribution:'PM2.5 © BMKG — model PCM (SPARTAN)'}).addTo(map);
-  pmOn=true;pmRunInfo=f.mr;
+  pmOn=true;pmRunInfo=f.mr;pmZoomLock(true);
   map.on('click',pmTileClick);
   chipState('PM2.5',true);if(typeof wxRender==='function')wxRender();
   toast('🌫 PM2.5 BMKG (PCM) aktif — run '+f.mr.slice(6,8)+'/'+f.mr.slice(4,6)+' '+f.mr.slice(8,10)+'.00 UTC');
