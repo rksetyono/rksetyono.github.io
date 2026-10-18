@@ -455,7 +455,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
 /* ===== Titik bandara di peta (OPMET BMKG) + bawaan awal ===== */
 let avDots=null,avDotsOn=false,avDotsTimer=null;
 function avDotStyle(p){const st=(p.icon_state||'').toLowerCase();if(st.includes('red'))return{color:'#ef4444',r:6};if(st.includes('yellow'))return{color:'#eab308',r:5.5};if(st.includes('blue'))return{color:'#38bdf8',r:5.5};if(st.includes('green'))return{color:'#22c55e',r:5.5};if(p.metar&&p.metar.includes(' AUTO ')&&(+p.visibility_m<0))return{color:'#f59e0b',r:5};if(+p.visibility_m>=0)return{color:avVisClass(+p.visibility_m).color,r:5.5};return{color:'#9ca3af',r:4}}
-function avPopOpts(){const o=qpopOpts();o.className='qpop-wrap avpop';o.autoPanPaddingTopLeft=L.point(14,168);o.maxWidth=Math.min(308,Math.round(window.innerWidth*.88));o.minWidth=Math.min(252,Math.round(window.innerWidth*.8));return o}
+function avPopOpts(){const o=qpopOpts();o.className='qpop-wrap avpop';o.autoPanPaddingTopLeft=L.point(14,168);o.maxWidth=Math.min(326,Math.round(window.innerWidth*.9));o.minWidth=Math.min(252,Math.round(window.innerWidth*.8));return o}
 function avPopupHTML(st){
   const btn='<button class="mini" style="display:block;width:100%;text-align:center;padding:7px 0" onclick="pilihBandara(\''+st.icao+'\','+st.lat+','+st.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>';
   const head='<b style="display:block;font-size:14px;line-height:1.3;padding-right:20px">'+st.name+'</b>';
