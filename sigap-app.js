@@ -52,7 +52,7 @@ map.on('locationerror',e=>{
 // Tabs
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+b.dataset.p).classList.add('on');if(b.dataset.p==='geodisaster')loadPM();map.closePopup()});
 function toggleTheme(){document.body.classList.toggle('dark')}
-function minAll(){[quakeLayer,gibsLayer].forEach(l=>{if(l)map.removeLayer(l)});chipState('Gempa',false);chipState('VIIRS',false);chipState('Hotspot',false);if(typeof rainLayer!=='undefined'&&rainLayer){map.removeLayer(rainLayer);rainLayer=null;chipState('Hujan',false);const rl=document.getElementById('rainLegend');if(rl)rl.style.display='none';const rb=document.getElementById('rainBtn');if(rb)rb.textContent='🌧 Hujan Satelit (IMERG): Nonaktif';if(typeof updateProdPill==='function')updateProdPill()}clearMyLoc();clearWilMap();if(lastQuakeMark){map.removeLayer(lastQuakeMark);lastQuakeMark=null}map.closePopup();toast('Semua layer overlay dimatikan')}
+function minAll(){[quakeLayer,gibsLayer].forEach(l=>{if(l)map.removeLayer(l)});chipState('Gempa',false);chipState('VIIRS',false);chipState('Hotspot',false);if(typeof rainLayer!=='undefined'&&rainLayer){map.removeLayer(rainLayer);rainLayer=null;chipState('Hujan',false);const rl=document.getElementById('rainLegend');if(rl)rl.style.display='none';const rb=document.getElementById('rainBtn');if(rb)rb.textContent='🌧 Hujan Satelit (IMERG): Nonaktif';if(typeof updateProdPill==='function')updateProdPill()}if(typeof pmOn!=='undefined'&&pmOn)togglePM();clearMyLoc();clearWilMap();if(lastQuakeMark){map.removeLayer(lastQuakeMark);lastQuakeMark=null}map.closePopup();toast('Semua layer overlay dimatikan')}
 // NASA GIBS time layers
 let gibsLayer=null,gibsKind=null;
 function gibsUrl(kind,date){const d=date||new Date(Date.now()-864e5).toISOString().slice(0,10);const id='VIIRS_NOAA20_CorrectedReflectance_TrueColor';return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${id}/default/${d}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`}
@@ -158,6 +158,7 @@ function wxRender(){const secs=[];
  if(typeof radarLayer!=='undefined'&&radarLayer)secs.push('<div class="wxsec"><b>📡 Radar BMKG (dBZ)</b><div class="wxgrad" style="background:linear-gradient(90deg,#a0d8ef,#01b8ff,#00e500,#b4dc00,#ffdc00,#ff7100,#ff0000,#b800d6)"></div><div class="wxcap"><span>5 ringan</span><span>35 deras</span><span>55 ekstrem</span><span>75 hail</span></div></div>');
  if(typeof rainLayer!=='undefined'&&rainLayer)secs.push('<div class="wxsec"><b>🌧 Hujan — GPM IMERG</b><div class="wxrow">Estimasi laju hujan satelit (mm/jam) · data '+(rainLayer._date||'')+'</div></div>');
  if(typeof gibsLayer!=='undefined'&&gibsLayer)secs.push('<div class="wxsec"><b>🛰 VIIRS NOAA-20 True Color</b><div class="wxrow">Citra warna asli NASA GIBS · '+(gibsLayer._date||'')+'</div></div>');
+ if(typeof pmOn!=='undefined'&&pmOn)secs.push('<div class="wxsec"><b>🌫 PM2.5 — Kualitas Udara (AQI AS)</b>'+[[50,'#22c55e','≤ 50 · Baik'],[100,'#eab308','51–100 · Sedang'],[150,'#f97316','101–150 · Sensitif'],[200,'#ef4444','151–200 · Tidak Sehat'],[300,'#a855f7','201–300 · Sangat Tidak Sehat'],[999,'#7f1d1d','> 300 · Berbahaya']].map(r=>'<div class="wxrow"><span class="wxdot" style="background:'+r[1]+';border-radius:3px"></span>AQI '+r[2]+'</div>').join('')+'<div class="wxrow">Model CAMS via Open-Meteo — klik lingkaran untuk nilai titik</div></div>');
  if(typeof quakeLayer!=='undefined'&&quakeLayer&&map.hasLayer(quakeLayer))secs.push('<div class="wxsec"><b>🌋 Gempa BMKG — magnitudo</b>'+[[6,'#b91c1c','≥ 6'],[5,'#dc2626','5 – 6'],[4,'#ea580c','4 – 5'],[3,'#d97706','3 – 4'],[0,'#009444','< 3']].map(r=>'<div class="wxrow"><span class="wxdot" style="background:'+r[1]+';border-radius:50%"></span>M '+r[2]+'</div>').join('')+'</div>');
  const el=wxLegendEl();if(!secs.length){el.style.display='none';return}
  el.style.display='block';document.getElementById('wxBadge').textContent=secs.length;document.getElementById('wxBody').style.display=wxLegOpen?'block':'none';document.getElementById('wxChev').textContent=wxLegOpen?'▾':'▸';document.getElementById('wxBody').innerHTML=secs.join('')}
@@ -314,6 +315,28 @@ async function loadPM(force){
      +(bars?'<div style="display:flex;align-items:flex-end;gap:2px;height:46px;margin:4px 0 2px">'+bars+'</div><p style="font-size:10.5px;color:var(--mut);margin:0">PM2.5 per jam hari ini (00.00–sekarang)</p>':'');
   }catch(e){body.innerHTML='<p style="color:var(--mut)">PM2.5 belum dapat dimuat — periksa koneksi lalu tekan Perbarui.</p>'}
 }
+let pmLayer=null,pmOn=false,pmMoveT=null;
+async function pmRender(){
+  if(!pmOn||!pmLayer)return;
+  const b=map.getBounds(),cols=11,rows=8,lats=[],lons=[];
+  const laS=b.getSouth(),laN=b.getNorth(),loW=b.getWest(),loE=b.getEast();
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){lats.push((laS+(laN-laS)*(r+0.5)/rows).toFixed(3));lons.push((loW+(loE-loW)*(c+0.5)/cols).toFixed(3))}
+  try{
+    const j=await (await fetchTimeout('https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+lats.join(',')+'&longitude='+lons.join(',')+'&current=pm2_5,us_aqi&timezone=Asia%2FMakassar',20000)).json();
+    const arr=Array.isArray(j)?j:[j];
+    if(!pmOn)return;
+    pmLayer.clearLayers();
+    const cellM=Math.max(1500,map.distance([laN,loW],[laN,loW+(loE-loW)/cols]));
+    arr.forEach(o=>{if(!o||!o.current)return;const aq=o.current.us_aqi;const cat=aqiCat(aq);const m=L.circle([o.latitude,o.longitude],{radius:cellM*0.72,color:cat.color,weight:0,fillColor:cat.color,fillOpacity:.42});
+      m.bindPopup('<div class="qpop"><div class="qpop-head"><span class="qpop-mag" style="background:'+cat.color+'">AQI '+(aq!=null?Math.round(aq):'—')+'</span><div class="qpop-t"><b>PM2.5 — Kualitas Udara</b><small>'+o.latitude.toFixed(2)+'°, '+o.longitude.toFixed(2)+'° · '+String(o.current.time).slice(11,16)+' WITA</small></div></div><div class="qpop-grid"><div><small>PM2.5</small><b>'+(o.current.pm2_5!=null?o.current.pm2_5:'—')+' µg/m³</b></div><div><small>Kategori AQI (AS)</small><b>'+cat.label+'</b></div></div><small class="qpop-src">Sumber: model CAMS via Open-Meteo (estimasi grid, bukan stasiun ukur darat)</small></div>',qpopOpts());pmLayer.addLayer(m)});
+  }catch(e){toast('Lapisan PM2.5 gagal dimuat — periksa koneksi')}
+}
+function togglePM(){
+  pmOn=!pmOn;
+  if(pmOn){if(!pmLayer)pmLayer=L.layerGroup();pmLayer.addTo(map);chipState('PM2.5',true);toast('Lapisan PM2.5 aktif di peta (model CAMS)');pmRender()}
+  else{if(pmLayer)map.removeLayer(pmLayer);chipState('PM2.5',false)}
+}
+map.on('moveend',()=>{if(pmOn){clearTimeout(pmMoveT);pmMoveT=setTimeout(pmRender,900)}});
 async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(richQuakePopup(g),qpopOpts());quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);chipState('Gempa',true);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
 function toggleQuake(){if(quakeLayer&&map.hasLayer(quakeLayer)){map.removeLayer(quakeLayer);chipState('Gempa',false);toast('Layer gempa dimatikan');return}document.querySelector('[data-p="geodisaster"]').click();chipState('Gempa',true);flyIndo();loadQuake('terkini')}
 // Klik peta: detail lokasi & cuaca — model popup bandara (avpop)
@@ -388,7 +411,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  const s=document.getElementById('search'),q=document.getElementById('quick');
  if(s)document.body.appendChild(s); if(q)document.body.appendChild(q);
  // Tambah item quick-layer sesuai daftar situs acuan
- if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"bndToggle()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
+ if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['🌫 PM2.5',"togglePM();document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"bndToggle()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
  extra.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.setAttribute('onclick',fn);q.appendChild(b)});}
  // Klik peta membuka sheet detail kanan
  
