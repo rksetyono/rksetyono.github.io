@@ -71,8 +71,10 @@ function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return nul
 function satFrame(key){const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
 let pmLockZ=null;
+let satPanB=null;
 function applyMinZoom(){map.options.minZoom=Math.max(3,satLockZ||0,pmLockZ||0)}
-function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'){map.options.minZoom=3;satLockZ=satFillZoom(key);applyMinZoom()}else{satLockZ=null;applyMinZoom()}}
+function applyViewBounds(){const b=(pmLockZ!==null)?L.latLngBounds(INDO_BOUNDS):satPanB;if(b){map.setMaxBounds(b.pad(0.04));map.options.maxBoundsViscosity=1.0;if(!b.contains(map.getCenter()))map.panInsideBounds(b)}else{map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
+function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'){map.options.minZoom=3;satLockZ=satFillZoom(key);satPanB=L.latLngBounds(SATBOUNDS[m]);applyMinZoom();applyViewBounds()}else{satLockZ=null;satPanB=null;applyMinZoom();applyViewBounds()}}
 let satResizeT=null;
 window.addEventListener('resize',()=>{if(!satKey)return;clearTimeout(satResizeT);satResizeT=setTimeout(()=>{if(satKey){if(satLockZ!==null)satZoomLock(satKey);satFrame(satKey)}},450)});
 function satMarkLoading(){const el=document.getElementById('satTime');if(el)el.textContent='⏳ memuat tile…';const L0=satLayer;if(!L0)return;let done=false;const fin=()=>{if(done)return;done=true;if(satLayer===L0)satLabel()};L0.once('load',fin);setTimeout(fin,60000)}
@@ -317,7 +319,7 @@ async function loadPM(force){
   }catch(e){body.innerHTML='<p style="color:var(--mut)">PM2.5 belum dapat dimuat — periksa koneksi lalu tekan Perbarui.</p>'}
 }
 let pmLayer=null,pmOn=false,pmRunInfo='';
-function pmZoomLock(on){const db=L.latLngBounds(INDO_BOUNDS);if(on){map.options.minZoom=3;pmLockZ=map.getBoundsZoom(db,true);applyMinZoom();if(pmLockZ!==null&&map.getZoom()<pmLockZ)map.setZoom(pmLockZ);map.setMaxBounds(db.pad(0.05));map.options.maxBoundsViscosity=1.0;if(!db.contains(map.getCenter()))map.panInsideBounds(db)}else{pmLockZ=null;applyMinZoom();map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
+function pmZoomLock(on){const db=L.latLngBounds(INDO_BOUNDS);if(on){map.options.minZoom=3;pmLockZ=map.getBoundsZoom(db,true);applyMinZoom();if(pmLockZ!==null&&map.getZoom()<pmLockZ)map.setZoom(pmLockZ);applyViewBounds()}else{pmLockZ=null;applyMinZoom();applyViewBounds()}}
 function pmToIspu(v){if(v==null)return null;const B=[[0,15.5,0,50],[15.5,55.4,50,100],[55.4,150.4,100,200],[150.4,250.4,200,300],[250.4,500.4,300,500]];for(const s of B){if(v<=s[1])return Math.round((s[3]-s[2])/(s[1]-s[0])*(v-s[0])+s[2])}return 500}
 const PMSPARTAN='https://spartan.bmkg.go.id/map/rgb_req/pcm_pm25/pm25/1000/';
 function pmDs(d){const q=n=>String(n).padStart(2,'0');return ''+d.getUTCFullYear()+q(d.getUTCMonth()+1)+q(d.getUTCDate())+q(d.getUTCHours())+'00'}
