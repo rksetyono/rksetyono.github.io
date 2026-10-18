@@ -1,6 +1,7 @@
 /* SIGAP JUWATA — mesin aplikasi (dimuat oleh index.html) */
 
 const map=L.map('map',{preferCanvas:false,maxZoom:22,minZoom:3,zoomControl:false}).setView([-2.5,118],5);
+map.createPane('bndPane');map.getPane('bndPane').style.zIndex=350;
 map._controlCorners.bottomcenter=L.DomUtil.create('div','leaflet-bottom leaflet-center',map._controlContainer);
 L.control.zoom({position:'bottomright'}).addTo(map);
 L.control.scale({position:'bottomleft',metric:true,imperial:false}).addTo(map);
@@ -560,13 +561,13 @@ async function bndToggle(force){
       const feats=[];parts.forEach(pc=>pc.features.forEach(f=>feats.push(f)));
       const gj={type:'FeatureCollection',features:feats};
       bndLayer=L.layerGroup([
-        L.geoJSON(gj,{style:{color:'#0b1c2c',weight:4.6,opacity:.55,fill:false},interactive:false}),
-        L.geoJSON(gj,{style:{color:'#ffd400',weight:2.4,opacity:1,fill:false},interactive:false})
+        L.geoJSON(gj,{pane:'bndPane',style:{color:'#0b1c2c',weight:4.6,opacity:.55,fill:false},interactive:false}),
+        L.geoJSON(gj,{pane:'bndPane',style:{color:'#ffd400',weight:2.4,opacity:1,fill:false},interactive:false})
       ]);
     }catch(e){bndLoading=false;toast('Gagal memuat data batas pulau');return}
     bndLoading=false;
   }
-  if(on){bndLayer.addTo(map);bndLayer.eachLayer(l=>{if(l.bringToBack)l.bringToBack()});bndOn=true}
+  if(on){bndLayer.addTo(map);bndOn=true}
   else{if(bndLayer)map.removeLayer(bndLayer);bndOn=false}
   syncBndChip();
   if(typeof lpSync==='function')setTimeout(lpSync,60);
