@@ -288,14 +288,13 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <div class="lprow"><span>⚡ Petir (15 mnt terakhir)</span><button class="mini" id="lpPetir" onclick="ltToggle();setTimeout(lpSync,300)">Aktif</button></div>
 <div class="lprow"><span>🛰 Batas FIR</span><button class="mini" id="lpFir" onclick="firToggle();setTimeout(lpSync,300)">Nonaktif</button></div><div class="lprow"><span>🗺 Batas Pulau & Garis Pantai</span><button class="mini" id="lpBnd" onclick="bndToggle();setTimeout(lpSync,300)">Nonaktif</button></div>
 </div>
-<div class="card"><h3>🌐 GeoPortal Hub — SatuPeta BIG</h3><p>Basemap Rupabumi BIG tersedia di pemilih layer peta (kanan atas). </p>
-<button class="ghost" onclick="setBase('rbi')">Pakai Basemap Rupabumi BIG</button></div>
-<div class="card"><h3>🏔 Unduh DEMNAS (konsep)</h3><p>Alur aslinya: pilih indeks DEMNAS → clip batas wilayah → unduh GeoTIFF tanpa token dari BIG. Di prototype ini unduhan DEMNAS belum tersedia.</p></div>
+
+
 </section>
 <section class="panel" id="p-geodisaster">
 <div class="card"><h3>🌋 Gempa — BMKG Live</h3><p>Sumber: data.bmkg.go.id (gempa terkini &amp; dirasakan).</p><div class="row"><button onclick="loadQuake('terkini')">M 5.0+ Terkini</button><button class="ghost" onclick="loadQuake('dirasakan')">Dirasakan</button></div><div id="quakeList" style="margin-top:8px"></div></div>
 <div class="card"><h3>☁️ Cuaca Sekarang (klik peta)</h3><div id="cuaca">Klik titik mana pun di peta: cuaca Open-Meteo + detail administrasi (reverse geocode) tampil sebagai popup di titik yang diklik.</div></div>
-<div class="card"><h3>🔥 Hotspot &amp; Kualitas Udara</h3><label>Opasitas layer citra <input type="range" min="20" max="100" value="85" oninput="setOpacity(this.value)"></label><div id="pmBody"><p style="color:var(--mut)">PM2.5 dimuat saat tab GEODISASTER dibuka.</p></div><div class="row"><button class="ghost" onclick="loadPM(true)">🔁 Perbarui PM2.5</button></div><p style="font-size:11px;color:var(--mut)">PM2.5 &amp; PM10 untuk titik Bandara Juwata, Tarakan — model kualitas udara CAMS via Open-Meteo (estimasi grid, bukan stasiun ukur darat).</p></div>
+<div class="card"><h3>🔥 Hotspot &amp; Kualitas Udara</h3><label>Opasitas layer citra <input type="range" min="20" max="100" value="85" oninput="setOpacity(this.value)"></label><div id="pmBody"><p style="color:var(--mut)">PM2.5 dimuat saat tab GEODISASTER dibuka.</p></div><div class="row"><button class="ghost" onclick="loadPM(true)">🔁 Perbarui PM2.5</button></div><p style="font-size:11px;color:var(--mut)">PM2.5 &amp; PM10 untuk titik Bandara Juwata, Tarakan — model kualitas udara CAMS via Open-Meteo (estimasi grid, bukan stasiun ukur darat). Indeks memakai skala ISPU (KLHK); ISPU resmi berbasis rata-rata 24 jam stasiun ukur KLHK.</p></div>
 <div class="card"><h3>🌊 Forecasting</h3><p>Angin, hujan 24 jam, SST, SPI/SPEI: di produksi diambil dari GFS/BMKG sebagai raster RGB/WMS — kerangka slider waktunya sama seperti layer VIIRS di GEOPORTAL.</p>
 <label>Tanggal citra NASA <input type="date" id="gibsDate"></label><button class="ghost" onclick="refreshGibs()">Terapkan Tanggal</button></div>
 </section>
@@ -329,6 +328,6 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
-<script src="sigap-app.js?v=20261018-39"></script>
+<script src="sigap-app.js?v=20261018-41"></script>
 </body>
 </html>
