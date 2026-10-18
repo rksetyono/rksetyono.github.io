@@ -325,7 +325,7 @@ function pmRGBA(v){const a=pmToIspu(v);let rgb=PMISPU[PMISPU.length-1][1];if(a<=
 function pmWashClick(e){const v=pmValAt(e.latlng.lat,e.latlng.lng);if(v==null)return;const aq=pmToIspu(v);const cat=ispuCat(aq);L.popup(qpopOpts()).setLatLng(e.latlng).setContent('<div class="qpop"><div class="qpop-head"><span class="qpop-mag" style="background:'+cat.color+';color:'+(cat.txt||'#fff')+'">ISPU '+aq+'</span><div class="qpop-t"><b>PM2.5 — Kualitas Udara</b><small>'+e.latlng.lat.toFixed(3)+'°, '+e.latlng.lng.toFixed(3)+'°</small></div></div><div class="qpop-grid"><div><small>PM2.5 (interpolasi)</small><b>'+v.toFixed(1)+' µg/m³</b></div><div><small>Kategori ISPU</small><b>'+cat.label+'</b></div></div><small class="qpop-src">Sumber: model CAMS via Open-Meteo (estimasi grid dunia, bukan stasiun ukur darat)</small></div>').openOn(map)}
 async function pmEnsureWorld(){
   if(pmWorld&&Date.now()-pmWorld.at<45*60000)return true;
-  const la0=-60,lo0=-180,step=4.5,rows=32,cols=80,pts=[];
+  const la0=-85,lo0=-180,step=4.5,rows=38,cols=80,pts=[];
   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)pts.push([la0+step*(r+0.5),lo0+step*(c+0.5)]);
   const vals=Array.from({length:rows},()=>Array(cols).fill(null));let got=0;
   const chunks=[];for(let i=0;i<pts.length;i+=430)chunks.push(pts.slice(i,i+430));
