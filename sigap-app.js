@@ -348,7 +348,7 @@ async function togglePM(){
   toast('🌫 Mencari data PM2.5 BMKG (SPARTAN)…');
   const f=await pmFindRun();
   if(!f){toast('⚠️ Tile PM2.5 BMKG belum tersedia saat ini — coba lagi nanti');return}
-  pmLayer=L.tileLayer(PMSPARTAN+f.mr+'/'+f.fc+'/{z}/{x}/{y}.png',{tms:true,maxNativeZoom:8,opacity:.8,attribution:'PM2.5 © BMKG — model PCM (SPARTAN)'}).addTo(map);
+  pmLayer=L.tileLayer(PMSPARTAN+f.mr+'/'+f.fc+'/{z}/{x}/{y}.png',{tms:true,maxNativeZoom:8,opacity:.7,attribution:'PM2.5 © BMKG — model PCM (SPARTAN)'}).addTo(map);
   pmOn=true;pmRunInfo=f.mr;
   map.on('click',pmTileClick);
   chipState('PM2.5',true);if(typeof wxRender==='function')wxRender();
