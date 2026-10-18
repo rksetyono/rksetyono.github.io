@@ -455,10 +455,10 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
 /* ===== Titik bandara di peta (OPMET BMKG) + bawaan awal ===== */
 let avDots=null,avDotsOn=false,avDotsTimer=null;
 function avDotStyle(p){const st=(p.icon_state||'').toLowerCase();if(st.includes('red'))return{color:'#ef4444',r:6};if(st.includes('yellow'))return{color:'#eab308',r:5.5};if(st.includes('blue'))return{color:'#38bdf8',r:5.5};if(st.includes('green'))return{color:'#22c55e',r:5.5};if(p.metar&&p.metar.includes(' AUTO ')&&(+p.visibility_m<0))return{color:'#f59e0b',r:5};if(+p.visibility_m>=0)return{color:avVisClass(+p.visibility_m).color,r:5.5};return{color:'#9ca3af',r:4}}
-function avPopOpts(){const o=qpopOpts();o.className='qpop-wrap avpop';o.autoPanPaddingTopLeft=L.point(14,168);return o}
+function avPopOpts(){const o=qpopOpts();o.className='qpop-wrap avpop';o.autoPanPaddingTopLeft=L.point(14,168);o.maxWidth=Math.min(308,Math.round(window.innerWidth*.88));o.minWidth=Math.min(252,Math.round(window.innerWidth*.8));return o}
 function avPopupHTML(st){
-  const btn='<button class="mini" onclick="pilihBandara(\''+st.icao+'\','+st.lat+','+st.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>';
-  const head='<b style="font-size:13.5px">'+st.name+'</b>';
+  const btn='<button class="mini" style="display:block;width:100%;text-align:center;padding:7px 0" onclick="pilihBandara(\''+st.icao+'\','+st.lat+','+st.lon+');document.querySelector(\'#tabs button[data-p=penerbangan]\').click()">Lihat METAR/TAF</button>';
+  const head='<b style="display:block;font-size:14px;line-height:1.3;padding-right:20px">'+st.name+'</b>';
   if(!st.raw)return head+'<div style="font-size:11.5px;color:#5b7a99;margin:4px 0 8px">'+st.icao+' · Data belum diperbarui — METAR belum tersedia.</div>'+btn;
   const o=avParseMetar(st.raw);const cat=avCat(o);const vc=avVisClass(o.vis);const od=avObsDate(o.time);
   const age=od!=null?Math.max(0,Math.round((Date.now()-od)/60000)):null;
@@ -466,8 +466,8 @@ function avPopupHTML(st){
   const cloudTxt=o.cavok?'CAVOK — cerah, vis ≥ 10 km':(o.clouds.length?o.clouds.map(c=>(COVID[c.cover]||c.cover)+(c.baseFt!=null?' · '+c.baseFt.toLocaleString('id-ID')+' ft':'')).join('; '):'—');
   const wxTxt=o.wx.length?o.wx.map(avWxText).join(', '):(o.nosig?'NOSIG — tidak ada perubahan signifikan':'Tidak ada cuaca terlaporkan');
   const visTxt=o.vis!=null?(o.vis>=9999?'≥ 10 km':(o.vis/1000).toLocaleString('id-ID')+' km'):'—';
-  return head+'<div style="font-size:11px;color:#5b7a99;margin:2px 0 7px">'+st.icao+' · Obs '+(od?od.toISOString().slice(11,16)+' UTC · '+fmtWita(od.toISOString()):'—')+(age!=null?' · '+age+' mnt lalu':'')+'</div>'
-   +'<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="background:'+cat.color+';color:#fff;font-weight:800;font-size:11.5px;padding:3px 9px;border-radius:999px">'+cat.cat+'</span><span style="font-size:11.5px;color:#5b7a99">'+cat.label+'</span></div>'
+  return head+'<div style="font-size:10.5px;color:#5b7a99;margin:3px 0 8px;line-height:1.5">'+st.icao+' · Obs '+(od?od.toISOString().slice(11,16)+' UTC · '+fmtWita(od.toISOString()):'—')+(age!=null?' · '+age+' mnt lalu':'')+'</div>'
+   +'<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:2px"><span style="background:'+cat.color+';color:#fff;font-weight:800;font-size:11.5px;padding:3px 10px;border-radius:999px">'+cat.cat+'</span><span style="font-size:11.5px;color:#5b7a99">'+cat.label+'</span></div>'
    +'<div class="avgrid">'
    +'<div><small>Angin</small><b>'+windTxt+'</b></div>'
    +'<div><small>Visibilitas</small><b><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+vc.color+';margin-right:5px"></span>'+visTxt+'</b> <span style="color:var(--mut);font-size:11px">'+vc.label+'</span></div>'
