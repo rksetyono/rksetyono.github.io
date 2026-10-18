@@ -50,7 +50,7 @@ map.on('locationerror',e=>{
   else{locHelp('Posisi Tidak Tersedia','Posisi perangkat tidak bisa ditentukan. Pastikan GPS/Lokasi perangkat aktif dan browser diizinkan mengakses lokasi, lalu tekan Coba Lagi.')}
 });
 // Tabs
-document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+b.dataset.p).classList.add('on');map.closePopup()});
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+b.dataset.p).classList.add('on');if(b.dataset.p==='geodisaster')loadPM();map.closePopup()});
 function toggleTheme(){document.body.classList.toggle('dark')}
 function minAll(){[quakeLayer,gibsLayer].forEach(l=>{if(l)map.removeLayer(l)});chipState('Gempa',false);chipState('VIIRS',false);chipState('Hotspot',false);if(typeof rainLayer!=='undefined'&&rainLayer){map.removeLayer(rainLayer);rainLayer=null;chipState('Hujan',false);const rl=document.getElementById('rainLegend');if(rl)rl.style.display='none';const rb=document.getElementById('rainBtn');if(rb)rb.textContent='🌧 Hujan Satelit (IMERG): Nonaktif';if(typeof updateProdPill==='function')updateProdPill()}clearMyLoc();clearWilMap();if(lastQuakeMark){map.removeLayer(lastQuakeMark);lastQuakeMark=null}map.closePopup();toast('Semua layer overlay dimatikan')}
 // NASA GIBS time layers
@@ -293,6 +293,27 @@ let lastQuakeMark=null;
 window.__qimg=function(){setTimeout(()=>{if(map._popup)map._popup.update()},40)};
 function qpopOpts(){return{className:'qpop-wrap',maxWidth:Math.min(330,Math.round(window.innerWidth*.86)),maxHeight:Math.max(240,Math.round(window.innerHeight*.68)),autoPan:true,keepInView:true,autoPanPaddingTopLeft:L.point(14,200),autoPanPaddingBottomRight:L.point(14,84)}}
 function showQuakePopup(la,ln,g){if(lastQuakeMark)lastQuakeMark.remove();lastQuakeMark=L.circleMarker([la,ln],{radius:10,color:'#c0392b',fillColor:'#e74c3c',fillOpacity:.6}).addTo(map).bindPopup(richQuakePopup(g),qpopOpts());map.flyTo([la,ln],9);let opened=false;const tryOpen=()=>{if(!opened){opened=true;if(lastQuakeMark)lastQuakeMark.openPopup()}};map.once('moveend',tryOpen);setTimeout(tryOpen,2800)}
+let pmLoadedAt=0;
+function aqiCat(a){if(a==null)return{label:'—',color:'#64748b'};if(a<=50)return{label:'Baik',color:'#22c55e'};if(a<=100)return{label:'Sedang',color:'#eab308'};if(a<=150)return{label:'Tidak sehat untuk kelompok sensitif',color:'#f97316'};if(a<=200)return{label:'Tidak Sehat',color:'#ef4444'};if(a<=300)return{label:'Sangat Tidak Sehat',color:'#a855f7'};return{label:'Berbahaya',color:'#7f1d1d'}}
+async function loadPM(force){
+  const body=document.getElementById('pmBody');if(!body)return;
+  if(!force&&pmLoadedAt&&Date.now()-pmLoadedAt<30*60000)return;
+  body.innerHTML='<p style="color:var(--mut)">Memuat PM2.5 Tarakan…</p>';
+  try{
+    const j=await (await fetchTimeout('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=3.3270&longitude=117.5683&current=pm2_5,pm10,us_aqi&hourly=pm2_5&timezone=Asia%2FMakassar&forecast_days=1',15000)).json();
+    const c=j.current;if(!c)throw 0;
+    pmLoadedAt=Date.now();
+    const cat=aqiCat(c.us_aqi);
+    const hrs=j.hourly&&j.hourly.time?j.hourly.time:[],vals=j.hourly&&j.hourly.pm2_5?j.hourly.pm2_5:[];
+    const nowH=hrs.indexOf(c.time);const upto=nowH>=0?nowH:vals.length-1;
+    let mx=0,mxT='';for(let i=0;i<=upto&&i<vals.length;i++){if(vals[i]!=null&&vals[i]>mx){mx=vals[i];mxT=hrs[i]}}
+    let bars='';const cap=Math.max(50,mx);
+    for(let i=0;i<=upto&&i<vals.length;i++){const v=vals[i];if(v==null)continue;const hgt=Math.max(8,Math.round(v/cap*44));const bc=aqiCat(v<=12?25:v<=35.4?75:v<=55.4?125:v<=150.4?175:v<=250.4?250:350).color;bars+='<div title="'+hrs[i].slice(11,16)+' · '+v+' µg/m³" style="flex:1;background:'+bc+';height:'+hgt+'px;border-radius:2px 2px 0 0"></div>'}
+    body.innerHTML='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="background:'+cat.color+';color:#fff;font-weight:800;font-size:12px;padding:4px 10px;border-radius:999px">AQI '+Math.round(c.us_aqi)+'</span><span style="font-size:12px;color:var(--mut)">'+cat.label+' · '+String(c.time).slice(11,16)+' WITA</span></div>'
+     +'<div class="avgrid"><div><small>PM2.5</small><b>'+c.pm2_5+' µg/m³</b></div><div><small>PM10</small><b>'+c.pm10+' µg/m³</b></div><div><small>Puncak hari ini</small><b>'+mx+' µg/m³</b> <span style="color:var(--mut);font-size:11px">'+(mxT?mxT.slice(11,16)+' WITA':'')+'</span></div><div><small>Titik model</small><b>Juwata, Tarakan</b></div></div>'
+     +(bars?'<div style="display:flex;align-items:flex-end;gap:2px;height:46px;margin:4px 0 2px">'+bars+'</div><p style="font-size:10.5px;color:var(--mut);margin:0">PM2.5 per jam hari ini (00.00–sekarang)</p>':'');
+  }catch(e){body.innerHTML='<p style="color:var(--mut)">PM2.5 belum dapat dimuat — periksa koneksi lalu tekan Perbarui.</p>'}
+}
 async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(richQuakePopup(g),qpopOpts());quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);chipState('Gempa',true);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
 function toggleQuake(){if(quakeLayer&&map.hasLayer(quakeLayer)){map.removeLayer(quakeLayer);chipState('Gempa',false);toast('Layer gempa dimatikan');return}document.querySelector('[data-p="geodisaster"]').click();chipState('Gempa',true);flyIndo();loadQuake('terkini')}
 // Klik peta: detail lokasi & cuaca — model popup bandara (avpop)
