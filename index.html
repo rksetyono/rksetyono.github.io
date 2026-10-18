@@ -249,12 +249,12 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <button onclick="flyIndo()">🇮🇩 Indonesia</button><button onclick="lokasiSaya()">📍 Lokasi Saya</button>
 </div>
 <nav id="tabs">
-<button class="on" data-p="geoportal">LAPISAN</button><button data-p="geonusa">GEONUSA</button>
+<button data-p="geoportal">LAPISAN</button><button class="on" data-p="geonusa">GEONUSA</button>
 <button data-p="geodisaster">GEODISASTER</button><button data-p="penerbangan">PENERBANGAN</button>
 
 </nav>
 <div id="panels">
-<section class="panel" id="p-geonusa">
+<section class="panel on" id="p-geonusa">
 <div class="card"><h3>📊 Statistik &amp; Pencarian Wilayah — DATA LENGKAP</h3><p><b>38 Provinsi · 514 Kab/Kota · 7.285 Kecamatan · 83.762 Desa/Kelurahan</b> — kode Kemendagri (Kepmendagri 300.2.2-2138/2025), dimuat langsung dari API statis wilayah Indonesia (update data 11 Okt 2026). Angka ini beda dari klaim BIG RBI di situs acuan karena beda sumber: ini kode administrasi Kemendagri, bukan hitungan geometri RBI.</p>
 <label>1. Provinsi</label><select id="prov"><option>Memuat…</option></select>
 <label>2. Kabupaten/Kota</label><select id="kab"><option>Pilih provinsi dahulu</option></select>
@@ -265,7 +265,7 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 <div id="wilayahStatus" style="font-size:12px;color:var(--mut);margin-top:6px"></div></div>
 <div class="card"><h3>👥 Indikator Wilayah Terpilih</h3><div id="indikator"><p>Pilih wilayah di atas — ibu kota, penduduk, luas, elevasi, zona waktu, dan kode pos (desa) tampil di sini dari data API yang sama.</p></div></div>
 </section>
-<section class="panel on" id="p-geoportal">
+<section class="panel" id="p-geoportal">
 <div class="card"><h3>🛰 Citra Satelit &amp; Radar — BMKG</h3><p>Citra geostasioner resmi BMKG (satellite.bmkg.go.id), produk penerbangan InaSIAM &amp; radar cuaca nasional (gis.bmkg.go.id). Pilih produk dari satu menu di bawah, geser waktu, atau putar animasinya.</p>
 <div class="lpgroup">Citra Satelit</div>
 <label>Produk citra <select id="satMenu" onchange="satMenuChange(this.value)" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--bord);background:var(--bg2);color:var(--txt);font-size:13px;margin-top:4px"><option value="">— Pilih produk citra —</option><optgroup label="Citra BMKG"><option value="eh">Himawari-9 IR Enhanced</option><option value="nc">Natural Color</option><option value="wv">Water Vapor</option><option value="rp">Rainfall</option><option value="gk">GK-2A IR Enhanced</option></optgroup><optgroup label="Produk Penerbangan — InaSIAM"><option value="ia:fog">Fog &amp; Stratus Rendah</option><option value="ia:cloud_top">Cloud Top Phase/Icing</option><option value="ia:ir_ct">IR Cloud Top Icing</option><option value="ia:sandwich">Sandwich VIS+IR</option><option value="ia:vis">Visible</option><option value="ia:wv_mid">WV Mid</option><option value="ia:wv_upper">WV Upper</option></optgroup></select></label> <label>Waktu citra <span id="satTime" style="color:var(--txt)">—</span></label>
@@ -329,6 +329,6 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
-<script src="sigap-app.js?v=20261018-32"></script>
+<script src="sigap-app.js?v=20261018-33"></script>
 </body>
 </html>
