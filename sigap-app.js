@@ -55,7 +55,7 @@ const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]],
 function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;return map.getBoundsZoom(L.latLngBounds(b),true)}
 function satFrame(key){if(key&&SATPROD[key]&&SATPROD[key].fd)return;const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
-function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'){satLockZ=satFillZoom(key);if(satLockZ!==null)map.options.minZoom=satLockZ}else{satLockZ=null;map.options.minZoom=3}}
+function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'||m==='himawari9fd'){map.options.minZoom=3;satLockZ=satFillZoom(key);if(satLockZ!==null)map.options.minZoom=satLockZ}else{satLockZ=null;map.options.minZoom=3}}
 let satResizeT=null;
 window.addEventListener('resize',()=>{if(!satKey)return;clearTimeout(satResizeT);satResizeT=setTimeout(()=>{if(satKey){if(satLockZ!==null)satZoomLock(satKey);satFrame(satKey)}},450)});
 function satMarkLoading(){const el=document.getElementById('satTime');if(el)el.textContent='⏳ memuat tile…';const L0=satLayer;if(!L0)return;let done=false;const fin=()=>{if(done)return;done=true;if(satLayer===L0)satLabel()};L0.once('load',fin);setTimeout(fin,60000)}
