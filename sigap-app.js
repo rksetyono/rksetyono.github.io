@@ -67,7 +67,7 @@ async function getModelRuns(){if(modelrunCache&&Date.now()-modelrunAt<300000)ret
 function satUrl(key,iso){const p=SATPROD[key];return `https://satellite.bmkg.go.id/api22/tile/{z}/{x}/{y}.png?tiletype=himawari9&modelname=${p.model}&param=${p.param}&baserun=${encodeURIComponent(iso)}`}
 function satLabel(){const el=document.getElementById('satTime');if(!satRuns.length){el.textContent='—';return}el.textContent=fmtWita(satRuns[satIdx])+(satIdx===0?' (terbaru)':'');updateProdPill()}
 const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]]};
-function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;return map.getBoundsZoom(L.latLngBounds(b),true)}
+function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;return map.getBoundsZoom(L.latLngBounds(b),false)}
 function satFrame(key){const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
 let pmLockZ=null;
