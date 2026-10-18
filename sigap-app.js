@@ -318,7 +318,7 @@ async function loadPM(force){
 }
 let pmLayer=null,pmOn=false,pmRunInfo='';
 const PMDOMAIN=[[-21.94,78.75],[31.95,157.5]];
-function pmZoomLock(on){if(on){map.options.minZoom=3;pmLockZ=map.getBoundsZoom(L.latLngBounds(PMDOMAIN),true);applyMinZoom();if(pmLockZ!==null&&map.getZoom()<pmLockZ)map.setZoom(pmLockZ)}else{pmLockZ=null;applyMinZoom()}}
+function pmZoomLock(on){const db=L.latLngBounds(PMDOMAIN);if(on){map.options.minZoom=3;pmLockZ=map.getBoundsZoom(db,true);applyMinZoom();if(pmLockZ!==null&&map.getZoom()<pmLockZ)map.setZoom(pmLockZ);map.setMaxBounds(db.pad(0.05));map.options.maxBoundsViscosity=1.0;if(!db.contains(map.getCenter()))map.panInsideBounds(db)}else{pmLockZ=null;applyMinZoom();map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
 function pmToIspu(v){if(v==null)return null;const B=[[0,15.5,0,50],[15.5,55.4,50,100],[55.4,150.4,100,200],[150.4,250.4,200,300],[250.4,500.4,300,500]];for(const s of B){if(v<=s[1])return Math.round((s[3]-s[2])/(s[1]-s[0])*(v-s[0])+s[2])}return 500}
 const PMSPARTAN='https://spartan.bmkg.go.id/map/rgb_req/pcm_pm25/pm25/1000/';
 function pmDs(d){const q=n=>String(n).padStart(2,'0');return ''+d.getUTCFullYear()+q(d.getUTCMonth()+1)+q(d.getUTCDate())+q(d.getUTCHours())+'00'}
