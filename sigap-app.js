@@ -317,8 +317,7 @@ async function loadPM(force){
   }catch(e){body.innerHTML='<p style="color:var(--mut)">PM2.5 belum dapat dimuat — periksa koneksi lalu tekan Perbarui.</p>'}
 }
 let pmLayer=null,pmOn=false,pmRunInfo='';
-const PMDOMAIN=[[-21.94,78.75],[31.95,157.5]];
-function pmZoomLock(on){const db=L.latLngBounds(PMDOMAIN);if(on){map.options.minZoom=3;pmLockZ=map.getBoundsZoom(db,true);applyMinZoom();if(pmLockZ!==null&&map.getZoom()<pmLockZ)map.setZoom(pmLockZ);map.setMaxBounds(db.pad(0.05));map.options.maxBoundsViscosity=1.0;if(!db.contains(map.getCenter()))map.panInsideBounds(db)}else{pmLockZ=null;applyMinZoom();map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
+function pmZoomLock(on){const db=L.latLngBounds(INDO_BOUNDS);if(on){map.options.minZoom=3;pmLockZ=map.getBoundsZoom(db,true);applyMinZoom();if(pmLockZ!==null&&map.getZoom()<pmLockZ)map.setZoom(pmLockZ);map.setMaxBounds(db.pad(0.05));map.options.maxBoundsViscosity=1.0;if(!db.contains(map.getCenter()))map.panInsideBounds(db)}else{pmLockZ=null;applyMinZoom();map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
 function pmToIspu(v){if(v==null)return null;const B=[[0,15.5,0,50],[15.5,55.4,50,100],[55.4,150.4,100,200],[150.4,250.4,200,300],[250.4,500.4,300,500]];for(const s of B){if(v<=s[1])return Math.round((s[3]-s[2])/(s[1]-s[0])*(v-s[0])+s[2])}return 500}
 const PMSPARTAN='https://spartan.bmkg.go.id/map/rgb_req/pcm_pm25/pm25/1000/';
 function pmDs(d){const q=n=>String(n).padStart(2,'0');return ''+d.getUTCFullYear()+q(d.getUTCMonth()+1)+q(d.getUTCDate())+q(d.getUTCHours())+'00'}
@@ -349,9 +348,10 @@ async function pmTileClick(e){
 }
 async function togglePM(){
   if(pmOn){pmOn=false;pmZoomLock(false);if(pmLayer){map.removeLayer(pmLayer);pmLayer=null}map.off('click',pmTileClick);chipState('PM2.5',false);if(typeof wxRender==='function')wxRender();toast('Layer PM2.5 BMKG dimatikan');return}
+  pmZoomLock(true);
   toast('🌫 Mencari data PM2.5 BMKG (SPARTAN)…');
   const f=await pmFindRun();
-  if(!f){toast('⚠️ Tile PM2.5 BMKG belum tersedia saat ini — coba lagi nanti');return}
+  if(!f){pmZoomLock(false);toast('⚠️ Tile PM2.5 BMKG belum tersedia saat ini — coba lagi nanti');return}
   pmLayer=L.tileLayer(PMSPARTAN+f.mr+'/'+f.fc+'/{z}/{x}/{y}.png',{tms:true,maxNativeZoom:8,opacity:.7,attribution:'PM2.5 © BMKG — model PCM (SPARTAN)'}).addTo(map);
   pmOn=true;pmRunInfo=f.mr;pmZoomLock(true);
   map.on('click',pmTileClick);
