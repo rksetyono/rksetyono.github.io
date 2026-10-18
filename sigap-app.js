@@ -280,10 +280,29 @@ function qpopOpts(){return{className:'qpop-wrap',maxWidth:Math.min(330,Math.roun
 function showQuakePopup(la,ln,g){if(lastQuakeMark)lastQuakeMark.remove();lastQuakeMark=L.circleMarker([la,ln],{radius:10,color:'#c0392b',fillColor:'#e74c3c',fillOpacity:.6}).addTo(map).bindPopup(richQuakePopup(g),qpopOpts());map.flyTo([la,ln],9);let opened=false;const tryOpen=()=>{if(!opened){opened=true;if(lastQuakeMark)lastQuakeMark.openPopup()}};map.once('moveend',tryOpen);setTimeout(tryOpen,2800)}
 async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(richQuakePopup(g),qpopOpts());quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);chipState('Gempa',true);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
 function toggleQuake(){if(quakeLayer&&map.hasLayer(quakeLayer)){map.removeLayer(quakeLayer);chipState('Gempa',false);toast('Layer gempa dimatikan');return}document.querySelector('[data-p="geodisaster"]').click();chipState('Gempa',true);flyIndo();loadQuake('terkini')}
-// Click: reverse geocode + weather
-map.on('click',async e=>{const {lat,lng}=e.latlng;document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Memuat alamat…`;
-try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18`,{headers:{'Accept-Language':'id'}});const j=await r.json();document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>${j.display_name||'-'}`}catch(_){document.getElementById('detailBody').innerHTML=`Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`}
-try{const w=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto`)).json();const c=w.current;document.getElementById('weatherBody').innerHTML=`<hr>🌡 ${c.temperature_2m}°C · 💧 ${c.relative_humidity_2m}% · 🌬 ${c.wind_speed_10m} km/j · 🌧 ${c.precipitation} mm`}catch(_){}});
+// Klik peta: detail lokasi & cuaca — model popup bandara (avpop)
+let clickPopup=null,lastPopupTs=0;
+map.on('popupopen',e=>{if(e.popup!==clickPopup)lastPopupTs=Date.now()});
+map.on('click',e=>{
+  const clickTs=Date.now();const lat=e.latlng.lat,lng=e.latlng.lng;
+  setTimeout(async()=>{
+    if(lastPopupTs>=clickTs-10)return;
+    if(!clickPopup)clickPopup=L.popup(avPopOpts());
+    clickPopup.setLatLng(e.latlng).setContent('<b style="display:block;font-size:14px;line-height:1.3;padding-right:20px">Detail Lokasi</b><div style="font-size:10.5px;color:#5b7a99;margin:3px 0 0;line-height:1.5">Koordinat: '+lat.toFixed(6)+', '+lng.toFixed(6)+'</div><p style="font-size:12px;color:var(--mut);margin:10px 0 2px">Memuat alamat & cuaca…</p>').openOn(map);
+    let addr=null,addrParts=null;
+    try{const r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lng+'&zoom=18',{headers:{'Accept-Language':'id'}});const j=await r.json();addr=j.display_name||null;addrParts=j.address||null}catch(_){}
+    let wx=null;
+    try{const w=await (await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto')).json();wx=w.current||null}catch(_){}
+    if(!map.hasLayer(clickPopup))return;
+    const nm=addrParts?([addrParts.village,addrParts.suburb,addrParts.neighbourhood,addrParts.town,addrParts.city,addrParts.county].find(Boolean)||'Detail Lokasi'):'Detail Lokasi';
+    const cell=(l,v)=>'<div><small>'+l+'</small><b>'+v+'</b></div>';
+    clickPopup.setContent('<b style="display:block;font-size:14px;line-height:1.3;padding-right:20px">'+nm+'</b>'
+      +'<div style="font-size:10.5px;color:#5b7a99;margin:3px 0 0;line-height:1.5">Koordinat: '+lat.toFixed(6)+', '+lng.toFixed(6)+'</div>'
+      +(wx?'<div class="avgrid">'+cell('Suhu',wx.temperature_2m+' °C')+cell('Kelembaban',wx.relative_humidity_2m+' %')+cell('Angin',wx.wind_speed_10m+' km/j')+cell('Hujan',wx.precipitation+' mm')+'</div>':'<p style="font-size:12px;color:var(--mut);margin:10px 0 2px">Cuaca titik ini belum termuat.</p>')
+      +(addr?'<p style="font-size:11.5px;color:var(--mut2);line-height:1.5;margin:2px 0 0">'+addr+'</p>':'')
+      +'<small class="qpop-src" style="padding:6px 0 0">Sumber: alamat © OpenStreetMap · cuaca Open-Meteo</small>');
+  },80);
+});
 // Search (Nominatim)
 async function cari(){const q=document.getElementById('q').value.trim();if(!q)return;const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q+', Indonesia')}`);const j=await r.json();if(j[0]){map.flyTo([+j[0].lat,+j[0].lon],12);L.marker([+j[0].lat,+j[0].lon]).addTo(map).bindPopup(j[0].display_name).openPopup()}else toast('Tidak ditemukan')}
 // ===== Data Wilayah LENGKAP: API statis Kemendagri (Emsifa v2, CORS terbuka, lazy per level) =====
@@ -336,7 +355,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['🌫 PM2.5',"document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleGibs('viirs')"],['💨 Angin',"toast('Klik titik di peta untuk angin & cuaca titik (Open-Meteo)')"],['🗺 Boundaries',"bndToggle()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
  extra.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.setAttribute('onclick',fn);q.appendChild(b)});}
  // Klik peta membuka sheet detail kanan
- map.on('click',()=>{document.getElementById('detail').classList.add('open')});
+ 
  // ===== Panel Gempa Terkini BMKG (autogempa) + ticker, ala beranda bmkg.go.id =====
  const fab=document.createElement('button');fab.id='fabMenu';fab.title='Buka/tutup menu';fab.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>';fab.onclick=()=>document.getElementById('side').classList.toggle('hidden');document.body.appendChild(fab);
  const sideEl=document.getElementById('side');
