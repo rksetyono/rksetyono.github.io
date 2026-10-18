@@ -157,7 +157,7 @@ function wxRender(){const secs=[];
  if(typeof radarLayer!=='undefined'&&radarLayer)secs.push('<div class="wxsec"><b>📡 Radar BMKG (dBZ)</b><div class="wxgrad" style="background:linear-gradient(90deg,#a0d8ef,#01b8ff,#00e500,#b4dc00,#ffdc00,#ff7100,#ff0000,#b800d6)"></div><div class="wxcap"><span>5 ringan</span><span>35 deras</span><span>55 ekstrem</span><span>75 hail</span></div></div>');
  if(typeof rainLayer!=='undefined'&&rainLayer)secs.push('<div class="wxsec"><b>🌧 Hujan — GPM IMERG</b><div class="wxrow">Estimasi laju hujan satelit (mm/jam) · data '+(rainLayer._date||'')+'</div></div>');
  if(typeof gibsLayer!=='undefined'&&gibsLayer)secs.push('<div class="wxsec"><b>🛰 VIIRS NOAA-20 True Color</b><div class="wxrow">Citra warna asli NASA GIBS · '+(gibsLayer._date||'')+'</div></div>');
- if(typeof pmOn!=='undefined'&&pmOn)secs.push('<div class="wxsec"><b>🌫 PM2.5 — Kualitas Udara (ISPU)</b>'+[[50,'#22c55e','≤ 50 · Baik'],[100,'#2563eb','51–100 · Sedang'],[200,'#eab308','101–200 · Tidak Sehat'],[300,'#ef4444','201–300 · Sangat Tidak Sehat'],[999,'#111827','> 300 · Berbahaya']].map(r=>'<div class="wxrow"><span class="wxdot" style="background:'+r[1]+';border-radius:3px"></span>ISPU '+r[2]+'</div>').join('')+'<div class="wxrow">Model CAMS via Open-Meteo · skala ISPU (KLHK) — klik lapisan untuk nilai titik</div></div>');
+ if(typeof pmOn!=='undefined'&&pmOn)secs.push('<div class="wxsec"><b>🌫 PM2.5 — BMKG PCM (SPARTAN)</b><div style="height:9px;border-radius:5px;margin:6px 0 2px;background:linear-gradient(90deg,#22c55e,#eab308,#f97316,#ef4444,#7c3aed,#7f1d1d)"></div><div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--mut)"><span>0</span><span>15</span><span>55</span><span>150</span><span>250</span><span>500 µg/m³</span></div>'+[[15,'#22c55e','≤ 15 · Baik'],[55,'#eab308','15–55 · Sedang'],[150,'#f97316','55–150 · Tidak Sehat'],[250,'#ef4444','150–250 · Sangat Tidak Sehat'],[999,'#7f1d1d','> 250 · Berbahaya']].map(r=>'<div class="wxrow"><span class="wxdot" style="background:'+r[1]+';border-radius:3px"></span>PM2.5 '+r[2]+'</div>').join('')+'<div class="wxrow">Tile model PCM BMKG (run '+(typeof pmRunInfo!=='undefined'&&pmRunInfo?pmRunInfo.slice(6,8)+'/'+pmRunInfo.slice(4,6)+' '+pmRunInfo.slice(8,10)+'.00 UTC':'harian')+') · klik peta untuk nilai titik</div></div>');
  if(typeof quakeLayer!=='undefined'&&quakeLayer&&map.hasLayer(quakeLayer))secs.push('<div class="wxsec"><b>🌋 Gempa BMKG — magnitudo</b>'+[[6,'#b91c1c','≥ 6'],[5,'#dc2626','5 – 6'],[4,'#ea580c','4 – 5'],[3,'#d97706','3 – 4'],[0,'#009444','< 3']].map(r=>'<div class="wxrow"><span class="wxdot" style="background:'+r[1]+';border-radius:50%"></span>M '+r[2]+'</div>').join('')+'</div>');
  const el=wxLegendEl();if(!secs.length){el.style.display='none';return}
  el.style.display='block';document.getElementById('wxBadge').textContent=secs.length;document.getElementById('wxBody').style.display=wxLegOpen?'block':'none';document.getElementById('wxChev').textContent=wxLegOpen?'▾':'▸';document.getElementById('wxBody').innerHTML=secs.join('')}
@@ -314,75 +314,46 @@ async function loadPM(force){
      +(bars?'<div style="display:flex;align-items:flex-end;gap:2px;height:46px;margin:4px 0 2px">'+bars+'</div><p style="font-size:10.5px;color:var(--mut);margin:0">PM2.5 per jam hari ini (00.00–sekarang)</p>':'');
   }catch(e){body.innerHTML='<p style="color:var(--mut)">PM2.5 belum dapat dimuat — periksa koneksi lalu tekan Perbarui.</p>'}
 }
-let pmLayer=null,pmOn=false,pmMoveT=null,pmWorld=null,pmLocal=null,pmWorldOv=null,pmLocalOv=null,pmWorldStamp=0,pmLocalStamp=0,pmFallback=null,pmWorldK=null;
-const PMRAMP=[[0,'#22c55e'],[12,'#84cc16'],[35,'#eab308'],[55,'#f97316'],[150,'#ef4444'],[250,'#a855f7'],[400,'#7f1d1d']];
-function pmRGB(v){const hx=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];if(v<=PMRAMP[0][0])return hx(PMRAMP[0][1]);for(let i=1;i<PMRAMP.length;i++){if(v<=PMRAMP[i][0]){const t=(v-PMRAMP[i-1][0])/(PMRAMP[i][0]-PMRAMP[i-1][0]);const A=hx(PMRAMP[i-1][1]),B=hx(PMRAMP[i][1]);return[0,1,2].map(k=>Math.round(A[k]+(B[k]-A[k])*t))}}return hx(PMRAMP[PMRAMP.length-1][1])}
+let pmLayer=null,pmOn=false,pmRunInfo='';
 function pmToIspu(v){if(v==null)return null;const B=[[0,15.5,0,50],[15.5,55.4,50,100],[55.4,150.4,100,200],[150.4,250.4,200,300],[250.4,500.4,300,500]];for(const s of B){if(v<=s[1])return Math.round((s[3]-s[2])/(s[1]-s[0])*(v-s[0])+s[2])}return 500}
-function pmSample(g,lat,lon){const sLa=g.stepLa||g.step,sLo=g.stepLo||g.step;const u=(lon-g.lo0)/sLo-0.5,w=(lat-g.la0)/sLa-0.5;let sw=0,sv=0;const c0=Math.floor(u),r0=Math.floor(w);for(let r=r0-1;r<=r0+1;r++){for(let c=c0-1;c<=c0+1;c++){if(r<0||c<0||r>=g.rows||c>=g.cols)continue;const v=g.vals[r][c];if(v==null)continue;const d2=(u-c)*(u-c)+(w-r)*(w-r)+0.08;const wt=1/d2;sw+=wt;sv+=wt*v}}return sw?sv/sw:null}
-function pmValAt(lat,lon){if(pmLocal&&lat>=pmLocal.la0&&lat<=pmLocal.la0+pmLocal.stepLa*pmLocal.rows&&lon>=pmLocal.lo0&&lon<=pmLocal.lo0+pmLocal.stepLo*pmLocal.cols){const v=pmSample(pmLocal,lat,lon);if(v!=null)return v}if(!pmWorld)return null;const lo=((lon+540)%360+360)%360-180;return pmSample(pmWorld,lat,lo)}
-const PMISPU=[[0,[34,197,94]],[50,[34,197,94]],[100,[37,99,235]],[200,[250,204,21]],[300,[239,68,68]],[500,[17,24,39]]];
-function pmRGBA(v){const a=pmToIspu(v);let rgb=PMISPU[PMISPU.length-1][1];if(a<=PMISPU[0][0])rgb=PMISPU[0][1];else for(let i=1;i<PMISPU.length;i++){if(a<=PMISPU[i][0]){const t=(a-PMISPU[i-1][0])/(PMISPU[i][0]-PMISPU[i-1][0]);rgb=[0,1,2].map(k=>Math.round(PMISPU[i-1][1][k]+(PMISPU[i][1][k]-PMISPU[i-1][1][k])*t));break}}const al=a<=50?70:a<=100?120:a<=200?165:a<=300?195:220;return[rgb[0],rgb[1],rgb[2],al]}
-function pmWashClick(e){const v=pmValAt(e.latlng.lat,e.latlng.lng);if(v==null)return;const aq=pmToIspu(v);const cat=ispuCat(aq);L.popup(qpopOpts()).setLatLng(e.latlng).setContent('<div class="qpop"><div class="qpop-head"><span class="qpop-mag" style="background:'+cat.color+';color:'+(cat.txt||'#fff')+'">ISPU '+aq+'</span><div class="qpop-t"><b>PM2.5 — Kualitas Udara</b><small>'+e.latlng.lat.toFixed(3)+'°, '+(((e.latlng.lng+540)%360)-180).toFixed(3)+'°</small></div></div><div class="qpop-grid"><div><small>PM2.5 (interpolasi)</small><b>'+v.toFixed(1)+' µg/m³</b></div><div><small>Kategori ISPU</small><b>'+cat.label+'</b></div></div><small class="qpop-src">Sumber: model CAMS via Open-Meteo (estimasi grid dunia, bukan stasiun ukur darat)</small></div>').openOn(map)}
-async function pmEnsureWorld(){
-  if(pmWorld&&Date.now()-pmWorld.at<45*60000)return true;
-  const la0=-85,lo0=-180,step=4.5,rows=38,cols=80,pts=[];
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)pts.push([la0+step*(r+0.5),lo0+step*(c+0.5)]);
-  const vals=Array.from({length:rows},()=>Array(cols).fill(null));let got=0;
-  const chunks=[];for(let i=0;i<pts.length;i+=430)chunks.push(pts.slice(i,i+430));
-  const res=await Promise.all(chunks.map(async ch=>{
-    try{const j=await (await fetchTimeout('https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+ch.map(p=>p[0].toFixed(2)).join(',')+'&longitude='+ch.map(p=>p[1].toFixed(2)).join(',')+'&current=pm2_5,us_aqi&timezone=Asia%2FMakassar',30000)).json();return Array.isArray(j)?j:[j]}catch(_){return null}
-  }));
-  res.forEach((arr,ci)=>{if(!arr)return;const base=ci*430;arr.forEach((o,k)=>{const idx=base+k;if(idx>=pts.length)return;const r=Math.floor(idx/cols),c=idx%cols;if(o&&o.current&&o.current.pm2_5!=null&&Math.abs(o.latitude-pts[idx][0])<step&&Math.abs(o.longitude-pts[idx][1])<step){vals[r][c]=o.current.pm2_5;got++}})});
-  if(got<pts.length*0.5)return false;
-  pmWorld={la0,lo0,step,rows,cols,vals,at:Date.now()};return true;
+const PMSPARTAN='https://spartan.bmkg.go.id/map/rgb_req/pcm_pm25/pm25/1000/';
+function pmDs(d){const q=n=>String(n).padStart(2,'0');return ''+d.getUTCFullYear()+q(d.getUTCMonth()+1)+q(d.getUTCDate())+q(d.getUTCHours())+'00'}
+function pmProbe(url){return new Promise(res=>{const im=new Image();let done=false;const t=setTimeout(()=>{if(!done){done=true;try{im.src=''}catch(_){}res(false)}},6000);im.onload=()=>{if(!done){done=true;clearTimeout(t);res(true)}};im.onerror=()=>{if(!done){done=true;clearTimeout(t);res(false)}};im.src=url})}
+async function pmFindRun(){
+  const now=new Date();const runs=[];
+  for(let d=0;d<3;d++)for(const h of [18,0]){const r=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()-d,h,0));if(r<=now)runs.push(r)}
+  for(const r of runs){
+    const f1=new Date(r);f1.setUTCDate(f1.getUTCDate()+1);f1.setUTCHours(3,0,0,0);
+    const f2=new Date(r.getTime()+3*3600e3);
+    const f3=new Date(r);f3.setUTCDate(f3.getUTCDate()+1);f3.setUTCHours(12,0,0,0);
+    for(const f of [f1,f2,f3]){const mr=pmDs(r),fc=pmDs(f);if(await pmProbe(PMSPARTAN+mr+'/'+fc+'/5/24/16.png'))return{mr,fc}}
+  }
+  return null;
 }
-async function pmEnsureLocal(){
-  const b=map.getBounds(),span=b.getEast()-b.getWest();if(!(span>0&&span<=55))return;
-  if(pmLocal&&Date.now()-pmLocal.at<45*60000&&b.getSouth()>=pmLocal.la0&&b.getNorth()<=pmLocal.la0+pmLocal.stepLa*pmLocal.rows&&b.getWest()>=pmLocal.lo0&&b.getEast()<=pmLocal.lo0+pmLocal.stepLo*pmLocal.cols)return;
-  const pad=0.18,laS=Math.max(-85,b.getSouth()-(b.getNorth()-b.getSouth())*pad),laN=Math.min(85,b.getNorth()+(b.getNorth()-b.getSouth())*pad),loW=b.getWest()-span*pad,loE=b.getEast()+span*pad;
-  const rows=19,cols=26,stepLa=(laN-laS)/rows,stepLo=(loE-loW)/cols,lats=[],lons=[],rq=[];
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const la=laS+stepLa*(r+0.5),lo=loW+stepLo*(c+0.5);lats.push(la.toFixed(3));lons.push(lo.toFixed(3));rq.push([la,lo])}
+let pmPopup=null;
+async function pmTileClick(e){
+  const lat=e.latlng.lat,lon=((e.latlng.lng+540)%360+360)%360-180;
+  if(!pmPopup)pmPopup=L.popup(qpopOpts());
+  pmPopup.setLatLng(e.latlng).setContent('<div class="qpop"><b>PM2.5 — Kualitas Udara</b><br><small>Memuat nilai titik…</small></div>').openOn(map);
   try{
-    const j=await (await fetchTimeout('https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+lats.join(',')+'&longitude='+lons.join(',')+'&current=pm2_5,us_aqi&timezone=Asia%2FMakassar',25000)).json();
-    const arr=Array.isArray(j)?j:[j];const vals=[];let got=0;
-    for(let r=0;r<rows;r++){vals.push([]);for(let c=0;c<cols;c++){const o=arr[r*cols+c];let v=null;if(o&&o.current&&o.current.pm2_5!=null&&Math.abs(o.latitude-rq[r*cols+c][0])<stepLa&&Math.abs(o.longitude-rq[r*cols+c][1])<stepLo){v=o.current.pm2_5;got++}vals[r].push(v)}}
-    if(got<rows*cols*0.5)return;
-    pmLocal={la0:laS,lo0:loW,stepLa,stepLo,rows,cols,vals,at:Date.now()};
-  }catch(_){}
+    const r=await fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+lat.toFixed(4)+'&longitude='+lon.toFixed(4)+'&current=pm2_5&timezone=Asia%2FMakassar');
+    const j=await r.json();const v=j&&j.current?j.current.pm2_5:null;
+    if(v==null)throw 0;
+    const aq=pmToIspu(v),cat=ispuCat(aq);
+    pmPopup.setContent('<div class="qpop"><div class="qpop-head"><span class="qpop-mag" style="background:'+cat.color+';color:'+(cat.txt||'#fff')+'">ISPU '+aq+'</span><div class="qpop-t"><b>PM2.5 — Kualitas Udara</b><small>'+lat.toFixed(3)+'°, '+lon.toFixed(3)+'°</small></div></div><div class="qpop-grid"><div><small>PM2.5 (estimasi titik)</small><b>'+v.toFixed(1)+' µg/m³</b></div><div><small>Kategori ISPU</small><b>'+cat.label+'</b></div></div><small class="qpop-src">Lapisan peta: model PCM BMKG (SPARTAN) · Nilai titik: estimasi CAMS via Open-Meteo (bukan stasiun ukur darat)</small></div>');
+  }catch(_){pmPopup.setContent('<div class="qpop"><b>PM2.5 — Kualitas Udara</b><br><small>Nilai titik tidak tersedia untuk lokasi ini. Lapisan peta: model PCM BMKG (SPARTAN).</small></div>')}
 }
-function pmCanvasFor(g,W,H){const sLa=g.stepLa||g.step,sLo=g.stepLo||g.step,laS=g.la0,loW=g.lo0,laN=g.la0+sLa*g.rows,loE=g.lo0+sLo*g.cols;const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');if(!ctx)return null;const img=ctx.createImageData(W,H);const d=img.data;for(let y=0;y<H;y++){const lat=laN-(laN-laS)*(y+0.5)/H;for(let x=0;x<W;x++){const lon=loW+(loE-loW)*(x+0.5)/W;const v=pmSample(g,lat,lon);const i=(y*W+x)*4;if(v==null){d[i+3]=0;continue}const rgba=pmRGBA(v);d[i]=rgba[0];d[i+1]=rgba[1];d[i+2]=rgba[2];d[i+3]=rgba[3]}}ctx.putImageData(img,0,0);return{url:cv.toDataURL('image/png'),bounds:[[laS,loW],[laN,loE]]}}
-function pmDrawWorld(){if(!pmWorld)return;const k=Math.round((map&&map.getCenter()?map.getCenter().lng:0)/360);if(pmWorldStamp===pmWorld.at&&pmWorldK===k)return;const w=pmCanvasFor(pmWorld,900,360);if(!w)return;if(pmWorldOv)pmLayer.removeLayer(pmWorldOv);pmWorldOv=L.layerGroup();[k*360-360,k*360,k*360+360].forEach(off=>{const iv=L.imageOverlay(w.url,[[w.bounds[0][0],w.bounds[0][1]+off],[w.bounds[1][0],w.bounds[1][1]+off]],{opacity:.95,interactive:true});iv.on('click',pmWashClick);pmWorldOv.addLayer(iv)});pmLayer.addLayer(pmWorldOv);if(pmLocalOv)pmLocalOv.bringToFront();if(pmFallback)pmLayer.removeLayer(pmFallback);pmWorldStamp=pmWorld.at;pmWorldK=k}
-function pmDrawLocal(){if(!pmLocal||pmLocalStamp===pmLocal.at)return;const l=pmCanvasFor(pmLocal,380,260);if(!l)return;if(pmLocalOv)pmLayer.removeLayer(pmLocalOv);pmLocalOv=L.imageOverlay(l.url,l.bounds,{opacity:.95,interactive:true});pmLocalOv.on('click',pmWashClick);pmLayer.addLayer(pmLocalOv);pmLocalStamp=pmLocal.at}
-function pmDraw(){
-  if(!pmOn||!pmLayer||!pmWorld)return;
-  pmDrawWorld();if(pmWorldOv){pmDrawLocal();return}
-  const b=map.getBounds(),laS=Math.max(-85,b.getSouth()),laN=Math.min(85,b.getNorth()),loW=b.getWest(),loE=b.getEast();
-  if(!pmFallback)pmFallback=L.layerGroup();
-  if(!pmLayer.hasLayer(pmFallback))pmLayer.addLayer(pmFallback);
-  pmFallback.clearLayers();
-  const g=pmWorld;const inView=[];for(let r=0;r<g.rows;r++)for(let c=0;c<g.cols;c++){const la=g.la0+g.step*(r+0.5),lo=g.lo0+g.step*(c+0.5);if(la>=laS&&la<=laN&&lo>=loW&&lo<=loE&&g.vals[r][c]!=null)inView.push([la,lo,g.vals[r][c]])}
-  const stride=Math.max(1,Math.ceil(inView.length/600));const cellM=g.step*111320*0.72;
-  inView.forEach((pt,i)=>{if(i%stride)return;const aq=pmToIspu(pt[2]);const cat=ispuCat(aq);const m=L.circle([pt[0],pt[1]],{radius:cellM,color:cat.color,weight:0,fillColor:cat.color,fillOpacity:.42});
-    m.bindPopup('<div class="qpop"><div class="qpop-head"><span class="qpop-mag" style="background:'+cat.color+';color:'+(cat.txt||'#fff')+'">ISPU '+aq+'</span><div class="qpop-t"><b>PM2.5 — Kualitas Udara</b><small>'+pt[0].toFixed(2)+'°, '+pt[1].toFixed(2)+'°</small></div></div><div class="qpop-grid"><div><small>PM2.5</small><b>'+pt[2]+' µg/m³</b></div><div><small>Kategori ISPU</small><b>'+cat.label+'</b></div></div><small class="qpop-src">Sumber: model CAMS via Open-Meteo (estimasi grid dunia, bukan stasiun ukur darat)</small></div>',qpopOpts());pmFallback.addLayer(m)});
+async function togglePM(){
+  if(pmOn){pmOn=false;if(pmLayer){map.removeLayer(pmLayer);pmLayer=null}map.off('click',pmTileClick);chipState('PM2.5',false);if(typeof wxRender==='function')wxRender();toast('Layer PM2.5 BMKG dimatikan');return}
+  toast('🌫 Mencari data PM2.5 BMKG (SPARTAN)…');
+  const f=await pmFindRun();
+  if(!f){toast('⚠️ Tile PM2.5 BMKG belum tersedia saat ini — coba lagi nanti');return}
+  pmLayer=L.tileLayer(PMSPARTAN+f.mr+'/'+f.fc+'/{z}/{x}/{y}.png',{tms:true,maxNativeZoom:8,opacity:.8,attribution:'PM2.5 © BMKG — model PCM (SPARTAN)'}).addTo(map);
+  pmOn=true;pmRunInfo=f.mr;
+  map.on('click',pmTileClick);
+  chipState('PM2.5',true);if(typeof wxRender==='function')wxRender();
+  toast('🌫 PM2.5 BMKG (PCM) aktif — run '+f.mr.slice(6,8)+'/'+f.mr.slice(4,6)+' '+f.mr.slice(8,10)+'.00 UTC');
 }
-
-async function pmRender(){
-  if(!pmOn)return;
-  const fresh=pmWorld&&Date.now()-pmWorld.at<45*60000;
-  if(!fresh)toast('Memuat PM2.5 seluruh dunia (CAMS)…');
-  const ok=await pmEnsureWorld();
-  if(!pmOn)return;
-  if(!ok){toast('PM2.5 dunia gagal dimuat — periksa koneksi');togglePM();return}
-  await pmEnsureLocal();if(!pmOn)return;
-  pmDraw();
-}
-function togglePM(){
-  pmOn=!pmOn;
-  if(pmOn){if(!pmLayer)pmLayer=L.layerGroup();pmLayer.addTo(map);chipState('PM2.5',true);pmRender()}
-  else{if(pmLayer)map.removeLayer(pmLayer);chipState('PM2.5',false)}
-  if(typeof wxRender==='function')wxRender()
-}
-map.on('moveend',()=>{if(pmOn&&pmWorld){clearTimeout(pmMoveT);pmMoveT=setTimeout(async()=>{await pmEnsureLocal();if(pmOn){pmDrawWorld();pmDrawLocal()}},600)}});
 async function loadQuake(mode){try{const url=mode==='terkini'?'https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json':'https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json';const r=await fetch(url);const j=await r.json();const list=j.Infogempa.gempa;if(quakeLayer)map.removeLayer(quakeLayer);quakeLayer=L.markerClusterGroup();let html='<table><tr><th>M</th><th>Wilayah</th><th>Waktu</th></tr>';list.slice(0,15).forEach(g=>{const [la,ln]=g.Coordinates.split(',').map(Number);const m=L.circleMarker([la,ln],{radius:Math.max(5,g.Magnitude*1.6),color:'#ef4444',fillColor:'#f97316',fillOpacity:.7}).bindPopup(richQuakePopup(g),qpopOpts());quakeLayer.addLayer(m);html+=`<tr><td>${g.Magnitude}</td><td>${g.Wilayah}</td><td>${g.Tanggal} ${g.Jam}</td></tr>`});quakeLayer.addTo(map);chipState('Gempa',true);document.getElementById('quakeList').innerHTML=html+'</table>';toast('Data gempa BMKG dimuat: '+list.length+' kejadian')}catch(e){document.getElementById('quakeList').innerHTML='<p>Gagal memuat BMKG (CORS/jaringan). Coba lagi atau buka data.bmkg.go.id.</p>'}}
 function toggleQuake(){if(quakeLayer&&map.hasLayer(quakeLayer)){map.removeLayer(quakeLayer);chipState('Gempa',false);toast('Layer gempa dimatikan');return}document.querySelector('[data-p="geodisaster"]').click();chipState('Gempa',true);flyIndo();loadQuake('terkini')}
 // Klik peta: detail lokasi & cuaca — model popup bandara (avpop)
