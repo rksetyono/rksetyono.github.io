@@ -1,6 +1,6 @@
 /* SIGAP JUWATA — mesin aplikasi (dimuat oleh index.html) */
 
-const map=L.map('map',{preferCanvas:false,maxZoom:22,minZoom:3,zoomControl:false}).setView([-2.5,118],5);
+const map=L.map('map',{preferCanvas:false,maxZoom:22,minZoom:3,zoomControl:false,zoomSnap:0.1,zoomDelta:1}).setView([-2.5,118],5);
 map.createPane('bndPane');map.getPane('bndPane').style.zIndex=350;
 map._controlCorners.bottomcenter=L.DomUtil.create('div','leaflet-bottom leaflet-center',map._controlContainer);
 L.control.zoom({position:'bottomright'}).addTo(map);
@@ -67,13 +67,13 @@ async function getModelRuns(){if(modelrunCache&&Date.now()-modelrunAt<300000)ret
 function satUrl(key,iso){const p=SATPROD[key];return `https://satellite.bmkg.go.id/api22/tile/{z}/{x}/{y}.png?tiletype=himawari9&modelname=${p.model}&param=${p.param}&baserun=${encodeURIComponent(iso)}`}
 function satLabel(){const el=document.getElementById('satTime');if(!satRuns.length){el.textContent='—';return}el.textContent=fmtWita(satRuns[satIdx])+(satIdx===0?' (terbaru)':'');updateProdPill()}
 const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]]};
-function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;const keep=map.options.minZoom;map.options.minZoom=3;const B=L.latLngBounds(b);const zf=map.getBoundsZoom(B,false);const zc=map.getBoundsZoom(B,true);map.options.minZoom=keep;return Math.min(zf+1,zc)}
+function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;const size=map.getSize();if(!size||!size.x||!size.y)return null;const nw=map.project(L.latLng(b[1][0],b[0][1]),0),se=map.project(L.latLng(b[0][0],b[1][1]),0);const w=Math.abs(se.x-nw.x),h=Math.abs(se.y-nw.y);if(!w||!h)return null;return Math.log(Math.max(size.x/w,size.y/h))/Math.LN2}
 function satFrame(key){const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
 let pmLockZ=null;
 let satPanB=null;
 function applyMinZoom(){map.options.minZoom=Math.max(3,satLockZ||0,pmLockZ||0)}
-function applyViewBounds(){const b=(pmLockZ!==null)?L.latLngBounds(INDO_BOUNDS):satPanB;if(b){map.setMaxBounds(b.pad(0.04));map.options.maxBoundsViscosity=1.0;if(!b.contains(map.getCenter()))map.panInsideBounds(b)}else{map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
+function applyViewBounds(){const b=(pmLockZ!==null)?L.latLngBounds(INDO_BOUNDS):satPanB;if(b){map.setMaxBounds(b.pad(pmLockZ!==null?0.04:0));map.options.maxBoundsViscosity=1.0;if(!b.contains(map.getCenter()))map.panInsideBounds(b)}else{map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
 function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'){map.options.minZoom=3;satLockZ=satFillZoom(key);satPanB=L.latLngBounds(SATBOUNDS[m]);applyMinZoom();applyViewBounds()}else{satLockZ=null;satPanB=null;applyMinZoom();applyViewBounds()}}
 function satLockRepair(){if(!satKey||satLockZ===null)return;const z=satFillZoom(satKey);if(z===null)return;if(satLockZ!==z||map.options.minZoom!==z)satZoomLock(satKey);if(map.getZoom()<z)map.setZoom(z)}
 setTimeout(satLockRepair,2600);setTimeout(satLockRepair,5200);
