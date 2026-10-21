@@ -544,7 +544,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  // Quick bar & topbar: chips teks bersih tanpa emoji (seperti situs acuan)
  document.querySelectorAll('#quick button,#topbar button').forEach(b=>{b.textContent=b.textContent.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu,'').trim()});
  // Search bar: mark mini + tombol ikon kaca pembesar
- if(s){s.insertAdjacentHTML('afterbegin','<span class="rk-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>');s.insertAdjacentHTML('beforeend','<button type="button" class="ghost pillbtn" title="Lihat seluruh Indonesia" onclick="flyIndo()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg></button>');const sb=s.querySelector('button');if(sb)sb.innerHTML=IC('<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>',15)}
+
  // Loading overlay
  const lo=document.createElement('div');lo.id='loadingOverlay';lo.innerHTML='<img src="'+BMKG_URI+'" alt="Logo BMKG" width="58" height="72" style="display:block;margin:0 auto 10px"><div style="font-size:26px;font-weight:800;letter-spacing:1px">SIGAP <span style="color:#4ade80">JUWATA</span></div><div style="font-size:12px;letter-spacing:3px;color:#dbeafe">SISTEM INFORMASI GEOSPASIAL & CUACA · TARAKAN</div><div class="loadbar"><i></i></div>';document.body.appendChild(lo);
  // Modal sambutan (ringkasan fitur dengan kata sendiri)
