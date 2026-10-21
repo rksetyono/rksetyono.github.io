@@ -41,7 +41,7 @@ async function tsResolve(qstr){
   return{}}
 function tsDrawRegion(r){try{if(tsLayer){map.removeLayer(tsLayer);tsLayer=null}
   if(!r||r.has_path===false||!r.id)return;
-  ambilPath(r.id).then(path=>{if(!path||!path.length)return;const core=L.polygon(path,{color:'#005baa',weight:3,fillColor:'#0072bc',fillOpacity:.14});const cas=L.polygon(path,{color:'#ffffff',weight:7,opacity:.6,fill:false,interactive:false});tsLayer=L.layerGroup([cas,core]).addTo(map);map.fitBounds(core.getBounds().pad(0.04))}).catch(()=>{})}catch(e){}}
+  ambilPath(r.id).then(path=>{if(!path||!path.length)return;const core=L.polygon(path,{color:'#005baa',weight:3,dashArray:'9 6',fillColor:'#0072bc',fillOpacity:.10});const cas=L.polygon(path,{color:'#ffffff',weight:5,opacity:.45,dashArray:'9 6',fill:false,interactive:false});tsLayer=L.layerGroup([cas,core]).addTo(map);map.fitBounds(core.getBounds().pad(0.04))}).catch(()=>{})}catch(e){}}
 function tsBoundsOf(r,path){if(path&&path.length){let a=[90,180,-90,-180];path.flat(3).forEach(()=>{});const walk=x=>{if(Array.isArray(x)&&typeof x[0]==='number'){a[0]=Math.min(a[0],x[0]);a[2]=Math.max(a[2],x[0]);a[1]=Math.min(a[1],x[1]);a[3]=Math.max(a[3],x[1])}else if(Array.isArray(x))x.forEach(walk)};walk(path);if(a[2]>a[0])return{minLat:a[0],minLng:a[1],maxLat:a[2],maxLng:a[3]}}
   const d=1.3;return{minLat:r.lat-d,minLng:r.lng-d*1.2,maxLat:r.lat+d,maxLng:r.lng+d*1.2}}
 
