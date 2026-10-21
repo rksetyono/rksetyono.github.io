@@ -23,7 +23,13 @@ body.dark{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--panel:rgba(15,23,42,.92);--
 #sideToggle{position:absolute;top:14px;left:14px;z-index:1100;width:40px;height:40px;border-radius:50%;background:var(--panel);color:var(--txt);border:1px solid var(--bord);box-shadow:var(--shadow);font-size:17px;display:none;align-items:center;justify-content:center}
 #side.hidden~#sideToggle{display:flex}
 /* Search melayang di tengah atas peta */
-#search{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1000;width:min(420px,calc(100% - 32px));height:46px;display:flex;align-items:center;gap:8px;padding:0 8px 0 14px;background:var(--panel);backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--bord);border-radius:23px;box-shadow:var(--shadow)}
+#search{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1000;width:min(440px,calc(100% - 32px));height:48px;display:flex;align-items:center;gap:7px;padding:0 6px 0 15px;background:var(--panel);backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--bord);border-radius:24px;box-shadow:0 8px 28px rgba(0,40,80,.22)}
+#search .s-ic{color:#7d99ae;display:flex;flex:none}
+#search .s-go{background:linear-gradient(135deg,#005baa,#0072bc);color:#fff;border:none;border-radius:999px;padding:8px 18px;font-weight:700;font-size:13.5px;cursor:pointer;flex:none;box-shadow:0 2px 8px rgba(0,91,170,.35)}
+#search .s-go:hover{filter:brightness(1.09)}
+#search .s-sep{width:1px;height:22px;background:var(--bord);flex:none}
+#search .s-globe{width:34px;height:34px;border-radius:50%;border:none;background:transparent;color:#5b7a92;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;padding:0}
+#search .s-globe:hover{background:rgba(0,114,188,.13);color:#005baa}
 #search input{flex:1;border:0;outline:0;background:transparent;color:var(--txt);font-size:14px}
 #search button{border-radius:17px;padding:7px 14px}
 /* Quick layer bar melayang */
@@ -287,7 +293,7 @@ body.dark #chatForm{background:#0a1a29}
 <div id="bmkgQuake"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>GEMPA BUMI TERKINI</h4><div id="bmkgQuakeBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat data gempa terbaru BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Data resmi BMKG · Portal prototype Stasiun Meteorologi Juwata Tarakan — bukan situs resmi bmkg.go.id.</p></div>
 <div id="bmkgWeather"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><path d="M18 10.5a5 5 0 0 0-9.5-1.6A4.6 4.6 0 0 0 7 18h11a3.6 3.6 0 0 0 0-7.5z"/></svg>CUACA SAAT INI</h4><div id="bmkgWeatherBody"><p style="color:var(--mut);font-size:12px;margin:0">Memuat prakiraan cuaca BMKG…</p></div><p style="color:var(--mut);font-size:11px;margin:6px 0 0">Mengikuti desa terpilih di GEONUSA (kode adm4). Bawaan: Karang Anyar Pantai, Kota Tarakan.</p></div>
 <div id="bmkgWarn"><h4><svg class="ic" viewBox="0 0 24 24" width="14" height="14"><path d="M12 3 2.5 20h19L12 3z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="17" r=".4" fill="currentColor"/></svg>PERINGATAN DINI CUACA</h4><div id="bmkgWarnBody"><p style="color:var(--mut);font-size:12px;margin:0">Menilai potensi cuaca signifikan dari prakiraan BMKG 24 jam ke depan…</p></div><button class="ghost" style="margin-top:6px;font-size:12px" onclick="window.open('https://www.bmkg.go.id/cuaca/peringatan-dini-cuaca','_blank')">Peringatan Dini Resmi BMKG ↗</button></div>
-<div id="search"><input id="q" type="text" placeholder="Cari wilayah"><button onclick="cari()">Cari</button></div>
+<div id="search"><span class="s-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span><input id="q" type="text" placeholder="Cari wilayah, kota, bandara…"><button class="s-go" onclick="cari()">Cari</button><span class="s-sep"></span><button type="button" class="s-globe" title="Lihat seluruh Indonesia" onclick="flyIndo()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg></button></div>
 <div id="quick">
 <button onclick="toggleQuake()">🌋 Gempa BMKG</button>
 <button onclick="toggleGibs('viirs')">🛰 VIIRS</button><button onclick="toggleRain()">🌧 Hujan</button><button onclick="toggleRadar()">📡 Radar</button>
@@ -381,7 +387,7 @@ body.dark #chatForm{background:#0a1a29}
   <div id="chatChips"></div>
   <form id="chatForm"><input id="chatInput" type="text" placeholder="Tanya tentang wilayah, cuaca, gempa…" autocomplete="off"><button id="chatSend" type="submit" title="Kirim">➤</button></form>
 </aside>
-<script src="sigap-app.js?v=20261021-64"></script>
-<script src="sigap-chat.js?v=20261021-64"></script>
+<script src="sigap-app.js?v=20261021-65"></script>
+<script src="sigap-chat.js?v=20261021-65"></script>
 </body>
 </html>
