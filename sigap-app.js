@@ -49,7 +49,7 @@ map.on('locationerror',e=>{
   else{locHelp('Posisi Tidak Tersedia','Posisi perangkat tidak bisa ditentukan. Pastikan GPS/Lokasi perangkat aktif dan browser diizinkan mengakses lokasi, lalu tekan Coba Lagi.')}
 });
 // Tabs
-document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+b.dataset.p).classList.add('on');if(b.dataset.p==='geodisaster')loadPM();map.closePopup()});
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));document.getElementById('p-'+b.dataset.p).classList.add('on');chipState('WAQQ',b.dataset.p==='penerbangan');if(b.dataset.p==='geodisaster')loadPM();map.closePopup()});
 function toggleTheme(){document.body.classList.toggle('dark')}
 function minAll(){[quakeLayer,gibsLayer].forEach(l=>{if(l)map.removeLayer(l)});chipState('Gempa',false);chipState('VIIRS',false);chipState('Hotspot',false);if(typeof rainLayer!=='undefined'&&rainLayer){map.removeLayer(rainLayer);rainLayer=null;chipState('Hujan',false);const rl=document.getElementById('rainLegend');if(rl)rl.style.display='none';const rb=document.getElementById('rainBtn');if(rb)rb.textContent='🌧 Hujan Satelit (IMERG): Nonaktif';if(typeof updateProdPill==='function')updateProdPill()}if(typeof pmOn!=='undefined'&&pmOn)togglePM();clearMyLoc();clearWilMap();if(lastQuakeMark){map.removeLayer(lastQuakeMark);lastQuakeMark=null}map.closePopup();toast('Semua layer overlay dimatikan')}
 // NASA GIBS time layers
@@ -285,7 +285,7 @@ function pilihBandara(icao,lat,lon){avIcao=icao;document.getElementById('avTitle
 function avClocks(){const u=document.getElementById('avUtc'),w=document.getElementById('avWita');if(!u)return;const n=new Date();const pz=x=>String(x).padStart(2,'0');u.textContent=pz(n.getUTCHours())+':'+pz(n.getUTCMinutes())+':'+pz(n.getUTCSeconds())+' UTC';const wt=new Date(n.getTime()+8*3600e3);w.textContent=pz(wt.getUTCHours())+':'+pz(wt.getUTCMinutes())+':'+pz(wt.getUTCSeconds())+' WITA'}
 setInterval(avClocks,1000);
 function initAv(){avClocks();if(avInit)return;avInit=true;loadAvMetar();loadAvTaf();loadAvList();avTimer=setInterval(()=>{loadAvMetar();loadAvList()},600000)}
-function openAv(){document.getElementById('side').classList.remove('hidden');document.querySelector('[data-p="penerbangan"]').click()}
+function openAv(){document.getElementById('side').classList.remove('hidden');document.querySelector('[data-p="penerbangan"]').click();chipState('WAQQ',true)}
 document.querySelector('[data-p="penerbangan"]').addEventListener('click',initAv);
 
 
