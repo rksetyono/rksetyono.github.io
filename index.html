@@ -135,10 +135,10 @@ body.dark .warn-item{background:#3a2c07;color:#fde68a}
 .panel{order:2}
 .panel.on{flex:1 1 auto;overflow-y:auto;min-height:0;padding:12px 12px 28px;-webkit-overflow-scrolling:touch}
 .card{padding:11px;margin-bottom:10px}
-@media(min-width:1100px){
- #side:not(.hidden)~#search{left:calc(50% + 180px)}
- #side:not(.hidden)~#quick{left:calc(50% + 180px)}
- #side:not(.hidden)~#prodPill{left:calc(50% + 180px)}
+@media(min-width:901px){
+ body:has(#side:not(.hidden)) #search{left:calc(50% + 180px)}
+ body:has(#side:not(.hidden)) #quick{left:calc(50% + 180px)}
+ body:has(#side:not(.hidden)) #prodPill{left:calc(50% + 180px)}
 }
 @media(max-width:760px){#tabs button{padding:8px 1px}}
 #geonusaSeg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px}
@@ -387,7 +387,7 @@ body.dark #chatForm{background:#0a1a29}
   <div id="chatChips"></div>
   <form id="chatForm"><input id="chatInput" type="text" placeholder="Tanya tentang wilayah, cuaca, gempa…" autocomplete="off"><button id="chatSend" type="submit" title="Kirim">➤</button></form>
 </aside>
-<script src="sigap-app.js?v=20261021-66"></script>
-<script src="sigap-chat.js?v=20261021-66"></script>
+<script src="sigap-app.js?v=20261021-67"></script>
+<script src="sigap-chat.js?v=20261021-67"></script>
 </body>
 </html>
