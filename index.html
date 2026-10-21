@@ -233,6 +233,51 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 .lprow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;border-bottom:1px dashed var(--bord);font-size:13px}
 .lprow:last-child{border-bottom:none}
 .lprow .mini.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+
+/* ===== Tanya SIGAP (chat data wilayah) ===== */
+#chatFab{position:fixed;right:14px;bottom:118px;z-index:1250;border:none;cursor:pointer;color:#fff;font:700 13.5px 'Segoe UI',sans-serif;background:linear-gradient(135deg,#005baa,#0072bc 60%,#009444);padding:11px 16px;border-radius:999px;box-shadow:0 6px 18px rgba(0,40,80,.35);display:flex;align-items:center;gap:7px}
+#chatFab:hover{filter:brightness(1.07)}
+.beta{background:#f59e0b;color:#231a00;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:5px;letter-spacing:.4px}
+#chatPanel{position:fixed;top:0;right:0;height:100dvh;width:min(398px,100vw);z-index:1400;background:#eef4f9;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,30,60,.25);transform:translateX(103%);transition:transform .28s ease;font-family:'Segoe UI',sans-serif}
+#chatPanel.open{transform:translateX(0)}
+.chat-head{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#005baa,#0072bc);color:#fff;padding:12px 14px}
+.chat-title{font-weight:800;font-size:16px;display:flex;gap:8px;align-items:center}
+.chat-tools{display:flex;gap:6px;align-items:center}
+.chat-tools button{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:7px;cursor:pointer;font-size:11.5px;padding:5px 9px}
+.chat-tools button:hover{background:rgba(255,255,255,.28)}
+#chatMsgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:92%;padding:10px 12px;border-radius:14px;font-size:13.5px;line-height:1.5;word-wrap:break-word}
+.msg.u{align-self:flex-end;background:#005baa;color:#fff;border-bottom-right-radius:4px;white-space:pre-wrap}
+.msg.a{align-self:flex-start;background:#fff;color:#16324a;border:1px solid #d4e2ee;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,40,80,.06)}
+.msg.a h4{margin:2px 0 4px;font-size:14.5px;color:#005baa}
+.msg.a h5{margin:10px 0 3px;font-size:13px;color:#0b5fa5;border-top:1px dashed #d4e2ee;padding-top:8px}
+.msg.a h5:first-of-type{border-top:none;padding-top:2px}
+.msg.a p{margin:2px 0}
+.msg.a ul{margin:3px 0 3px 16px;padding:0}
+.msg.a li{margin:2px 0}
+.msg.a .sub{color:#5b7a92;font-size:12px}
+.msg.a .src{color:#7d99ae;font-size:11px;margin-top:8px}
+.ts-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.ts-btn{background:#e8f2fb;border:1.5px solid #0072bc;color:#005baa;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.ts-btn:hover{background:#0072bc;color:#fff}
+.ts-load{display:inline-flex;gap:4px;align-items:center}
+.ts-load i{width:6px;height:6px;border-radius:50%;background:#0072bc;display:inline-block;animation:tsblink 1s infinite}
+.ts-load i:nth-child(2){animation-delay:.18s}.ts-load i:nth-child(3){animation-delay:.36s}
+@keyframes tsblink{0%,100%{opacity:.25}50%{opacity:1}}
+#chatChips{display:flex;gap:6px;overflow-x:auto;padding:8px 10px;background:#e2edf6;border-top:1px solid #cfdfec;scrollbar-width:thin}
+#chatChips button{flex:0 0 auto;border:1.5px solid #0072bc;background:#fff;color:#005baa;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700;cursor:pointer}
+#chatChips button:hover{background:#0072bc;color:#fff}
+#chatForm{display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid #d4e2ee}
+#chatInput{flex:1;border:1.5px solid #b9cfdf;border-radius:999px;padding:10px 14px;font-size:13.5px;outline:none;font-family:inherit}
+#chatInput:focus{border-color:#0072bc}
+#chatSend{width:42px;height:42px;border-radius:50%;border:none;background:#005baa;color:#fff;font-size:16px;cursor:pointer;flex:0 0 auto}
+#chatSend:hover{background:#0072bc}
+body.dark #chatPanel{background:#0e2233}
+body.dark .msg.a{background:#14334e;color:#dbeaf5;border-color:#24506e}
+body.dark .msg.a h4,body.dark .msg.a h5{color:#7fc4f5}
+body.dark #chatChips{background:#0a1a29}
+body.dark #chatForm{background:#0a1a29}
+@media(max-width:640px){#chatFab{bottom:150px;right:10px;padding:10px 13px}}
 </style>
 </head>
 <body>
@@ -328,6 +373,14 @@ body.dark #side header .ghost{background:#1e3a5f!important;color:#dbeafe!importa
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.min.js"></script>
 
-<script src="sigap-app.js?v=20261019-60"></script>
+
+<button id="chatFab" title="Tanya SIGAP — asisten data wilayah &amp; cuaca">💬 Tanya SIGAP <span class="beta">BETA</span></button>
+<aside id="chatPanel" aria-label="Tanya SIGAP">
+  <div class="chat-head"><div class="chat-title">💬 Tanya SIGAP <span class="beta">BETA</span></div><div class="chat-tools"><button id="chatClear" type="button">Hapus Chat</button><button id="chatClose" type="button" title="Tutup">✕</button></div></div>
+  <div id="chatMsgs"></div>
+  <div id="chatChips"></div>
+  <form id="chatForm"><input id="chatInput" type="text" placeholder="Tanya tentang wilayah, cuaca, gempa…" autocomplete="off"><button id="chatSend" type="submit" title="Kirim">➤</button></form>
+</aside>
+<script src="sigap-app.js?v=20261021-61"></script>
 </body>
 </html>
