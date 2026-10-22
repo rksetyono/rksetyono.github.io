@@ -70,27 +70,43 @@ async function toggleAngin(){
  toast('💨 Angin BMKG aktif · berlaku '+anginValidTxt);
 }
 
-// ===== Cuaca Pelabuhan BMKG Maritim — 17 pelabuhan Kalimantan Utara =====
-const PORTS=[['Pelabuhan Malundung Tarakan','pelabuhan-malundung-tarakan'],['Pelabuhan Feri Juata Laut Tarakan','pelabuhan-feri-juata-laut-tarakan'],['Pelabuhan Tengkayu I','pelabuhan-tengkayu-i'],['Pelabuhan Tanjung Selor','pelabuhan-tanjung-selor'],['Pelabuhan Bunyu','pelabuhan-bunyu'],['Pelabuhan Feri Ancam Bulungan','pelabuhan-feri-ancam-bulungan'],['Pelabuhan KIPI Tanah Kuning Bulungan','pelabuhan-kipi-tanah-kuning-bulungan'],['Pelabuhan Speedboat Tana Kuning','pelabuhan-speedboat-tana-kuning'],['Pelabuhan Tunon Taka Nunukan','pelabuhan-tunon-taka-nunukan'],['Pelabuhan Liem Hie Djung Nunukan','pelabuhan-liem-hie-djung-nunukan'],['Pelabuhan Feri Sei Jepun Nunukan','pelabuhan-feri-sei-jepun-nunukan'],['Pelabuhan Sei Nyamuk Sebatik','pelabuhan-sei-nyamuk-sebatik'],['Pelabuhan Feri Liang Bunyu Sebatik','pelabuhan-feri-liang-bunyu-sebatik'],['Pelabuhan Speedboat Malinau','pelabuhan-speedboat-malinau'],['Pelabuhan Tideng Pale, Tana Tidung','pelabuhan-tideng-pale-kabupaten-tana-tidung'],['Pelabuhan Feri Sei Bawan, Tana Tidung','pelabuhan-feri-sei-bawan-kabupaten-tana-tidung'],['Pelabuhan Sembakung','pelabuhan-sembakung']];
-const portCache={};
-function renderPorts(){const el=document.getElementById('portList');if(!el||el.dataset.done)return;el.dataset.done='1';el.innerHTML=PORTS.map((x,i)=>'<div style="border-top:1px solid var(--line);padding:7px 0"><button class="ghost" style="width:100%;text-align:left" onclick="loadPort('+i+')">⚓ '+x[0]+'</button><div id="port-'+i+'" style="font-size:12.5px;margin-top:4px"></div></div>').join('')}
-async function loadPort(i){
- const box=document.getElementById('port-'+i);if(!box)return;
- if(portCache[i]){box.innerHTML=portCache[i];return}
- box.innerHTML='<span style="color:var(--mut)">Memuat prakiraan BMKG…</span>';
+// ===== Cuaca Pelabuhan BMKG Maritim — 17 pelabuhan Kalimantan Utara (penanda peta + ringkasan) =====
+const PORTS=[['Pelabuhan Malundung Tarakan','pelabuhan-malundung-tarakan',3.2833,117.5952],['Pelabuhan Feri Juata Laut Tarakan','pelabuhan-feri-juata-laut-tarakan',3.4309,117.5375],['Pelabuhan Tengkayu I','pelabuhan-tengkayu-i',3.2912,117.5876],['Pelabuhan Tanjung Selor','pelabuhan-tanjung-selor',2.8486,117.4559],['Pelabuhan Bunyu','pelabuhan-bunyu',3.4602,117.8358],['Pelabuhan Feri Ancam Bulungan','pelabuhan-feri-ancam-bulungan',3.1137,117.2463],['Pelabuhan KIPI Tanah Kuning Bulungan','pelabuhan-kipi-tanah-kuning-bulungan',2.6027,117.8172],['Pelabuhan Speedboat Tana Kuning','pelabuhan-speedboat-tana-kuning',2.6067,117.8172],['Pelabuhan Tunon Taka Nunukan','pelabuhan-tunon-taka-nunukan',4.1449,117.6672],['Pelabuhan Liem Hie Djung Nunukan','pelabuhan-liem-hie-djung-nunukan',4.1442,117.6479],['Pelabuhan Feri Sei Jepun Nunukan','pelabuhan-feri-sei-jepun-nunukan',4.0852,117.6260],['Pelabuhan Sei Nyamuk Sebatik','pelabuhan-sei-nyamuk-sebatik',4.1426,117.9117],['Pelabuhan Feri Liang Bunyu Sebatik','pelabuhan-feri-liang-bunyu-sebatik',4.1048,117.7542],['Pelabuhan Speedboat Malinau','pelabuhan-speedboat-malinau',3.5953,116.6325],['Pelabuhan Tideng Pale, Tana Tidung','pelabuhan-tideng-pale-kabupaten-tana-tidung',3.5855,116.9078],['Pelabuhan Feri Sei Bawan, Tana Tidung','pelabuhan-feri-sei-bawan-kabupaten-tana-tidung',3.5427,117.1904],['Pelabuhan Sembakung','pelabuhan-sembakung',3.7570,116.7509]];
+const portCache={};let portGroup=null,portOn=false;const portMarkers=[];
+function portIcon(){return L.divIcon({className:'',html:'<div style="background:#005baa;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)">⚓</div>',iconSize:[26,26],iconAnchor:[13,13]})}
+function renderPorts(){const el=document.getElementById('portList');if(!el||el.dataset.done)return;el.dataset.done='1';el.innerHTML=PORTS.map((x,i)=>'<div style="border-top:1px solid var(--line);padding:7px 0"><button class="ghost" style="width:100%;text-align:left" onclick="portGo('+i+')">⚓ '+x[0]+'</button><div id="port-'+i+'" style="font-size:12.5px;margin-top:4px"></div></div>').join('')}
+async function portSummaryHTML(i){
+ if(portCache[i])return portCache[i];
  const url='https://maritim.bmkg.go.id/cuaca/pelabuhan/'+PORTS[i][1];
  const relays=['https://api.allorigins.win/raw?url='+encodeURIComponent(url),'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url)];
  let ringkas='';
- for(const r of relays){try{const resp=await fetchTimeout(r,18000);const html=await resp.text();const m=html.match(/og:description" content="([^"]+)"/);if(m){ringkas=m[1].replace(/^Prakiraan cuaca maritim terkini untuk Pelabuhan[^.]*\.\s*Data cuaca:\s*/,'');break}}catch(e){}}
+ for(const r of relays){try{const resp=await fetchTimeout(r,12000);const html=await resp.text();const m=html.match(/og:description" content="([^"]+)"/);if(m){ringkas=m[1].replace(/^Prakiraan cuaca maritim terkini untuk Pelabuhan[^.]*\.\s*Data cuaca:\s*/,'');break}}catch(e){}}
  const link='<div style="margin-top:3px"><a href="'+url+'" target="_blank" rel="noopener">Detail resmi BMKG ↗</a></div>';
  if(ringkas){const cantik=ringkas.replace(/, Angin:/,' · Angin:').replace(/, Gelombang:/,' · Gelombang:').replace(/Gelombang: ([\d.]+)m/,'Gelombang: $1 m');portCache[i]='<b>'+cantik+'</b>'+link}
  else portCache[i]='<span style="color:var(--mut)">Ringkasan belum dapat dimuat dari sini (halaman BMKG tidak mengizinkan pengambilan lintas situs).</span>'+link;
- box.innerHTML=portCache[i];
+ return portCache[i];
+}
+async function loadPort(i){const box=document.getElementById('port-'+i);if(box)box.innerHTML=await portSummaryHTML(i)}
+function portShowMarkers(){
+ if(!portGroup){portGroup=L.layerGroup();
+  PORTS.forEach((x,i)=>{const mk=L.marker([x[2],x[3]],{icon:portIcon()}).bindPopup('<b>⚓ '+x[0]+'</b><div id="pop-port-'+i+'" style="font-size:12.5px;margin-top:4px">Memuat prakiraan BMKG…</div>',{maxWidth:290});
+   mk.on('popupopen',async()=>{const d=document.getElementById('pop-port-'+i);if(d)d.innerHTML=await portSummaryHTML(i)});
+   portMarkers[i]=mk;portGroup.addLayer(mk)})}
+ portGroup.addTo(map);portOn=true;
+}
+function portGo(i){
+ if(!portOn){portShowMarkers();chipState('Pelabuhan',true)}
+ loadPort(i);
+ map.flyTo([PORTS[i][2],PORTS[i][3]],Math.max(map.getZoom(),11),{duration:1.1});
+ setTimeout(()=>{if(portMarkers[i])portMarkers[i].openPopup()},1250);
 }
 function openPorts(){
+ if(portOn){portOn=false;if(portGroup)map.removeLayer(portGroup);chipState('Pelabuhan',false);toast('Penanda pelabuhan dimatikan');return}
  const b=document.querySelector('[data-p=geodisaster]');if(b)b.click();
  document.getElementById('side').classList.remove('hidden');
- renderPorts();
+ renderPorts();portShowMarkers();chipState('Pelabuhan',true);
+ map.flyToBounds(L.latLngBounds(PORTS.map(x=>[x[2],x[3]])).pad(0.12),{duration:1.1});
  setTimeout(()=>{const c=document.getElementById('portCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},90);
  loadPort(0);loadPort(1);
+ toast('⚓ 17 pelabuhan Kaltara ditandai di peta');
 }
