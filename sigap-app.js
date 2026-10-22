@@ -22,7 +22,7 @@ function fitIndo(){map.fitBounds(INDO_BOUNDS,{padding:[12,12]})}
 function flyIndo(){fitIndo()}
 setTimeout(fitIndo,400);
 var myLocMark=null,myLocCircle=null;
-function clearMyLoc(){if(myLocMark){map.removeLayer(myLocMark);myLocMark=null}if(myLocCircle){map.removeLayer(myLocCircle);myLocCircle=null}}
+function clearMyLoc(){if(myLocMark){map.removeLayer(myLocMark);myLocMark=null}if(myLocCircle){map.removeLayer(myLocCircle);myLocCircle=null}chipState('Lokasi Saya',false)}
 function havKm(a,b,c,d){const R=6371,t=Math.PI/180,x=(c-a)*t,y=(d-b)*t,s=Math.sin(x/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(s))}
 let locHelpPopup=null;
 function locHelp(judul,isi){if(!locHelpPopup)locHelpPopup=L.popup(avPopOpts());locHelpPopup.setLatLng(map.getCenter()).setContent('<b style="display:block;font-size:14px;line-height:1.3;padding-right:20px">'+judul+'</b><div style="font-size:12px;line-height:1.6;margin-top:6px">'+isi+'</div><button class="mini" style="display:block;width:100%;text-align:center;padding:7px 0;margin-top:10px" onclick="map.closePopup();lokasiSaya()">🔁 Coba Lagi</button>').openOn(map)}
@@ -36,14 +36,14 @@ function lokasiSaya(){
     }).catch(()=>mulai());
   } else mulai();
 }
-map.on('locationfound',async e=>{clearMyLoc();const{lat,lng}=e.latlng;const acc=Math.round(e.accuracy||0);
+map.on('locationfound',async e=>{clearMyLoc();chipState('Lokasi Saya',true);const{lat,lng}=e.latlng;const acc=Math.round(e.accuracy||0);
  myLocCircle=L.circle(e.latlng,{radius:e.accuracy||0,color:'#0072bc',weight:1,fillColor:'#0072bc',fillOpacity:.08}).addTo(map);
  const jk=havKm(lat,lng,3.3270177,117.5682619);const jTxt=jk<1?Math.round(jk*1000)+' m':jk.toFixed(1).replace('.',',')+' km';
  const html=`<div class="qpop"><div class="qpop-head"><span class="qpop-mag" style="background:#0072bc">📍 GPS</span><div class="qpop-t"><b>Lokasi Anda</b><small>Posisi perangkat saat ini</small></div></div><div class="qpop-grid"><div><small>Koordinat</small><b>${lat.toFixed(6)}, ${lng.toFixed(6)}</b></div><div><small>Akurasi GPS</small><b>± ${acc} m</b></div></div><p class="qpop-row"><b>Jarak ke Bandara Juwata:</b> ${jTxt}</p><p class="qpop-row"><b>Alamat:</b> <span id="myLocAddr">Memuat alamat…</span></p><p class="qpop-row"><b>Cuaca saat ini:</b> <span id="myLocWx">Memuat cuaca…</span></p><small class="qpop-src">Sumber: GPS perangkat · alamat © OpenStreetMap · cuaca Open-Meteo</small></div>`;
  myLocMark=L.marker(e.latlng).addTo(map).bindPopup(html,qpopOpts());myLocMark.openPopup();
  try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18`,{headers:{'Accept-Language':'id'}});const j=await r.json();const el=document.getElementById('myLocAddr');if(el)el.textContent=j.display_name||'Tidak ditemukan'}catch(_){const el=document.getElementById('myLocAddr');if(el)el.textContent='Gagal memuat alamat'}
  try{const wv=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto`)).json();const c=wv.current;const el=document.getElementById('myLocWx');if(el)el.textContent=`${c.temperature_2m}°C · 💧 ${c.relative_humidity_2m}% · 🌬 ${c.wind_speed_10m} km/j · 🌧 ${c.precipitation} mm`}catch(_){const el=document.getElementById('myLocWx');if(el)el.textContent='Gagal memuat cuaca'}});
-map.on('locationerror',e=>{
+map.on('locationerror',e=>{chipState('Lokasi Saya',false);
   if(e&&e.code===1){locHelp('Izin Lokasi Ditolak','Browser menolak izin lokasi untuk situs ini sehingga posisi tidak bisa diambil.<br><br><b>Cara mengizinkan (Chrome Android):</b> ketuk ikon 🔒 di kiri alamat situs → <i>Izin</i> → <i>Lokasi</i> → <i>Izinkan</i>, lalu tekan Coba Lagi.<br><br>Jika situs ini dibuka dari dalam aplikasi lain (WhatsApp, Telegram, Muse, dll.), buka ulang alamatnya langsung di Chrome — penampil dalam aplikasi biasanya memblokir lokasi sepenuhnya tanpa pernah memunculkan permintaan izin.')}
   else if(e&&e.code===3){locHelp('Lokasi Terlambat Terdeteksi','Sinyal GPS terlalu lemah atau waktu habis. Pastikan Lokasi perangkat aktif, coba di area terbuka, lalu tekan Coba Lagi.')}
   else{locHelp('Posisi Tidak Tersedia','Posisi perangkat tidak bisa ditentukan. Pastikan GPS/Lokasi perangkat aktif dan browser diizinkan mengakses lokasi, lalu tekan Coba Lagi.')}
