@@ -69,3 +69,28 @@ async function toggleAngin(){
  if(typeof wxRender==='function')wxRender();if(typeof updateProdPill==='function')updateProdPill();
  toast('💨 Angin BMKG aktif · berlaku '+anginValidTxt);
 }
+
+// ===== Cuaca Pelabuhan BMKG Maritim — 17 pelabuhan Kalimantan Utara =====
+const PORTS=[['Pelabuhan Malundung Tarakan','pelabuhan-malundung-tarakan'],['Pelabuhan Feri Juata Laut Tarakan','pelabuhan-feri-juata-laut-tarakan'],['Pelabuhan Tengkayu I','pelabuhan-tengkayu-i'],['Pelabuhan Tanjung Selor','pelabuhan-tanjung-selor'],['Pelabuhan Bunyu','pelabuhan-bunyu'],['Pelabuhan Feri Ancam Bulungan','pelabuhan-feri-ancam-bulungan'],['Pelabuhan KIPI Tanah Kuning Bulungan','pelabuhan-kipi-tanah-kuning-bulungan'],['Pelabuhan Speedboat Tana Kuning','pelabuhan-speedboat-tana-kuning'],['Pelabuhan Tunon Taka Nunukan','pelabuhan-tunon-taka-nunukan'],['Pelabuhan Liem Hie Djung Nunukan','pelabuhan-liem-hie-djung-nunukan'],['Pelabuhan Feri Sei Jepun Nunukan','pelabuhan-feri-sei-jepun-nunukan'],['Pelabuhan Sei Nyamuk Sebatik','pelabuhan-sei-nyamuk-sebatik'],['Pelabuhan Feri Liang Bunyu Sebatik','pelabuhan-feri-liang-bunyu-sebatik'],['Pelabuhan Speedboat Malinau','pelabuhan-speedboat-malinau'],['Pelabuhan Tideng Pale, Tana Tidung','pelabuhan-tideng-pale-kabupaten-tana-tidung'],['Pelabuhan Feri Sei Bawan, Tana Tidung','pelabuhan-feri-sei-bawan-kabupaten-tana-tidung'],['Pelabuhan Sembakung','pelabuhan-sembakung']];
+const portCache={};
+function renderPorts(){const el=document.getElementById('portList');if(!el||el.dataset.done)return;el.dataset.done='1';el.innerHTML=PORTS.map((x,i)=>'<div style="border-top:1px solid var(--line);padding:7px 0"><button class="ghost" style="width:100%;text-align:left" onclick="loadPort('+i+')">⚓ '+x[0]+'</button><div id="port-'+i+'" style="font-size:12.5px;margin-top:4px"></div></div>').join('')}
+async function loadPort(i){
+ const box=document.getElementById('port-'+i);if(!box)return;
+ if(portCache[i]){box.innerHTML=portCache[i];return}
+ box.innerHTML='<span style="color:var(--mut)">Memuat prakiraan BMKG…</span>';
+ const url='https://maritim.bmkg.go.id/cuaca/pelabuhan/'+PORTS[i][1];
+ const relays=['https://api.allorigins.win/raw?url='+encodeURIComponent(url),'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url)];
+ let ringkas='';
+ for(const r of relays){try{const resp=await fetchTimeout(r,18000);const html=await resp.text();const m=html.match(/og:description" content="([^"]+)"/);if(m){ringkas=m[1].replace(/^Prakiraan cuaca maritim terkini untuk Pelabuhan[^.]*\.\s*Data cuaca:\s*/,'');break}}catch(e){}}
+ const link='<div style="margin-top:3px"><a href="'+url+'" target="_blank" rel="noopener">Detail resmi BMKG ↗</a></div>';
+ if(ringkas){const cantik=ringkas.replace(/, Angin:/,' · Angin:').replace(/, Gelombang:/,' · Gelombang:').replace(/Gelombang: ([\d.]+)m/,'Gelombang: $1 m');portCache[i]='<b>'+cantik+'</b>'+link}
+ else portCache[i]='<span style="color:var(--mut)">Ringkasan belum dapat dimuat dari sini (halaman BMKG tidak mengizinkan pengambilan lintas situs).</span>'+link;
+ box.innerHTML=portCache[i];
+}
+function openPorts(){
+ const b=document.querySelector('[data-p=geodisaster]');if(b)b.click();
+ document.getElementById('side').classList.remove('hidden');
+ renderPorts();
+ setTimeout(()=>{const c=document.getElementById('portCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},90);
+ loadPort(0);loadPort(1);
+}
