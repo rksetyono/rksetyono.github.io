@@ -344,6 +344,7 @@ body.dark #chatForm{background:#0a1a29}
 </section>
 <section class="panel" id="p-geodisaster">
 <div class="card"><h3>🌋 Gempa — BMKG Live</h3><p>Sumber: data.bmkg.go.id (gempa terkini &amp; dirasakan).</p><div class="row"><button onclick="loadQuake('terkini')">M 5.0+ Terkini</button><button class="ghost" onclick="loadQuake('dirasakan')">Dirasakan</button></div><div id="quakeList" style="margin-top:8px"></div></div>
+<div class="card" id="portCard"><h3>⚓ Cuaca Pelabuhan — BMKG Maritim</h3><p>Prakiraan cuaca pelabuhan resmi BMKG untuk pelabuhan-pelabuhan Kalimantan Utara: cuaca, angin, dan tinggi gelombang. Klik nama pelabuhan untuk memuat ringkasan terkininya.</p><div id="portList"><p style="color:var(--mut)">Daftar pelabuhan dimuat…</p></div><p style="font-size:11px;color:var(--mut)">Sumber: BMKG Maritim (maritim.bmkg.go.id/cuaca/pelabuhan). "Detail BMKG" membuka halaman resmi tiap pelabuhan — prakiraan lengkap per periode, termasuk pasang surut.</p></div>
 <div class="card"><h3>☁️ Cuaca Sekarang (klik peta)</h3><div id="cuaca">Klik titik mana pun di peta: cuaca Open-Meteo + detail administrasi (reverse geocode) tampil sebagai popup di titik yang diklik.</div></div>
 <div class="card"><h3>🔥 Hotspot &amp; Kualitas Udara</h3><label>Opasitas layer citra <input type="range" min="20" max="100" value="85" oninput="setOpacity(this.value)"></label><div id="pmBody"><p style="color:var(--mut)">PM2.5 dimuat saat tab GEODISASTER dibuka.</p></div><div class="row"><button class="ghost" onclick="loadPM(true)">🔁 Perbarui PM2.5</button></div><p style="font-size:11px;color:var(--mut)">PM2.5 &amp; PM10 untuk titik Bandara Juwata, Tarakan — model kualitas udara CAMS via Open-Meteo (estimasi grid, bukan stasiun ukur darat). Indeks memakai skala ISPU (KLHK); ISPU resmi berbasis rata-rata 24 jam stasiun ukur KLHK. Lapisan peta PM2.5 memakai model PCM BMKG (SPARTAN).</p></div>
 <div class="card"><h3>🌊 Forecasting</h3><p>Angin, hujan 24 jam, SST, SPI/SPEI: di produksi diambil dari GFS/BMKG sebagai raster RGB/WMS — kerangka slider waktunya sama seperti layer VIIRS di GEOPORTAL.</p>
@@ -387,8 +388,8 @@ body.dark #chatForm{background:#0a1a29}
   <div id="chatChips"></div>
   <form id="chatForm"><input id="chatInput" type="text" placeholder="Tanya tentang wilayah, cuaca, gempa…" autocomplete="off"><button id="chatSend" type="submit" title="Kirim">➤</button></form>
 </aside>
-<script src="sigap-app.js?v=20261022-74"></script>
-<script src="sigap-layers.js?v=20261022-74"></script>
-<script src="sigap-chat.js?v=20261022-74"></script>
+<script src="sigap-app.js?v=20261022-75"></script>
+<script src="sigap-layers.js?v=20261022-75"></script>
+<script src="sigap-chat.js?v=20261022-75"></script>
 </body>
 </html>
