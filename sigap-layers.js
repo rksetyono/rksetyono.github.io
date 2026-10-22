@@ -72,7 +72,7 @@ async function toggleAngin(){
 
 // ===== Cuaca Pelabuhan BMKG Maritim — 17 pelabuhan Kalimantan Utara (penanda peta + ringkasan) =====
 const PORTS=[['Pelabuhan Malundung Tarakan','pelabuhan-malundung-tarakan',3.2833,117.5952],['Pelabuhan Feri Juata Laut Tarakan','pelabuhan-feri-juata-laut-tarakan',3.4309,117.5375],['Pelabuhan Tengkayu I','pelabuhan-tengkayu-i',3.2912,117.5876],['Pelabuhan Tanjung Selor','pelabuhan-tanjung-selor',2.8486,117.4559],['Pelabuhan Bunyu','pelabuhan-bunyu',3.4602,117.8358],['Pelabuhan Feri Ancam Bulungan','pelabuhan-feri-ancam-bulungan',3.1137,117.2463],['Pelabuhan KIPI Tanah Kuning Bulungan','pelabuhan-kipi-tanah-kuning-bulungan',2.6027,117.8172],['Pelabuhan Speedboat Tana Kuning','pelabuhan-speedboat-tana-kuning',2.6067,117.8172],['Pelabuhan Tunon Taka Nunukan','pelabuhan-tunon-taka-nunukan',4.1449,117.6672],['Pelabuhan Liem Hie Djung Nunukan','pelabuhan-liem-hie-djung-nunukan',4.1442,117.6479],['Pelabuhan Feri Sei Jepun Nunukan','pelabuhan-feri-sei-jepun-nunukan',4.0852,117.6260],['Pelabuhan Sei Nyamuk Sebatik','pelabuhan-sei-nyamuk-sebatik',4.1426,117.9117],['Pelabuhan Feri Liang Bunyu Sebatik','pelabuhan-feri-liang-bunyu-sebatik',4.1048,117.7542],['Pelabuhan Speedboat Malinau','pelabuhan-speedboat-malinau',3.5953,116.6325],['Pelabuhan Tideng Pale, Tana Tidung','pelabuhan-tideng-pale-kabupaten-tana-tidung',3.5855,116.9078],['Pelabuhan Feri Sei Bawan, Tana Tidung','pelabuhan-feri-sei-bawan-kabupaten-tana-tidung',3.5427,117.1904],['Pelabuhan Sembakung','pelabuhan-sembakung',3.7570,116.7509]];
-const portCache={};let portGroup=null,portOn=false;const portMarkers=[];
+const portCache={};let portGroup=null,portOn=false,portWave=null,portWaveTxt='';const portMarkers=[];
 function portIcon(){return L.divIcon({className:'',html:'<div style="background:#005baa;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.45)">⚓</div>',iconSize:[26,26],iconAnchor:[13,13]})}
 function renderPorts(){const el=document.getElementById('portList');if(!el||el.dataset.done)return;el.dataset.done='1';el.innerHTML=PORTS.map((x,i)=>'<div style="border-top:1px solid var(--line);padding:7px 0"><button class="ghost" style="width:100%;text-align:left" onclick="portGo('+i+')">⚓ '+x[0]+'</button><div id="port-'+i+'" style="font-size:12.5px;margin-top:4px"></div></div>').join('')}
 async function portSummaryHTML(i){
@@ -87,6 +87,14 @@ async function portSummaryHTML(i){
  return portCache[i];
 }
 async function loadPort(i){const box=document.getElementById('port-'+i);if(box)box.innerHTML=await portSummaryHTML(i)}
+async function portShowWave(){
+ if(portWave){if(!map.hasLayer(portWave))portWave.addTo(map);return}
+ const t=await anginTimes();
+ portWave=L.tileLayer('https://maritim.bmkg.go.id/api21/mpl_req/w3g_hires/swh/0/'+t.runStr+'/'+t.valStr+'/{z}/{x}/{y}.png?ci=1&overlays=,contourf&conc=snow',{tms:true,opacity:.78,attribution:'Gelombang © BMKG — OFS INAWAVES'});
+ portWave.addTo(map);portWaveTxt=fmtWita(t.valid.toISOString());
+ if(typeof wxRender==='function')wxRender();if(typeof updateProdPill==='function')updateProdPill();
+}
+function portHideWave(){if(portWave){map.removeLayer(portWave)}if(typeof wxRender==='function')wxRender();if(typeof updateProdPill==='function')updateProdPill()}
 function portShowMarkers(){
  if(!portGroup){portGroup=L.layerGroup();
   PORTS.forEach((x,i)=>{const mk=L.marker([x[2],x[3]],{icon:portIcon()}).bindPopup('<b>⚓ '+x[0]+'</b><div id="pop-port-'+i+'" style="font-size:12.5px;margin-top:4px">Memuat prakiraan BMKG…</div>',{maxWidth:290});
@@ -101,12 +109,12 @@ function portGo(i){
  setTimeout(()=>{if(portMarkers[i])portMarkers[i].openPopup()},1250);
 }
 function openPorts(){
- if(portOn){portOn=false;if(portGroup)map.removeLayer(portGroup);chipState('Pelabuhan',false);toast('Penanda pelabuhan dimatikan');return}
+ if(portOn){portOn=false;if(portGroup)map.removeLayer(portGroup);portHideWave();chipState('Pelabuhan',false);toast('Fitur pelabuhan & perairan dimatikan');return}
  const b=document.querySelector('[data-p=geodisaster]');if(b)b.click();
  document.getElementById('side').classList.remove('hidden');
- renderPorts();portShowMarkers();chipState('Pelabuhan',true);
+ renderPorts();portShowWave();portShowMarkers();chipState('Pelabuhan',true);
  map.flyToBounds(L.latLngBounds(PORTS.map(x=>[x[2],x[3]])).pad(0.12),{duration:1.1});
  setTimeout(()=>{const c=document.getElementById('portCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},90);
  loadPort(0);loadPort(1);
- toast('⚓ 17 pelabuhan Kaltara ditandai di peta');
+ toast('⚓ Pelabuhan & perairan aktif: gelombang BMKG + 17 penanda pelabuhan Kaltara');
 }
