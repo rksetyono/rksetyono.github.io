@@ -45,7 +45,6 @@ function tsDrawRegion(r){try{if(tsLayer){map.removeLayer(tsLayer);tsLayer=null}
 function tsBoundsOf(r,path){if(path&&path.length){let a=[90,180,-90,-180];path.flat(3).forEach(()=>{});const walk=x=>{if(Array.isArray(x)&&typeof x[0]==='number'){a[0]=Math.min(a[0],x[0]);a[2]=Math.max(a[2],x[0]);a[1]=Math.min(a[1],x[1]);a[3]=Math.max(a[3],x[1])}else if(Array.isArray(x))x.forEach(walk)};walk(path);if(a[2]>a[0])return{minLat:a[0],minLng:a[1],maxLat:a[2],maxLng:a[3]}}
   const d=1.3;return{minLat:r.lat-d,minLng:r.lng-d*1.2,maxLat:r.lat+d,maxLng:r.lng+d*1.2}}
 
-const TSVOLS=[['Merapi',-7.542,110.442,2968],['Semeru',-8.108,112.922,3676],['Kelud',-7.935,112.308,1731],['Bromo',-7.942,112.953,2329],['Ijen',-8.058,114.242,2799],['Raung',-8.125,114.042,3332],['Arjuno-Welirang',-7.725,112.578,3339],['Slamet',-7.242,109.208,3428],['Sumbing',-7.384,110.07,3371],['Sindoro',-7.3,109.996,3136],['Dieng',-7.2,109.92,2565],['Ciremai',-6.892,108.4,3078],['Gede',-6.78,106.98,2958],['Salak',-6.72,106.73,2211],['Tangkuban Parahu',-6.77,107.6,2084],['Papandayan',-7.32,107.73,2665],['Guntur',-7.15,107.85,2249],['Galunggung',-7.25,108.058,2168],['Anak Krakatau',-6.102,105.423,157],['Kerinci',-1.697,101.264,3805],['Sinabung',3.17,98.392,2460],['Marapi',-0.381,100.473,2891],['Talang',-0.978,100.679,2597],['Dempo',-4.016,103.13,3159],['Agung',-8.342,115.508,3142],['Batur',-8.242,115.375,1717],['Rinjani',-8.42,116.47,3726],['Tambora',-8.25,117.992,2722],['Sangeang Api',-8.2,119.07,1949],['Lewotobi',-8.542,122.775,1786],['Ili Lewotolok',-8.272,123.505,1423],['Dukono',1.68,127.88,1335],['Ibu',1.488,127.63,1325],['Gamalama',0.8,127.33,1715],['Soputan',1.108,124.725,1784],['Lokon',1.358,124.792,1580],['Karangetang',2.78,125.4,1827],['Ruang',2.3,125.37,725],['Awu',3.67,125.5,1320]];
 function tsWxDesc(c){if(c==null)return'-';if(c===0)return'Cerah';if(c===1)return'Cerah Berawan';if(c===2)return'Berawan Sebagian';if(c===3)return'Berawan';if(c===45||c===48)return'Berkabut';if(c>=51&&c<=55)return'Gerimis';if(c===56||c===57)return'Gerimis Beku';if(c>=61&&c<=65)return'Hujan';if(c===66||c===67)return'Hujan Beku';if(c>=71&&c<=77)return'Salju';if(c>=80&&c<=82)return'Hujan Lokal';if(c===85||c===86)return'Salju';if(c===95)return'Hujan Petir';if(c>=96)return'Hujan Petir + Es';return'Berawan'}
 async function tsWeatherOM(r){const u=`https://api.open-meteo.com/v1/forecast?latitude=${r.lat}&longitude=${r.lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto&forecast_days=4`;
   const j=await (await fetch(u)).json();const c=j.current,d=j.daily;const df=i=>new Date(d.time[i]+'T12:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'short'});
@@ -75,8 +74,6 @@ async function tsUsgs(r){let path=null;try{if(r.has_path!==false)path=await ambi
   let h=`<p>Dalam batas wilayah ini: <b>${tsNum(c365)} gempa M≥4</b> dalam 1 tahun terakhir · <b>${tsNum(c30)} gempa M≥2,5</b> dalam 30 hari terakhir (katalog USGS).</p>`;
   if(top.length)h+='<p><b>Terbesar (1 tahun):</b></p><ul>'+top.map(f=>`<li><b>M${tsNum1(f.properties.mag)}</b> — ${tsEsc(f.properties.place)} (kedalaman ${tsNum(f.geometry.coordinates[2])} km, ${new Date(f.properties.time).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})})</li>`).join('')+'</ul>';
   return h}
-function tsVolcanoes(r){const v=TSVOLS.map(x=>({n:x[0],e:x[3],d:tsHav(r.lat,r.lng,x[1],x[2])})).sort((a,b)=>a.d-b.d).slice(0,3);
-  return'<ul>'+v.map(x=>`<li><b>${x.n}</b> — ${tsNum(x.d)} km · ${tsNum(x.e)} mdpl</li>`).join('')+'</ul><p class="sub">Daftar referensi gunung berapi aktif (PVMBG); status aktivitas tidak ditampilkan — cek MAGMA Indonesia untuk status resmi terkini.</p>'}
 async function tsDrought(r){if(tsDroughtCache[r.id])return tsDroughtCache[r.id];
   const now=new Date();const iso=d=>d.toISOString().slice(0,10);const end=new Date(now-5*864e5),start=new Date(now-95*864e5);
   const base=`https://archive-api.open-meteo.com/v1/archive?latitude=${r.lat}&longitude=${r.lng}&daily=precipitation_sum&timezone=UTC`;
@@ -112,7 +109,7 @@ async function tsProfile(r,focus){focus=focus||'profil';let h=tsHead(r);const sr
     try{h+='<h5>📍 Gempa Terdekat (BMKG)</h5>'+await tsQuakesNear(r);srcs.push('Gempa BMKG (TEWS)')}catch(e){}
     if(r.level==='provinsi'||r.level==='kabupaten'){try{h+='<h5>🌐 Riwayat Gempa (Katalog USGS)</h5>'+await tsUsgs(r);srcs.push('Katalog gempa USGS')}catch(e){}}}
   if(focus==='gempa')return{html:h+btn,srcs};
-  if(focus==='profil'){try{h+='<h5>🌋 Gunung Berapi Terdekat</h5>'+tsVolcanoes(r)}catch(e){}}
+  
   return{html:h,srcs}}
 function tsLayerList(){const out=[];document.querySelectorAll('#quick button.on').forEach(b=>out.push(b.textContent.trim()));
   if(satKey&&!out.some(x=>/Himawari/i.test(x)))out.push('Citra satelit: '+satKey);
