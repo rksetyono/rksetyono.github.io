@@ -439,7 +439,7 @@ toast('Selamat datang di SIGAP JUWATA — klik peta untuk cuaca & alamat, atau m
  const s=document.getElementById('search'),q=document.getElementById('quick');
  if(s)document.body.appendChild(s); if(q)document.body.appendChild(q);
  // Tambah item quick-layer sesuai daftar situs acuan
- if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['🌫 PM2.5',"togglePM();document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleSST()"],['💨 Angin',"toggleAngin()"],['🗺 Boundaries',"bndToggle()"],['🌋 Gunung Api',"toast('Layer gunung api: aktifkan lewat GEODISASTER di menu ☰')"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
+ if(q){const extra=[['✈ WAQQ',"openAv()"],['🛰 Himawari',"document.querySelector('[data-p=geoportal]').click();document.getElementById('side').classList.remove('hidden');setSatProduct('eh')"],['🌫 PM2.5',"togglePM();document.querySelector('[data-p=geodisaster]').click();document.getElementById('side').classList.remove('hidden')"],['🌊 SST',"toggleSST()"],['💨 Angin',"toggleAngin()"],['🗺 Boundaries',"bndToggle()"],['⚓ Pelabuhan',"toast('Cuaca pelabuhan BMKG Maritim ada di GEODISASTER')"]];
  extra.forEach(([label,fn])=>{const b=document.createElement('button');b.textContent=label;b.setAttribute('onclick',fn);q.appendChild(b)});}
  // Klik peta membuka sheet detail kanan
  
