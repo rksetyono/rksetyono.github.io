@@ -137,14 +137,6 @@ async function portSummaryHTML(slug,full){
  return portCache[key];
 }
 async function loadPort(i){const box=document.getElementById('port-'+i);if(box)box.innerHTML=await portSummaryHTML(PORTS[i][1],false)}
-async function portShowWave(){
- if(portWave){if(!map.hasLayer(portWave))portWave.addTo(map);return}
- const t=await anginTimes();
- portWave=L.tileLayer('https://maritim.bmkg.go.id/api21/mpl_req/w3g_hires/swh/0/'+t.runStr+'/'+t.valStr+'/{z}/{x}/{y}.png?ci=1&overlays=,contourf&conc=snow',{tms:true,opacity:.78,attribution:'Gelombang © BMKG — OFS INAWAVES'});
- portWave.addTo(map);portWaveTxt=fmtWita(t.valid.toISOString());
- if(typeof wxRender==='function')wxRender();if(typeof updateProdPill==='function')updateProdPill();
-}
-function portHideWave(){if(portWave){map.removeLayer(portWave)}if(typeof wxRender==='function')wxRender();if(typeof updateProdPill==='function')updateProdPill()}
 function portShowMarkers(){
  if(!portGroup){portGroup=L.layerGroup();
   PORTS.forEach((x,i)=>{const mk=L.marker([x[2],x[3]],{icon:portIcon()}).bindPopup(portPopupShell(x[0],x[1]),{maxWidth:330,className:'port-pop'});
@@ -172,10 +164,10 @@ function portGo(i){
  setTimeout(()=>{if(portMarkers[i])portMarkers[i].openPopup()},1250);
 }
 function openPorts(){
- if(portOn){portOn=false;if(portGroup)map.removeLayer(portGroup);portHideWave();chipState('Pelabuhan',false);toast('Fitur pelabuhan & perairan dimatikan');return}
+ if(portOn){portOn=false;if(portGroup)map.removeLayer(portGroup);chipState('Pelabuhan',false);toast('Fitur pelabuhan & perairan dimatikan');return}
  const b=document.querySelector('[data-p=geodisaster]');if(b)b.click();
  document.getElementById('side').classList.remove('hidden');
- renderPorts();portShowWave();portShowMarkers();chipState('Pelabuhan',true);
+ renderPorts();portShowMarkers();chipState('Pelabuhan',true);
  map.flyToBounds(L.latLngBounds(PORTS.map(x=>[x[2],x[3]])).pad(0.12),{duration:1.1});
  setTimeout(()=>{const c=document.getElementById('portCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},90);
  loadPort(0);loadPort(1);
