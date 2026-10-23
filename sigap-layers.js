@@ -181,3 +181,36 @@ function openPorts(){
  loadPort(0);loadPort(1);
  toast('⚓ Pelabuhan & perairan aktif: gelombang BMKG + penanda 658 pelabuhan BMKG se-Indonesia');
 }
+
+// ===== PERAIRAN BMKG: poligon resmi GIS BMKG + prakiraan situs BMKG Maritim (hasil panen sendiri) =====
+let perairanOn=false,perairanLayer=null,perairanData=null,perairanMeta='',perairanLinked=0;
+function perairanPopupHTML(p){
+ const rec=(p&&p.slug&&perairanData)?perairanData[p.slug]:null;
+ let inner;
+ if(rec){
+  if(rec[2]==='og'){inner='<div style="padding:10px 16px 4px;font-size:12.5px"><b>'+rec[3]+'</b></div>'}
+  else{inner=portRowsHTML([['KODE WILAYAH',rec[0]],['CUACA',rec[2]],['GELOMBANG',rec[3]+' ('+rec[4]+')'],['ANGIN',rec[5]+' — '+rec[6]+'–'+rec[6]+' knot'],['BERLAKU',portFmtBerlaku(rec[7])+' s.d.<br>'+portFmtBerlaku(rec[8])]]);
+  if(rec[1]!==p.nama)inner+='<div class="portpop-f" style="border-top:none;padding-top:0">Poligon GIS BMKG: '+p.nama+' ('+p.kode+')</div>'}
+  inner+='<div class="portpop-f">Sumber: BMKG Maritim · dipanen '+perairanMeta+'</div><div style="margin:6px 16px 12px"><a href="https://maritim.bmkg.go.id/cuaca/perairan/'+p.slug+'" target="_blank" rel="noopener">Detail resmi BMKG ↗</a></div>';
+  return '<div class="portpop"><div class="portpop-h"><span class="portpop-pill">● CUACA PERAIRAN</span><div class="portpop-t">'+rec[1]+'</div></div><div class="portpop-b">'+inner+'</div></div>';
+ }
+ inner=portRowsHTML([['KODE WILAYAH (GIS BMKG)',p.kode]])+'<div style="padding:2px 16px 4px;font-size:12px;color:#475569">Prakiraan situs BMKG Maritim untuk wilayah ini belum terhubung ke poligon resminya.</div><div class="portpop-f">Sumber: poligon GIS BMKG</div><div style="margin:6px 16px 12px"><a href="https://maritim.bmkg.go.id/cuaca/perairan" target="_blank" rel="noopener">Indeks Perairan BMKG ↗</a></div>';
+ return '<div class="portpop"><div class="portpop-h"><span class="portpop-pill">● CUACA PERAIRAN</span><div class="portpop-t">'+p.nama+'</div></div><div class="portpop-b">'+inner+'</div></div>';
+}
+async function perairanLoad(){
+ if(perairanLayer)return true;
+ try{
+  const [g,d]=await Promise.all([fetch('perairan-geom.geojson').then(r=>{if(!r.ok)throw new Error('geom');return r.json()}),fetch('perairan-data.json').then(r=>{if(!r.ok)throw new Error('data');return r.json()})]);
+  perairanData=d.data||{};perairanMeta=d.dibuat||'';perairanLinked=0;
+  perairanLayer=L.geoJSON(g,{style:{color:'#1773b8',weight:1,fillColor:'#35b26f',fillOpacity:.16},onEachFeature:(f,l)=>{if(f.properties&&f.properties.slug)perairanLinked++;l.bindPopup(perairanPopupHTML(f.properties),{maxWidth:330,className:'port-pop'});l.on('mouseover',()=>l.setStyle({fillOpacity:.35,weight:1.8}));l.on('mouseout',()=>{if(perairanLayer)perairanLayer.resetStyle(l)})}});
+  return true;
+ }catch(e){return false}
+}
+async function togglePerairan(){
+ if(perairanOn){perairanOn=false;if(perairanLayer)map.removeLayer(perairanLayer);chipState('Perairan',false);wxRender();return}
+ toast('🌊 Memuat poligon wilayah perairan BMKG…');
+ if(!await perairanLoad()){toast('⚠️ Data perairan belum bisa dimuat — coba lagi sebentar lagi.');return}
+ perairanOn=true;perairanLayer.addTo(map);chipState('Perairan',true);
+ toast('🌊 Perairan BMKG aktif — '+perairanLinked+' dari 232 poligon terhubung prakiraan situs BMKG Maritim. Klik poligon untuk detailnya.');
+ wxRender();
+}
