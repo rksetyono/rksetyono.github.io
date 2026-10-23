@@ -20,7 +20,7 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.sty
 const INDO_BOUNDS=[[-11,95],[6,141]];
 function fitIndo(){map.fitBounds(INDO_BOUNDS,{padding:[12,12]})}
 function flyIndo(){fitIndo()}
-setTimeout(fitIndo,400);
+setTimeout(()=>{fitIndo();applyMinZoom();applyViewBounds()},400);
 var myLocMark=null,myLocCircle=null;
 function clearMyLoc(){if(myLocMark){map.removeLayer(myLocMark);myLocMark=null}if(myLocCircle){map.removeLayer(myLocCircle);myLocCircle=null}chipState('Lokasi Saya',false)}
 function havKm(a,b,c,d){const R=6371,t=Math.PI/180,x=(c-a)*t,y=(d-b)*t,s=Math.sin(x/2)**2+Math.cos(a*t)*Math.cos(c*t)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(s))}
@@ -69,17 +69,19 @@ function satUrl(key,iso){const p=SATPROD[key];return `https://satellite.bmkg.go.
 function satLabel(){const el=document.getElementById('satTime');if(!satRuns.length){el.textContent='—';return}el.textContent=fmtWita(satRuns[satIdx])+(satIdx===0?' (terbaru)':'');updateProdPill()}
 const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]]};
 function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;const size=map.getSize();if(!size||!size.x||!size.y)return null;const nw=map.project(L.latLng(b[1][0],b[0][1]),0),se=map.project(L.latLng(b[0][0],b[1][1]),0);const w=Math.abs(se.x-nw.x),h=Math.abs(se.y-nw.y);if(!w||!h)return null;return Math.log(Math.max(size.x/w,size.y/h))/Math.LN2}
+function indoFillZoom(){const b=INDO_BOUNDS;const size=map.getSize();if(!size||!size.x||!size.y)return null;const nw=map.project(L.latLng(b[1][0],b[0][1]),0),se=map.project(L.latLng(b[0][0],b[1][1]),0);const w=Math.abs(se.x-nw.x),h=Math.abs(se.y-nw.y);if(!w||!h)return null;return Math.log(Math.max(size.x/w,size.y/h))/Math.LN2}
 function satFrame(key){const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
 let pmLockZ=null;
 let satPanB=null;
-function applyMinZoom(){map.options.minZoom=Math.max(3,satLockZ||0,pmLockZ||0)}
-function applyViewBounds(){const b=(pmLockZ!==null)?L.latLngBounds(INDO_BOUNDS):satPanB;if(b){map.setMaxBounds(b.pad(pmLockZ!==null?0.04:0));map.options.maxBoundsViscosity=1.0;if(!b.contains(map.getCenter()))map.panInsideBounds(b)}else{map.setMaxBounds(L.latLngBounds());map.options.maxBoundsViscosity=0}}
+function applyMinZoom(){if(satLockZ===null&&pmLockZ===null){const iz=indoFillZoom();map.options.minZoom=(iz!==null?iz:3);if(iz!==null&&map.getZoom()<iz)map.setZoom(iz)}else{map.options.minZoom=Math.max(3,satLockZ||0,pmLockZ||0)}}
+function applyViewBounds(){const pm=pmLockZ!==null;const b=pm?L.latLngBounds(INDO_BOUNDS):(satPanB||L.latLngBounds(INDO_BOUNDS));map.setMaxBounds(b.pad(pm?0.04:0));map.options.maxBoundsViscosity=1.0;if(!b.contains(map.getCenter()))map.panInsideBounds(b)}
 function satZoomLock(key){const m=key?SATPROD[key].model:null;if(m==='himawari9'||m==='gk2a'){map.options.minZoom=3;satLockZ=satFillZoom(key);satPanB=L.latLngBounds(SATBOUNDS[m]);applyMinZoom();applyViewBounds()}else{satLockZ=null;satPanB=null;applyMinZoom();applyViewBounds()}}
 function satLockRepair(){if(!satKey||satLockZ===null)return;const z=satFillZoom(satKey);if(z===null)return;if(satLockZ!==z||map.options.minZoom!==z)satZoomLock(satKey);if(map.getZoom()<z)map.setZoom(z)}
 setTimeout(satLockRepair,2600);setTimeout(satLockRepair,5200);
 let satResizeT=null;
 window.addEventListener('resize',()=>{if(!satKey)return;clearTimeout(satResizeT);satResizeT=setTimeout(()=>{if(satKey){if(satLockZ!==null)satZoomLock(satKey);satFrame(satKey)}},450)});
+let indoResizeT=null;window.addEventListener('resize',()=>{if(satKey||pmLockZ!==null)return;clearTimeout(indoResizeT);indoResizeT=setTimeout(()=>{if(!satKey&&pmLockZ===null){applyMinZoom();applyViewBounds()}},450)});
 function satMarkLoading(){const el=document.getElementById('satTime');if(el)el.textContent='⏳ memuat tile…';const L0=satLayer;if(!L0)return;let done=false;const fin=()=>{if(done)return;done=true;if(satLayer===L0)satLabel()};L0.once('load',fin);setTimeout(fin,60000)}
 function satArmTileWatch(L0){if(!satKey||!SATPROD[satKey])return;let okT=0,errT=0;L0.on('tileload',()=>{okT++});L0.on('tileerror',()=>{errT++});const chk=timer=>{if(satLayer!==L0||okT>0)return;if(!timer&&errT===0)return;satTileFail()};L0.once('load',()=>setTimeout(()=>chk(false),50));setTimeout(()=>chk(true),45000)}
 function satTileFail(){const st=document.getElementById('satStatus');if(st)st.textContent='Tile citra belum terbaca — server BMKG lambat; tunggu sebentar atau pilih produk lain.'}
@@ -136,7 +138,7 @@ function iaProbeImg(src){return new Promise(r=>{const im=new Image();im.onload=(
 async function iaProbeRun(k){const d=new Date();d.setUTCSeconds(0,0);d.setUTCMinutes(Math.floor(d.getUTCMinutes()/10)*10);for(let i=0;i<18;i++){const run=iaFmt(d);if(await iaProbeImg(iaTile(k,run,6,52,31)))return run;d.setUTCMinutes(d.getUTCMinutes()-10)}return null}
 function iaFrame(){const z=satFillZoom('eh');if(z===null)return;if(map.getZoom()>z+0.01)return;map.setView(L.latLngBounds(SATBOUNDS.himawari9).getCenter(),z)}
 function iaBarShow(k){const P=IAPROD[k];document.getElementById('iaBar').style.display='block';document.getElementById('iaGrad').style.background='linear-gradient(90deg,'+P.cb.map(s=>s[1]).join(',')+')';const cap=document.getElementById('iaCap');cap.children[0].textContent=P.cb[0][0]+' '+P.u;cap.children[1].textContent=P.d+' · '+P.cb[P.cb.length-1][0]+' '+P.u}
-function iaOff(){iaKey=null;iaRun=null;if(iaLayer){map.removeLayer(iaLayer);iaLayer=null}if(iaTimer){clearInterval(iaTimer);iaTimer=null}satLockZ=null;map.options.minZoom=3;document.querySelectorAll('.iabtn').forEach(b=>b.classList.remove('on'));document.getElementById('iaBar').style.display='none';document.getElementById('iaStatus').textContent='Citra penerbangan dari tiler InaSIAM BMKG — run terbaru dijejak otomatis tiap 10 menit.';updateProdPill()}
+function iaOff(){iaKey=null;iaRun=null;if(iaLayer){map.removeLayer(iaLayer);iaLayer=null}if(iaTimer){clearInterval(iaTimer);iaTimer=null}satLockZ=null;satPanB=null;applyMinZoom();applyViewBounds();document.querySelectorAll('.iabtn').forEach(b=>b.classList.remove('on'));document.getElementById('iaBar').style.display='none';document.getElementById('iaStatus').textContent='Citra penerbangan dari tiler InaSIAM BMKG — run terbaru dijejak otomatis tiap 10 menit.';updateProdPill()}
 async function setIa(key){const st=document.getElementById('iaStatus');if(!key||key===iaKey){iaOff();st.textContent='Citra InaSIAM dimatikan.';return}
  if(satKey)setSatProduct(satKey);
  iaKey=key;document.querySelectorAll('.iabtn').forEach(b=>b.classList.toggle('on',b.dataset.ia===key));st.textContent='Menjejaki run InaSIAM terbaru…';
