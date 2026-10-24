@@ -18,7 +18,7 @@ function chipState(name,on){document.querySelectorAll('#quick button').forEach(b
 function setBase(k){map.removeLayer(curBase);curBase=bases[k];curBase.addTo(map)}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',4200)}
 const INDO_BOUNDS=[[-11,95],[6,141]];
-function fitIndo(){map.fitBounds(INDO_BOUNDS,{padding:[12,12]})}
+function fitIndo(){const z=indoFillZoom();if(z!==null){map.setView(L.latLngBounds(INDO_BOUNDS).getCenter(),z)}else{map.fitBounds(INDO_BOUNDS,{padding:[12,12]})}}
 function flyIndo(){fitIndo()}
 setTimeout(()=>{fitIndo();applyMinZoom();applyViewBounds()},400);
 var myLocMark=null,myLocCircle=null;
@@ -69,7 +69,7 @@ function satUrl(key,iso){const p=SATPROD[key];return `https://satellite.bmkg.go.
 function satLabel(){const el=document.getElementById('satTime');if(!satRuns.length){el.textContent='—';return}el.textContent=fmtWita(satRuns[satIdx])+(satIdx===0?' (terbaru)':'');updateProdPill()}
 const SATBOUNDS={himawari9:[[-22,90],[22,146.25]],gk2a:[[-22,78.75],[22,157.5]]};
 function satFillZoom(key){const b=SATBOUNDS[SATPROD[key].model];if(!b)return null;const size=map.getSize();if(!size||!size.x||!size.y)return null;const nw=map.project(L.latLng(b[1][0],b[0][1]),0),se=map.project(L.latLng(b[0][0],b[1][1]),0);const w=Math.abs(se.x-nw.x),h=Math.abs(se.y-nw.y);if(!w||!h)return null;return Math.log(Math.max(size.x/w,size.y/h))/Math.LN2}
-function indoFillZoom(){const b=INDO_BOUNDS;const size=map.getSize();if(!size||!size.x||!size.y)return null;const nw=map.project(L.latLng(b[1][0],b[0][1]),0),se=map.project(L.latLng(b[0][0],b[1][1]),0);const w=Math.abs(se.x-nw.x),h=Math.abs(se.y-nw.y);if(!w||!h)return null;return Math.log(Math.max(size.x/w,size.y/h))/Math.LN2}
+function indoFillZoom(){const b=SATBOUNDS.himawari9;const size=map.getSize();if(!size||!size.x||!size.y)return null;const nw=map.project(L.latLng(b[1][0],b[0][1]),0),se=map.project(L.latLng(b[0][0],b[1][1]),0);const w=Math.abs(se.x-nw.x),h=Math.abs(se.y-nw.y);if(!w||!h)return null;return Math.log(Math.max(size.x/w,size.y/h))/Math.LN2}
 function satFrame(key){const z=satFillZoom(key);if(z===null)return;if(map.getZoom()>z+0.01)return;const b=SATBOUNDS[SATPROD[key].model];map.setView(L.latLngBounds(b).getCenter(),z)}
 let satLockZ=null;
 let pmLockZ=null;
